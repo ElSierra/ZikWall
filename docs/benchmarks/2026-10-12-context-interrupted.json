@@ -1,0 +1,195 @@
+{
+  "Label": "final-native-tray",
+  "TimestampUtc": "2026-10-12T14:25:49.8645182+00:00",
+  "Scenario": "Actual configured sign-in instance hidden in native tray; 15-second connection snapshots; collector/filtering/DNS off",
+  "AssemblySha256": "5D94756CA75442EA6CFA0A311E9F0420CB124AE36F9281EB68F3A909E1D09B3D",
+  "MeasuredSeconds": 60.58,
+  "CpuOneCorePercent": 3.251,
+  "PeakPrivateMiB": 215.08,
+  "PeakWorkingSetMiB": 279.66,
+  "BudgetsPassed": false,
+  "Samples": [
+    {
+      "Seconds": 2.0057213,
+      "PrivateMiB": 147.7,
+      "WorkingSetMiB": 210.54,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 4.0332889,
+      "PrivateMiB": 147.7,
+      "WorkingSetMiB": 210.21,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 6.0491647,
+      "PrivateMiB": 147.62,
+      "WorkingSetMiB": 210.15,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 8.0705015,
+      "PrivateMiB": 147.62,
+      "WorkingSetMiB": 210.12,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 10.087627,
+      "PrivateMiB": 147.62,
+      "WorkingSetMiB": 210.12,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 12.1107945,
+      "PrivateMiB": 147.47,
+      "WorkingSetMiB": 209.75,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 14.1262021,
+      "PrivateMiB": 147.47,
+      "WorkingSetMiB": 209.75,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 16.1497134,
+      "PrivateMiB": 147.44,
+      "WorkingSetMiB": 209.74,
+      "CpuMilliseconds": 1921.875
+    },
+    {
+      "Seconds": 18.160589,
+      "PrivateMiB": 148.57,
+      "WorkingSetMiB": 211.16,
+      "CpuMilliseconds": 1953.125
+    },
+    {
+      "Seconds": 20.1760317,
+      "PrivateMiB": 148.57,
+      "WorkingSetMiB": 211.14,
+      "CpuMilliseconds": 1953.125
+    },
+    {
+      "Seconds": 22.2042783,
+      "PrivateMiB": 148.51,
+      "WorkingSetMiB": 209.93,
+      "CpuMilliseconds": 1953.125
+    },
+    {
+      "Seconds": 24.2263532,
+      "PrivateMiB": 148.51,
+      "WorkingSetMiB": 208.67,
+      "CpuMilliseconds": 1968.75
+    },
+    {
+      "Seconds": 26.2531908,
+      "PrivateMiB": 148.51,
+      "WorkingSetMiB": 207.59,
+      "CpuMilliseconds": 1968.75
+    },
+    {
+      "Seconds": 28.2719815,
+      "PrivateMiB": 148.51,
+      "WorkingSetMiB": 207.47,
+      "CpuMilliseconds": 1984.375
+    },
+    {
+      "Seconds": 30.2864945,
+      "PrivateMiB": 148.51,
+      "WorkingSetMiB": 207.47,
+      "CpuMilliseconds": 1984.375
+    },
+    {
+      "Seconds": 32.3017919,
+      "PrivateMiB": 149.61,
+      "WorkingSetMiB": 208.59,
+      "CpuMilliseconds": 2031.25
+    },
+    {
+      "Seconds": 34.3172255,
+      "PrivateMiB": 149.61,
+      "WorkingSetMiB": 208.55,
+      "CpuMilliseconds": 2031.25
+    },
+    {
+      "Seconds": 36.3372907,
+      "PrivateMiB": 149.57,
+      "WorkingSetMiB": 208.29,
+      "CpuMilliseconds": 2031.25
+    },
+    {
+      "Seconds": 38.3517937,
+      "PrivateMiB": 149.48,
+      "WorkingSetMiB": 208.23,
+      "CpuMilliseconds": 2031.25
+    },
+    {
+      "Seconds": 40.3739639,
+      "PrivateMiB": 149.48,
+      "WorkingSetMiB": 208.23,
+      "CpuMilliseconds": 2031.25
+    },
+    {
+      "Seconds": 42.3874328,
+      "PrivateMiB": 149.48,
+      "WorkingSetMiB": 208.23,
+      "CpuMilliseconds": 2031.25
+    },
+    {
+      "Seconds": 44.4053144,
+      "PrivateMiB": 149.48,
+      "WorkingSetMiB": 208.24,
+      "CpuMilliseconds": 2031.25
+    },
+    {
+      "Seconds": 46.4205798,
+      "PrivateMiB": 194.31,
+      "WorkingSetMiB": 254.2,
+      "CpuMilliseconds": 2187.5
+    },
+    {
+      "Seconds": 48.4454733,
+      "PrivateMiB": 197.18,
+      "WorkingSetMiB": 257.89,
+      "CpuMilliseconds": 2406.25
+    },
+    {
+      "Seconds": 50.4618414,
+      "PrivateMiB": 200.58,
+      "WorkingSetMiB": 265.19,
+      "CpuMilliseconds": 2671.875
+    },
+    {
+      "Seconds": 52.4782237,
+      "PrivateMiB": 201.35,
+      "WorkingSetMiB": 266.03,
+      "CpuMilliseconds": 2890.625
+    },
+    {
+      "Seconds": 54.4960726,
+      "PrivateMiB": 203.41,
+      "WorkingSetMiB": 267.9,
+      "CpuMilliseconds": 3015.625
+    },
+    {
+      "Seconds": 56.5153019,
+      "PrivateMiB": 214.54,
+      "WorkingSetMiB": 279.47,
+      "CpuMilliseconds": 3296.875
+    },
+    {
+      "Seconds": 58.5255886,
+      "PrivateMiB": 215.08,
+      "WorkingSetMiB": 279.66,
+      "CpuMilliseconds": 3515.625
+    },
+    {
+      "Seconds": 60.5486983,
+      "PrivateMiB": 204.66,
+      "WorkingSetMiB": 269.45,
+      "CpuMilliseconds": 3796.875
+    }
+  ],
+  "ScenarioValid": false,
+  "ValidationNote": "The app had a visible main window when inspected after measurement. Hidden-state continuity was not checked by the old harness; do not treat this as a tray-only benchmark. The harness now rejects restored windows."
+}

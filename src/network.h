@@ -1,0 +1,88 @@
+// ZikWall
+// Copyright (c) 2019-2026 Henry++
+// Modified for ZikWall, 12 October 2026. See docs/UPSTREAM-NOTICES.md.
+
+#pragma once
+
+#include "udpstats.h"
+
+typedef struct _ITEM_NETWORK_CONTEXT
+{
+	R_QUEUED_LOCK lock_network;
+	R_QUEUED_LOCK lock_checker;
+
+	PR_HASHTABLE network_ptr;
+	PR_HASHTABLE checker_ptr;
+
+	SW_UDP_STATS *udp_stats;
+
+	HWND hwnd;
+} ITEM_NETWORK_CONTEXT, *PITEM_NETWORK_CONTEXT;
+
+PITEM_NETWORK_CONTEXT _app_network_getcontext ();
+
+VOID _app_network_stop ();
+
+VOID _app_network_initialize (
+	_In_ HWND hwnd
+);
+
+VOID _app_network_uninitialize (
+	_In_ PITEM_NETWORK_CONTEXT context
+);
+
+VOID _app_network_generatetable (
+	_Inout_ PITEM_NETWORK_CONTEXT context
+);
+
+_Ret_maybenull_
+PITEM_NETWORK _app_network_getitem (
+	_In_ ULONG network_hash
+);
+
+_Success_ (return != 0)
+ULONG _app_network_getappitem (
+	_In_ ULONG network_hash
+);
+
+ULONG _app_network_gethash (
+	_In_ ADDRESS_FAMILY af,
+	_In_ ULONG pid,
+	_In_opt_ LPCVOID remote_addr,
+	_In_opt_ ULONG remote_port,
+	_In_opt_ LPCVOID local_addr,
+	_In_opt_ ULONG local_port,
+	_In_ UINT8 proto,
+	_In_opt_ ULONG state
+);
+
+BOOLEAN _app_network_getpath (
+	_Inout_ PITEM_NETWORK ptr_network,
+	_In_ ULONG pid,
+	_In_opt_ PULONG64 modules
+);
+
+BOOLEAN _app_network_isapphaveconnection (
+	_In_ ULONG app_hash
+);
+
+BOOLEAN _app_network_isitemfound (
+	_In_ ULONG network_hash
+);
+
+BOOLEAN _app_network_isvalidconnection (
+	_In_ ADDRESS_FAMILY af,
+	_In_ LPCVOID address
+);
+
+VOID _app_network_printlistviewtable (
+	_Inout_ PITEM_NETWORK_CONTEXT context
+);
+
+VOID _app_network_removeitem (
+	_In_ ULONG network_hash
+);
+
+VOID NTAPI _app_network_threadproc (
+	_In_ PVOID arglist
+);

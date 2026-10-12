@@ -1,0 +1,193 @@
+{
+  "Label": "final-native-tray",
+  "TimestampUtc": "2026-10-12T13:52:15.2271176+00:00",
+  "Scenario": "Actual configured sign-in instance hidden in native tray; 15-second connection snapshots; collector/filtering/DNS off",
+  "AssemblySha256": "BEF1B5353E3BF0098F0E5ECFBC0C9201C6C8FFAF8CE8AB6AA3BD1A40A59CB54D",
+  "MeasuredSeconds": 60.63,
+  "CpuOneCorePercent": 0.335,
+  "PeakPrivateMiB": 158.23,
+  "PeakWorkingSetMiB": 219.09,
+  "BudgetsPassed": true,
+  "Samples": [
+    {
+      "Seconds": 2.0147527,
+      "PrivateMiB": 151.77,
+      "WorkingSetMiB": 211.72,
+      "CpuMilliseconds": 1796.875
+    },
+    {
+      "Seconds": 4.0439327,
+      "PrivateMiB": 151.77,
+      "WorkingSetMiB": 211.72,
+      "CpuMilliseconds": 1796.875
+    },
+    {
+      "Seconds": 6.068254,
+      "PrivateMiB": 151.77,
+      "WorkingSetMiB": 211.72,
+      "CpuMilliseconds": 1796.875
+    },
+    {
+      "Seconds": 8.0842894,
+      "PrivateMiB": 153.0,
+      "WorkingSetMiB": 213.01,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 10.1023808,
+      "PrivateMiB": 153.0,
+      "WorkingSetMiB": 213.01,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 12.1246406,
+      "PrivateMiB": 152.96,
+      "WorkingSetMiB": 212.98,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 14.1472761,
+      "PrivateMiB": 152.96,
+      "WorkingSetMiB": 212.98,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 16.1723122,
+      "PrivateMiB": 152.96,
+      "WorkingSetMiB": 212.62,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 18.1843812,
+      "PrivateMiB": 152.99,
+      "WorkingSetMiB": 212.64,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 20.1973851,
+      "PrivateMiB": 152.99,
+      "WorkingSetMiB": 212.64,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 22.2117187,
+      "PrivateMiB": 152.96,
+      "WorkingSetMiB": 212.62,
+      "CpuMilliseconds": 1875.0
+    },
+    {
+      "Seconds": 24.2342297,
+      "PrivateMiB": 154.14,
+      "WorkingSetMiB": 214.12,
+      "CpuMilliseconds": 1906.25
+    },
+    {
+      "Seconds": 26.2451423,
+      "PrivateMiB": 154.14,
+      "WorkingSetMiB": 214.12,
+      "CpuMilliseconds": 1906.25
+    },
+    {
+      "Seconds": 28.2629922,
+      "PrivateMiB": 154.09,
+      "WorkingSetMiB": 214.08,
+      "CpuMilliseconds": 1906.25
+    },
+    {
+      "Seconds": 30.2849153,
+      "PrivateMiB": 154.09,
+      "WorkingSetMiB": 214.08,
+      "CpuMilliseconds": 1906.25
+    },
+    {
+      "Seconds": 32.3040287,
+      "PrivateMiB": 153.45,
+      "WorkingSetMiB": 213.7,
+      "CpuMilliseconds": 1906.25
+    },
+    {
+      "Seconds": 34.3212604,
+      "PrivateMiB": 153.45,
+      "WorkingSetMiB": 213.7,
+      "CpuMilliseconds": 1906.25
+    },
+    {
+      "Seconds": 36.3399499,
+      "PrivateMiB": 153.45,
+      "WorkingSetMiB": 213.7,
+      "CpuMilliseconds": 1906.25
+    },
+    {
+      "Seconds": 38.3601087,
+      "PrivateMiB": 154.56,
+      "WorkingSetMiB": 214.79,
+      "CpuMilliseconds": 1937.5
+    },
+    {
+      "Seconds": 40.3809464,
+      "PrivateMiB": 154.56,
+      "WorkingSetMiB": 214.55,
+      "CpuMilliseconds": 1937.5
+    },
+    {
+      "Seconds": 42.4024507,
+      "PrivateMiB": 154.52,
+      "WorkingSetMiB": 214.53,
+      "CpuMilliseconds": 1937.5
+    },
+    {
+      "Seconds": 44.4241292,
+      "PrivateMiB": 154.52,
+      "WorkingSetMiB": 214.53,
+      "CpuMilliseconds": 1937.5
+    },
+    {
+      "Seconds": 46.449331,
+      "PrivateMiB": 154.52,
+      "WorkingSetMiB": 214.53,
+      "CpuMilliseconds": 1937.5
+    },
+    {
+      "Seconds": 48.4730561,
+      "PrivateMiB": 154.55,
+      "WorkingSetMiB": 214.54,
+      "CpuMilliseconds": 1937.5
+    },
+    {
+      "Seconds": 50.4931667,
+      "PrivateMiB": 154.55,
+      "WorkingSetMiB": 214.54,
+      "CpuMilliseconds": 1937.5
+    },
+    {
+      "Seconds": 52.512256,
+      "PrivateMiB": 154.55,
+      "WorkingSetMiB": 214.54,
+      "CpuMilliseconds": 1953.125
+    },
+    {
+      "Seconds": 54.5353765,
+      "PrivateMiB": 158.23,
+      "WorkingSetMiB": 219.09,
+      "CpuMilliseconds": 2000.0
+    },
+    {
+      "Seconds": 56.5608238,
+      "PrivateMiB": 158.23,
+      "WorkingSetMiB": 219.09,
+      "CpuMilliseconds": 2000.0
+    },
+    {
+      "Seconds": 58.5810487,
+      "PrivateMiB": 158.2,
+      "WorkingSetMiB": 219.07,
+      "CpuMilliseconds": 2000.0
+    },
+    {
+      "Seconds": 60.60636,
+      "PrivateMiB": 158.2,
+      "WorkingSetMiB": 219.07,
+      "CpuMilliseconds": 2000.0
+    }
+  ]
+}

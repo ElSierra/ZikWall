@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>ZikWall.WinUI</RootNamespace>
+    <AssemblyName>ZikWall</AssemblyName>
+    <Product>ZikWall</Product>
+    <Title>ZikWall</Title>
+    <Description>ZikWall Windows 11 firewall UI preview</Description>
+    <ApplicationIcon>Assets\ZikWall.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <NuGetAudit>true</NuGetAudit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="..\..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\UPSTREAM-NOTICES.md" Link="UPSTREAM-NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\ZikWall.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\ZikWall.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\World.svg" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Countries\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Flags\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+  </ItemGroup>
+</Project>

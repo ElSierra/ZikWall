@@ -1,0 +1,24 @@
+{
+  "reviewedAt": "2026-10-12",
+  "simplewall": {
+    "repository": "https://github.com/henrypp/simplewall",
+    "commit": "633e75ca8afe85f13a503c1aced10528f57f24fe"
+  },
+  "routine": {
+    "repository": "https://github.com/henrypp/routine",
+    "commit": "1acd9394395b7cee9e1ea7b985fb54e76be86b11",
+    "archiveSha256": "0A5DBCA837797CF7184440BE8EF4A30E0C09309BBDDEB8B59BBEA7B44493BFA8",
+    "compatibleWithThisCheckout": false,
+    "purpose": "Review input only; not an approved production dependency"
+  },
+  "builder": {
+    "repository": "https://github.com/henrypp/builder",
+    "commit": "74d1faba0a75feda417313909c96b256fae7e79f",
+    "archiveSha256": "C49441E8E10CA40CB65D8786C9217BC053218D6596E6B69561445BF8A56FCC08"
+  },
+  "cppWinRT": {
+    "package": "Microsoft.Windows.CppWinRT",
+    "version": "2.0.230706.1",
+    "packageSha256": "A99ECA1C244DD730B31554E6D4850E685F40BFB7CB0BD1CFB1561169FC3B692B"
+  }
+}

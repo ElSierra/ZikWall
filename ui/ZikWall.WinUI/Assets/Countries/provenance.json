@@ -1,0 +1,22 @@
+{
+  "source": "https://download.db-ip.com/free/dbip-country-lite-2026-10.csv.gz",
+  "sourceSha256": "097426b8ddae89157d444a59ac1847e873f7943c32d52becc4371c8b0273af80",
+  "edition": "2026-10",
+  "license": "CC-BY-4.0",
+  "files": {
+    "ipv4.zwc": {
+      "ranges": 362122,
+      "sha256": "df86fad4521228ced52d701985e838f1f47bde640309906b074d5d2d8fc89dc5",
+      "bytes": 3621228
+    },
+    "ipv6.zwc": {
+      "ranges": 348712,
+      "sha256": "e2d2299a04923c23eb4e1e229f8896366f88650f1d500a202c43754cc1213bb3",
+      "bytes": 11856216
+    },
+    "centroids.json": {
+      "sha256": "55aa362bada3ef3439dfee9920900f85317467e47f789a1cc525d1cfef1242a6",
+      "source": "Natural Earth 5.1.2 admin-0 LABEL_X/Y; public domain; most populous feature per ISO_A2_EH"
+    }
+  }
+}

@@ -1,0 +1,448 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7FB76828-A353-4113-82D7-CD728EED81DF}</ProjectGuid>
+    <RootNamespace>ZikWall</RootNamespace>
+    <ProjectName>ZikWall</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v145</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <TargetName>$(ProjectName)</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\..\routine\src\;.\src\include\;.\src\</IncludePath>
+    <GenerateManifest>false</GenerateManifest>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <OutDir>$(SolutionDir)bin\$(PlatformArchitecture)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <TargetName>$(ProjectName)</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\..\routine\src\;.\src\include\;.\src\</IncludePath>
+    <GenerateManifest>false</GenerateManifest>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <OutDir>$(SolutionDir)bin\$(PlatformArchitecture)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)bin\$(PlatformArchitecture)\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\..\routine\src\;.\src\include\;.\src\</IncludePath>
+    <GenerateManifest>false</GenerateManifest>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)bin\$(PlatformArchitecture)\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\..\routine\src\;.\src\include\;.\src\</IncludePath>
+    <GenerateManifest>false</GenerateManifest>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)bin\$(PlatformArchitecture)\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\..\routine\src\;.\src\include\;.\src\</IncludePath>
+    <GenerateManifest>false</GenerateManifest>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)bin\$(PlatformArchitecture)\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);.\..\routine\src\;.\src\include\;.\src\</IncludePath>
+    <GenerateManifest>false</GenerateManifest>
+    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <CodeAnalysisRuleSet>MixedRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <StringPooling>true</StringPooling>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PreprocessorDefinitions>SECURITY_WIN32;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_NO_GUEST;APP_HAVE_AUTORUN;APP_HAVE_SKIPUAC;APP_HAVE_TRAY;APP_HAVE_SETTINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <SDLCheck>true</SDLCheck>
+      <GuardEHContMetadata>true</GuardEHContMetadata>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <ConformanceMode>true</ConformanceMode>
+      <OmitFramePointers>true</OmitFramePointers>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalOptions>/DEPENDENTLOADFLAG:0x800 /BREPRO %(AdditionalOptions)</AdditionalOptions>
+      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <StringPooling>true</StringPooling>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PreprocessorDefinitions>SECURITY_WIN32;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;;UNICODE;WIN32_LEAN_AND_MEAN;APP_NO_GUEST;APP_HAVE_AUTORUN;APP_HAVE_SKIPUAC;APP_HAVE_TRAY;APP_HAVE_SETTINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <CallingConvention>StdCall</CallingConvention>
+      <SDLCheck>true</SDLCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <ConformanceMode>true</ConformanceMode>
+      <OmitFramePointers>true</OmitFramePointers>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <SubSystem>Windows</SubSystem>
+      <MinimumRequiredVersion>6.1</MinimumRequiredVersion>
+      <AdditionalOptions>/DEPENDENTLOADFLAG:0x800 /BREPRO %(AdditionalOptions)</AdditionalOptions>
+      <CETCompat>true</CETCompat>
+      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <StringPooling>true</StringPooling>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PreprocessorDefinitions>SECURITY_WIN32;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_NO_GUEST;APP_HAVE_AUTORUN;APP_HAVE_SKIPUAC;APP_HAVE_TRAY;APP_HAVE_SETTINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <CallingConvention>StdCall</CallingConvention>
+      <SDLCheck>true</SDLCheck>
+      <GuardEHContMetadata>true</GuardEHContMetadata>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <ConformanceMode>true</ConformanceMode>
+      <OmitFramePointers>true</OmitFramePointers>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalOptions>/DEPENDENTLOADFLAG:0x800 /BREPRO %(AdditionalOptions)</AdditionalOptions>
+      <MinimumRequiredVersion>6.1</MinimumRequiredVersion>
+      <CETCompat>true</CETCompat>
+      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>SECURITY_WIN32;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_NO_GUEST;APP_HAVE_AUTORUN;APP_HAVE_SKIPUAC;APP_HAVE_TRAY;APP_HAVE_SETTINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <SDLCheck>true</SDLCheck>
+      <GuardEHContMetadata>true</GuardEHContMetadata>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <ConformanceMode>true</ConformanceMode>
+      <OmitFramePointers>true</OmitFramePointers>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SetChecksum>true</SetChecksum>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalOptions>/DEPENDENTLOADFLAG:0x800 /BREPRO %(AdditionalOptions)</AdditionalOptions>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>SECURITY_WIN32;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_NO_GUEST;APP_HAVE_AUTORUN;APP_HAVE_SKIPUAC;APP_HAVE_TRAY;APP_HAVE_SETTINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <CallingConvention>StdCall</CallingConvention>
+      <SDLCheck>true</SDLCheck>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <ConformanceMode>true</ConformanceMode>
+      <OmitFramePointers>true</OmitFramePointers>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SetChecksum>true</SetChecksum>
+      <SubSystem>Windows</SubSystem>
+      <MinimumRequiredVersion>6.1</MinimumRequiredVersion>
+      <AdditionalOptions>/DEPENDENTLOADFLAG:0x800 /BREPRO %(AdditionalOptions)</AdditionalOptions>
+      <CETCompat>true</CETCompat>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <ControlFlowGuard>Guard</ControlFlowGuard>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>SECURITY_WIN32;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_NO_GUEST;APP_HAVE_AUTORUN;APP_HAVE_SKIPUAC;APP_HAVE_TRAY;APP_HAVE_SETTINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdclatest</LanguageStandard_C>
+      <CallingConvention>StdCall</CallingConvention>
+      <SDLCheck>true</SDLCheck>
+      <GuardEHContMetadata>true</GuardEHContMetadata>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <ConformanceMode>true</ConformanceMode>
+      <OmitFramePointers>true</OmitFramePointers>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SetChecksum>true</SetChecksum>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalOptions>/DEPENDENTLOADFLAG:0x800 /BREPRO %(AdditionalOptions)</AdditionalOptions>
+      <MinimumRequiredVersion>6.1</MinimumRequiredVersion>
+      <CETCompat>true</CETCompat>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
+      <LargeAddressAware>true</LargeAddressAware>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\routine\src\rapp.c" />
+    <ClCompile Include="..\routine\src\routine.c" />
+    <ClCompile Include="src\controls.c" />
+    <ClCompile Include="src\db.c" />
+    <ClCompile Include="src\editor.c" />
+    <ClCompile Include="src\helper.c" />
+    <ClCompile Include="src\icons.c" />
+    <ClCompile Include="src\listview.c" />
+    <ClCompile Include="src\log.c" />
+    <ClCompile Include="src\main.c" />
+    <ClCompile Include="src\network.c" />
+    <ClCompile Include="src\notifications.c" />
+    <ClCompile Include="src\packages.c" />
+    <ClCompile Include="src\profile.c" />
+    <ClCompile Include="src\search.c" />
+    <ClCompile Include="src\security.c" />
+    <ClCompile Include="src\timer.c" />
+    <ClCompile Include="src\udpstats.c" />
+    <ClCompile Include="src\uwp.cpp" />
+    <ClCompile Include="src\wfp.c" />
+    <ClCompile Include="src\messages.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\routine\src\ntapi.h" />
+    <ClInclude Include="..\routine\src\ntrtl.h" />
+    <ClInclude Include="..\routine\src\rapp.h" />
+    <ClInclude Include="..\routine\src\rconfig.h" />
+    <ClInclude Include="..\routine\src\routine.h" />
+    <ClInclude Include="..\routine\src\rtypes.h" />
+    <ClInclude Include="src\app.h" />
+    <ClInclude Include="src\controls.h" />
+    <ClInclude Include="src\db.h" />
+    <ClInclude Include="src\editor.h" />
+    <ClInclude Include="src\global.h" />
+    <ClInclude Include="src\helper.h" />
+    <ClInclude Include="src\icons.h" />
+    <ClInclude Include="src\listview.h" />
+    <ClInclude Include="src\log.h" />
+    <ClInclude Include="src\main.h" />
+    <ClInclude Include="src\network.h" />
+    <ClInclude Include="src\notifications.h" />
+    <ClInclude Include="src\packages.h" />
+    <ClInclude Include="src\profile.h" />
+    <ClInclude Include="src\resource.h" />
+    <ClInclude Include="src\search.h" />
+    <ClInclude Include="src\security.h" />
+    <ClInclude Include="src\timer.h" />
+    <ClInclude Include="src\udpstats.h" />
+    <ClInclude Include="src\uwp.h" />
+    <ClInclude Include="src\wfp.h" />
+    <ClInclude Include="src\messages.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+  </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
+    <Error Condition="!Exists('packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Microsoft.Windows.CppWinRT.2.0.230706.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+  </Target>
+</Project>

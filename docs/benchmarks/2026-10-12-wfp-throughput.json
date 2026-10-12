@@ -1,0 +1,242 @@
+{
+  "TimestampUtc": "2026-10-12T14:36:01.7478849+00:00",
+  "Completed": true,
+  "ThroughputBudgetPassed": true,
+  "Scenario": "IPv4 TCP loopback; two-second unidirectional transfers with fresh connections; five alternating off/on pairs per rule count; production broker; no saved policy; no Internet or disk transfer",
+  "Interpretation": "Off means zero ZikWall filters with Windows Firewall unchanged. On includes a matching permit and a verified guard block. A median paired ratio below 0.95 flags investigation; passing does not prove zero overhead, Internet/VPN speed, UDP/IPv6 throughput or monitoring/ETW overhead.",
+  "AssemblySha256": "64A9B6B45FCE5DE99086DB14639E4959B81210EF8F1F2E8F23B6D1D8635B85E3",
+  "Port": 12196,
+  "GuardPort": 12197,
+  "CleanupVerified": true,
+  "Checks": [
+    "Unfiltered guard-port baseline connected",
+    "Production unelevated client/elevated broker connected",
+    "2-rule policy accepted and guard block verified",
+    "1000-rule policy accepted and guard block verified",
+    "Empty policy restored guard connection",
+    "Broker disconnected; loopback connectivity remains available"
+  ],
+  "Comparisons": [
+    {
+      "Rules": 2,
+      "CompletePairs": 5,
+      "OffMedianMbps": 4301.982036352937,
+      "OnMedianMbps": 4919.4444199455,
+      "MedianPairedRatio": 1.1239082124017736,
+      "MinimumPairedRatio": 0.8126269445468217,
+      "MaximumPairedRatio": 1.5120886011686732
+    },
+    {
+      "Rules": 1000,
+      "CompletePairs": 5,
+      "OffMedianMbps": 3942.1484668439525,
+      "OnMedianMbps": 4530.451779112703,
+      "MedianPairedRatio": 1.116158349992331,
+      "MinimumPairedRatio": 0.8529718234919709,
+      "MaximumPairedRatio": 2.3010431394999613
+    }
+  ],
+  "Samples": [
+    {
+      "Pair": 0,
+      "State": "off",
+      "Rules": 2,
+      "Mbps": 4355.992442404027,
+      "ConnectMs": 1.4355,
+      "Bytes": 1089142784,
+      "Seconds": 2.0002657,
+      "CpuMs": 3296.875
+    },
+    {
+      "Pair": 0,
+      "State": "on",
+      "Rules": 2,
+      "Mbps": 5958.579496426544,
+      "ConnectMs": 1.0489,
+      "Bytes": 1489829888,
+      "Seconds": 2.0002484,
+      "CpuMs": 3093.75
+    },
+    {
+      "Pair": 1,
+      "State": "on",
+      "Rules": 2,
+      "Mbps": 4919.4444199455,
+      "ConnectMs": 0.6689,
+      "Bytes": 1229914112,
+      "Seconds": 2.0000862,
+      "CpuMs": 3171.875
+    },
+    {
+      "Pair": 1,
+      "State": "off",
+      "Rules": 2,
+      "Mbps": 6053.754989245318,
+      "ConnectMs": 0.6585,
+      "Bytes": 1513553920,
+      "Seconds": 2.0001522,
+      "CpuMs": 3078.125
+    },
+    {
+      "Pair": 2,
+      "State": "off",
+      "Rules": 2,
+      "Mbps": 3469.8351352948457,
+      "ConnectMs": 0.608,
+      "Bytes": 867565568,
+      "Seconds": 2.0002462,
+      "CpuMs": 3015.625
+    },
+    {
+      "Pair": 2,
+      "State": "on",
+      "Rules": 2,
+      "Mbps": 3319.6694521641607,
+      "ConnectMs": 0.7616,
+      "Bytes": 829947904,
+      "Seconds": 2.0000736,
+      "CpuMs": 2875
+    },
+    {
+      "Pair": 3,
+      "State": "on",
+      "Rules": 2,
+      "Mbps": 4835.032940261972,
+      "ConnectMs": 0.8926,
+      "Bytes": 1208877056,
+      "Seconds": 2.0001966,
+      "CpuMs": 3062.5
+    },
+    {
+      "Pair": 3,
+      "State": "off",
+      "Rules": 2,
+      "Mbps": 4301.982036352937,
+      "ConnectMs": 0.8016,
+      "Bytes": 1075642368,
+      "Seconds": 2.0002731,
+      "CpuMs": 3390.625
+    },
+    {
+      "Pair": 4,
+      "State": "off",
+      "Rules": 2,
+      "Mbps": 3427.176887680215,
+      "ConnectMs": 0.851,
+      "Bytes": 856883200,
+      "Seconds": 2.0002077,
+      "CpuMs": 2765.625
+    },
+    {
+      "Pair": 4,
+      "State": "on",
+      "Rules": 2,
+      "Mbps": 5182.195106049983,
+      "ConnectMs": 0.8159,
+      "Bytes": 1295646720,
+      "Seconds": 2.0001512,
+      "CpuMs": 3328.125
+    },
+    {
+      "Pair": 0,
+      "State": "off",
+      "Rules": 1000,
+      "Mbps": 5215.128804166339,
+      "ConnectMs": 0.8309,
+      "Bytes": 1303838720,
+      "Seconds": 2.0000867,
+      "CpuMs": 3328.125
+    },
+    {
+      "Pair": 0,
+      "State": "on",
+      "Rules": 1000,
+      "Mbps": 4448.357925835264,
+      "ConnectMs": 1.2436,
+      "Bytes": 1112145920,
+      "Seconds": 2.0001015,
+      "CpuMs": 3140.625
+    },
+    {
+      "Pair": 1,
+      "State": "on",
+      "Rules": 1000,
+      "Mbps": 4989.64134988504,
+      "ConnectMs": 0.9576,
+      "Bytes": 1247477760,
+      "Seconds": 2.0001081,
+      "CpuMs": 3234.375
+    },
+    {
+      "Pair": 1,
+      "State": "off",
+      "Rules": 1000,
+      "Mbps": 5006.200832962517,
+      "ConnectMs": 0.7407,
+      "Bytes": 1251606528,
+      "Seconds": 2.00009,
+      "CpuMs": 3421.875
+    },
+    {
+      "Pair": 2,
+      "State": "off",
+      "Rules": 1000,
+      "Mbps": 3942.1484668439525,
+      "ConnectMs": 0.842,
+      "Bytes": 985595904,
+      "Seconds": 2.0001193,
+      "CpuMs": 2906.25
+    },
+    {
+      "Pair": 2,
+      "State": "on",
+      "Rules": 1000,
+      "Mbps": 4581.580642155123,
+      "ConnectMs": 0.8209,
+      "Bytes": 1145503744,
+      "Seconds": 2.0001896,
+      "CpuMs": 3203.125
+    },
+    {
+      "Pair": 3,
+      "State": "on",
+      "Rules": 1000,
+      "Mbps": 2787.7845846857117,
+      "ConnectMs": 1.3362,
+      "Bytes": 697040896,
+      "Seconds": 2.0002719,
+      "CpuMs": 2671.875
+    },
+    {
+      "Pair": 3,
+      "State": "off",
+      "Rules": 1000,
+      "Mbps": 2497.6604661022034,
+      "ConnectMs": 1.1537,
+      "Bytes": 624492544,
+      "Seconds": 2.000248,
+      "CpuMs": 2765.625
+    },
+    {
+      "Pair": 4,
+      "State": "off",
+      "Rules": 1000,
+      "Mbps": 1968.8686845294058,
+      "ConnectMs": 0.9648,
+      "Bytes": 492240896,
+      "Seconds": 2.0000964,
+      "CpuMs": 2796.875
+    },
+    {
+      "Pair": 4,
+      "State": "on",
+      "Rules": 1000,
+      "Mbps": 4530.451779112703,
+      "ConnectMs": 1.0289,
+      "Bytes": 1132724224,
+      "Seconds": 2.0001965,
+      "CpuMs": 3453.125
+    }
+  ],
+  "Failure": null
+}
