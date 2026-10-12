@@ -1,10 +1,69 @@
-<UserControl x:Class="ZikWall.WinUI.GeoView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:models="using:ZikWall.WinUI.Models" xmlns:presentation="using:ZikWall.WinUI.Presentation">
+<UserControl x:Class="ZikWall.WinUI.GeoView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:models="using:ZikWall.WinUI.Models" xmlns:presentation="using:ZikWall.WinUI.Presentation" xmlns:local="using:ZikWall.WinUI">
+    <UserControl.Resources>
+        <Style x:Key="SecondaryText" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+            <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+        </Style>
+        <!-- Map markers: a plain dot sized by remote IP count. Selection changes the fill. -->
+        <Style x:Key="MarkerStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="BorderBrush" Value="White" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+                <Grid><Ellipse Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1" /><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></Grid>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style>
+    </UserControl.Resources>
     <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
-        <Grid ColumnDefinitions="*,260" ColumnSpacing="12"><StackPanel><TextBlock x:Name="GeoStatus" Text="Waiting for connections…" /><TextBlock Text="Offline country estimates · select a marker to see apps and IPs" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel><ComboBox x:Name="CountryPicker" Grid.Column="1" PlaceholderText="Select a country" DisplayMemberPath="Label" SelectionChanged="CountrySelected" HorizontalAlignment="Stretch" /></Grid>
-        <Grid Grid.Row="1" ColumnDefinitions="*,320" ColumnSpacing="12">
-            <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="12"><Viewbox Stretch="Uniform"><Grid Width="720" Height="360"><Image Opacity="0.55"><Image.Source><SvgImageSource UriSource="ms-appx:///Assets/World.svg" /></Image.Source></Image><Canvas x:Name="Markers" /></Grid></Viewbox></Border>
-            <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="12"><Grid RowDefinitions="Auto,*"><TextBlock x:Name="DestinationTitle" Text="Select a country" FontWeight="SemiBold" Margin="0,0,0,10" /><ListView x:Name="Destinations" Grid.Row="1" SelectionMode="None" HorizontalContentAlignment="Stretch"><ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions><ListView.ItemTemplate><DataTemplate x:DataType="models:ConnectionEntry"><Grid ColumnDefinitions="32,*" ColumnSpacing="8" Padding="0,6"><presentation:AppIcon Executable="{x:Bind ProcessPath}" /><StackPanel Grid.Column="1"><TextBlock Text="{x:Bind Application}" /><TextBlock Text="{x:Bind RemoteEndpoint}" IsTextSelectionEnabled="True" FontSize="12" /><TextBlock Text="{x:Bind DirectionLabel}" FontSize="12" /><TextBlock Text="{x:Bind ProcessLabel}" FontSize="12" TextTrimming="CharacterEllipsis" /></StackPanel></Grid></DataTemplate></ListView.ItemTemplate></ListView></Grid></Border>
+        <StackPanel Spacing="2">
+            <TextBlock x:Name="GeoStatus" Text="Waiting for connections…" Style="{StaticResource BodyStrongTextBlockStyle}" />
+            <TextBlock Text="Live Internet connections by approximate country. Select a dot or a country to see apps and IP addresses." Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+        </StackPanel>
+        <Grid x:Name="MapLayout" Grid.Row="1" ColumnDefinitions="*,340" RowDefinitions="*,0" ColumnSpacing="12" SizeChanged="LayoutChanged">
+            <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
+                <Viewbox Stretch="Uniform"><Grid Width="720" Height="360"><Image Opacity="0.45"><Image.Source><SvgImageSource UriSource="ms-appx:///Assets/World.svg" /></Image.Source></Image><Canvas x:Name="Markers" /></Grid></Viewbox>
+            </Border>
+            <Border x:Name="SidePanel" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Padding="12,12,12,10" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                        <Button x:Name="BackButton" Click="BackClicked" Visibility="Collapsed" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" VerticalAlignment="Center" ToolTipService.ToolTip="All countries (Esc)" AutomationProperties.Name="Back to all countries">
+                            <FontIcon Glyph="&#xE72B;" FontSize="14" />
+                            <Button.KeyboardAccelerators><KeyboardAccelerator Key="Escape" /></Button.KeyboardAccelerators>
+                        </Button>
+                        <Image x:Name="SelectedFlag" Grid.Column="1" Width="24" Height="18" VerticalAlignment="Center" Visibility="Collapsed" />
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <TextBlock x:Name="DestinationTitle" Text="Countries" Style="{StaticResource BodyStrongTextBlockStyle}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock x:Name="DestinationSubtitle" Text="Most remote IPs first" Style="{StaticResource SecondaryText}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
+                    <ListView x:Name="CountryList" Grid.Row="1" SelectionMode="None" IsItemClickEnabled="True" ItemClick="CountryClicked" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Countries with live connections">
+                        <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
+                        <ListView.ItemTemplate><DataTemplate x:DataType="local:CountryRow"><Grid Padding="0,8" ColumnDefinitions="28,*,Auto" ColumnSpacing="10" RowDefinitions="Auto,Auto" AutomationProperties.Name="{x:Bind Label}">
+                            <Image Grid.RowSpan="2" Source="{x:Bind Flag}" Width="22" Height="16" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1"><TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{x:Bind AppsLabel}" Style="{StaticResource SecondaryText}" /></StackPanel>
+                            <TextBlock Grid.Column="2" Text="{x:Bind IpsLabel}" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" />
+                            <ProgressBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Value="{x:Bind Share}" Maximum="1" Margin="0,6,0,0" IsHitTestVisible="False" />
+                        </Grid></DataTemplate></ListView.ItemTemplate>
+                    </ListView>
+                    <ListView x:Name="Destinations" Grid.Row="1" SelectionMode="None" HorizontalContentAlignment="Stretch" Visibility="Collapsed" AutomationProperties.Name="Connections in the selected country">
+                        <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
+                        <ListView.ItemTemplate><DataTemplate x:DataType="models:ConnectionEntry"><Grid ColumnDefinitions="32,*" ColumnSpacing="10" Padding="0,8">
+                            <presentation:AppIcon Executable="{x:Bind ProcessPath}" VerticalAlignment="Top" />
+                            <StackPanel Grid.Column="1" Spacing="1">
+                                <TextBlock Text="{x:Bind Application}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind ProcessLabel}" />
+                                <TextBlock Text="{x:Bind RemoteEndpoint}" IsTextSelectionEnabled="True" Style="{StaticResource CaptionTextBlockStyle}" />
+                                <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="{x:Bind presentation:Ui.DirectionGlyph(Direction)}" FontSize="11" Foreground="{x:Bind presentation:Ui.DirectionBrush(Direction)}" /><TextBlock Text="{x:Bind Direction}" Style="{StaticResource SecondaryText}" /><TextBlock Text="{x:Bind State}" Style="{StaticResource SecondaryText}" /></StackPanel>
+                            </StackPanel>
+                        </Grid></DataTemplate></ListView.ItemTemplate>
+                    </ListView>
+                    <StackPanel x:Name="EmptyCountries" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="24">
+                        <FontIcon Glyph="&#xE909;" FontSize="28" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock Text="No located Internet connections yet" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Style="{StaticResource SecondaryText}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
         </Grid>
-        <TextBlock Grid.Row="2" Text="Markers show approximate country centers, not server or city locations. VPNs and shared hosting affect accuracy. Country data: DB-IP (CC BY 4.0). Map and positions: Natural Earth (public domain)." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+        <TextBlock Grid.Row="2" Text="Dots mark approximate country centers, not server or city locations. VPNs and shared hosting affect accuracy. Country data: DB-IP (CC BY 4.0). Map and positions: Natural Earth (public domain)." Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
     </Grid>
 </UserControl>

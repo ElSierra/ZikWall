@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Data;
+using Polyline = Microsoft.UI.Xaml.Shapes.Polyline;
 using ZikWall.WinUI.Models;
 using ZikWall.WinUI.Services;
 using Windows.Storage.Pickers;
@@ -34,6 +35,9 @@ public sealed partial class MonitoringView : UserControl
     private bool updatingAdapters;
     private List<ConnectionEntry>? displayedConnections;
     private readonly ActivityTree activityTree = new();
+    // Connections first seen in the latest snapshot; empty for the baseline snapshot.
+    private HashSet<string> fresh = [];
+    private bool baselineTaken;
     private bool pageActive = true, background;
     public void SetBackground(bool value) { if (background == value) return; background = value; UpdateInterval(); }
     private bool WindowMinimized => background || Owner?.AppWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter { State: Microsoft.UI.Windowing.OverlappedPresenterState.Minimized };
@@ -66,6 +70,7 @@ public sealed partial class MonitoringView : UserControl
     public MonitoringView()
     {
         InitializeComponent();
+        UpdateSelectionActions();
         desktopNotifications.Invoked = () => DispatcherQueue.TryEnqueue(() => { if (Owner is MainWindow main) main.ShowFromTray(); else Owner?.Activate(); });
         timer.Tick += async (_, _) => await CaptureAsync();
         usageTimer.Tick += async (_, _) => await CaptureUsageAsync();
@@ -116,12 +121,15 @@ public sealed partial class MonitoringView : UserControl
             SnapshotChanged?.Invoke(current);
             var observed = connections.Observe(current, now);
             archive.Events.AddRange(observed);
+            var nextFresh = baselineTaken ? observed.Where(x => x.Event == "First seen").Select(x => x.Connection.Key).ToHashSet() : [];
+            bool freshChanged = fresh.Count > 0 || nextFresh.Count > 0;
+            fresh = nextFresh; baselineTaken = true;
             if (recent.Observe(observed, now, RecentAlerts.IsOn || DesktopAlerts.IsOn) is { } batch)
             {
                 var first = batch.Connections[0];
                 string message = $"{first.Application} · {first.Direction} · {first.RemoteEndpoint} · {first.CountryLabel}";
                 if (batch.Count > 1) message += $" · +{batch.Count - 1} more (see Activity)";
-                RecentBanner.Title = "Recent connections";
+                RecentBanner.Title = "New connections";
                 RecentBanner.Severity = InfoBarSeverity.Informational;
                 RecentBanner.Message = message;
                 RecentBanner.IsOpen = RecentAlerts.IsOn;
@@ -144,14 +152,17 @@ public sealed partial class MonitoringView : UserControl
                     try
                     {
                         AdapterChoice.ItemsSource = snapshot.Counters;
-                        AdapterChoice.SelectedItem = snapshot.Counters.FirstOrDefault(x => x.Id == adapterId) ?? snapshot.Counters.FirstOrDefault();
+                        // Default to the busiest adapter rather than whichever Windows lists first.
+                        AdapterChoice.SelectedItem = snapshot.Counters.FirstOrDefault(x => x.Id == adapterId) ?? snapshot.Counters.MaxBy(x => x.Received + x.Sent);
                     }
                     finally { updatingAdapters = false; }
                 }
-                UpdateLists(false);
+                UpdateLists(freshChanged);
                 DrawTraffic();
+                if (new Windows.UI.ViewManagement.UISettings().AnimationsEnabled) ((Microsoft.UI.Xaml.Media.Animation.Storyboard)Resources["LivePulse"]).Begin();
             }
-            MonitorStatus.Text = $"{current.Count} endpoints · {archive.Events.Count} history events · Updated {now.ToLocalTime():T}\n{enrichment?.CountryDataStatus}";
+            MonitorStatus.Text = $"Updated {now.ToLocalTime():T} · {current.Count} endpoints · {archive.Events.Count} history events";
+            CountryDataStatus.Text = enrichment?.CountryDataStatus ?? "";
             if (SaveHistory.IsOn && now - lastSaved > TimeSpan.FromSeconds(15)) await PersistAsync();
         }
         catch (Exception ex) when (ex is IOException or Win32Exception or UnauthorizedAccessException or System.Net.NetworkInformation.NetworkInformationException)
@@ -163,6 +174,7 @@ public sealed partial class MonitoringView : UserControl
     {
         if (ConnectionList is null || HistoryList is null || GroupChoice is null || HistoryWindow is null) return;
         string query = MonitorSearch.Text ?? "";
+        if (force || !ReferenceEquals(displayedConnections, current)) UpdateStats(query);
         if (history)
         {
             var selectedEvent = HistoryList.SelectedItem as ConnectionEvent;
@@ -170,15 +182,61 @@ public sealed partial class MonitoringView : UserControl
             var events = archive.Events.Where(x => x.Time >= since && MatchesFilters(x.Connection, query)).Reverse().ToList();
             HistoryList.ItemsSource = events;
             HistoryList.SelectedItem = events.Contains(selectedEvent!) ? selectedEvent : null;
+            ShowEmpty(events.Count == 0, "No activity in this range", query.Length > 0 ? "Try another search, filter or range." : "New, changed and closed connections appear here as they happen.");
             return;
         }
         if (!force && ReferenceEquals(displayedConnections, current)) return;
         displayedConnections = current;
         string? selected = (ConnectionList.SelectedItem as ActivityRow)?.Key;
         var visible = current.Where(x => MatchesFilters(x, query)).ToList();
-        activityTree.Update(visible, GroupChoice.SelectedIndex == 1, key => usage.Labels(key, usageClient?.Connected == true, DateOnly.FromDateTime(DateTime.Now)));
+        activityTree.Update(visible, GroupChoice.SelectedIndex == 1, UsageLabels, fresh);
         if (!ReferenceEquals(ConnectionList.ItemsSource, activityTree.Rows)) ConnectionList.ItemsSource = activityTree.Rows;
         ConnectionList.SelectedItem = activityTree.Rows.FirstOrDefault(x => x.Key == selected);
+        ShowEmpty(visible.Count == 0, CaptureCount == 0 ? "Reading Windows connection tables…" : "No matching connections",
+            CaptureCount == 0 ? "" : query.Length > 0 ? "Try another search or filter." : "Change the filter to include local and listening endpoints.");
+    }
+    // Usage labels stay empty until usage is collected; the Options flyout explains how.
+    private (string Rate, string Total) UsageLabels(string key)
+    {
+        bool active = usageClient?.Connected == true;
+        var (rate, total) = usage.Labels(key, active, DateOnly.FromDateTime(DateTime.Now));
+        return (active && rate != "—" ? rate : "", total == "No usage recorded" ? "" : total);
+    }
+    private void UpdateStats(string query)
+    {
+        int shown = 0;
+        var apps = new HashSet<string>(StringComparer.Ordinal);
+        var countries = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var entry in current)
+        {
+            if (!MatchesFilters(entry, query)) continue;
+            shown++; apps.Add(entry.AppKey);
+            if (entry.CountryCode.Length == 2) countries.Add(entry.CountryCode);
+        }
+        StatApps.Text = CaptureCount == 0 ? "—" : apps.Count.ToString("N0");
+        StatConnections.Text = CaptureCount == 0 ? "—" : shown.ToString("N0");
+        StatCountries.Text = CaptureCount == 0 ? "—" : countries.Count.ToString("N0");
+    }
+    private void ShowEmpty(bool empty, string title, string hint)
+    {
+        EmptyList.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
+        if (!empty) return;
+        EmptyTitle.Text = title; EmptyHint.Text = hint;
+        EmptyHint.Visibility = hint.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+    private void SelectionChanged(object sender, SelectionChangedEventArgs args) => UpdateSelectionActions();
+    private void UpdateSelectionActions()
+    {
+        bool any = SelectedActionRow() is not null;
+        DetailsButton.IsEnabled = any; BlockButton.IsEnabled = any;
+    }
+    private void SetLive(bool live)
+    {
+        LiveDot.Fill = live ? Presentation.Ui.Active : Presentation.Ui.Idle;
+        LiveText.Text = live ? "Live" : "Paused";
+        string tip = live ? "Pause live updates" : "Resume live updates";
+        ToolTipService.SetToolTip(PauseButton, tip);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PauseButton, tip);
     }
 
     private async void AllUsageClicked(object sender, RoutedEventArgs args)
@@ -260,8 +318,8 @@ public sealed partial class MonitoringView : UserControl
     private void MonitorOptionsChanged(object sender, SelectionChangedEventArgs args) { if (ConnectionList is null || HistoryList is null) return; UpdateLists(); DrawTraffic(); }
     private void PauseClicked(object sender, RoutedEventArgs args)
     {
-        if (timer.IsEnabled) { timer.Stop(); PauseButton.Content = "Resume"; MonitorStatus.Text = "Paused · displayed connections are a snapshot."; }
-        else { connections.Reset(); recent.ResetBaseline(); traffic.Reset(); timer.Start(); PauseButton.Content = "Pause"; _ = CaptureAsync(); }
+        if (timer.IsEnabled) { timer.Stop(); SetLive(false); MonitorStatus.Text = "Paused · displayed connections are a snapshot."; }
+        else { connections.Reset(); recent.ResetBaseline(); traffic.Reset(); baselineTaken = false; fresh = []; timer.Start(); SetLive(true); _ = CaptureAsync(); }
     }
     private Task PersistAsync()
     {
@@ -281,7 +339,7 @@ public sealed partial class MonitoringView : UserControl
     {
         var dialog = new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Clear local activity?", Content = "This removes the displayed activity and the saved ZikWall activity file on this PC.", PrimaryButtonText = "Clear", CloseButtonText = "Cancel" };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
-        try { store.Clear(); archive = new([], []); connections.Reset(); recent.ResetBaseline(); traffic.Reset(); UpdateLists(); DrawTraffic(); MonitorStatus.Text = "Local activity cleared."; }
+        try { store.Clear(); archive = new([], []); connections.Reset(); recent.ResetBaseline(); traffic.Reset(); baselineTaken = false; fresh = []; UpdateLists(); DrawTraffic(); MonitorStatus.Text = "Local activity cleared."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { MonitorStatus.Text = ex.Message; }
     }
     private async void DetailsClicked(object sender, RoutedEventArgs args) => await RunRowActionAsync(() => ShowDetailsAsync(SelectedActionRow()));
@@ -347,23 +405,37 @@ public sealed partial class MonitoringView : UserControl
     private void ChartSizeChanged(object sender, SizeChangedEventArgs args) => DrawTraffic();
     private void DrawTraffic()
     {
-        if (TrafficChart is null || DownloadLine is null || MonitorOptions?.IsOpen != true) return;
-        string? id = (AdapterChoice.SelectedItem as AdapterCounters)?.Id;
+        if (TrafficChart is null || Sparkline is null) return;
+        var adapter = AdapterChoice.SelectedItem as AdapterCounters;
+        string? id = adapter?.Id;
+        var recentSamples = archive.Traffic.Where(x => x.AdapterId == id).TakeLast(60).ToList();
+        TrafficAdapter.Text = adapter?.Name ?? "Network traffic";
+        ToolTipService.SetToolTip(TrafficAdapter, adapter is null ? null : $"{adapter.Name} · whole-adapter totals. Change the adapter in Options.");
+        if (recentSamples.LastOrDefault() is { } latest) { RateDown.Text = TrafficSample.Rate(latest.Download); RateUp.Text = TrafficSample.Rate(latest.Upload); }
+        else RateDown.Text = RateUp.Text = "—";
+        Plot(recentSamples, Sparkline, SparkDown, SparkUp);
+        if (MonitorOptions?.IsOpen != true) return;
         var since = HistorySince();
         var samples = archive.Traffic.Where(x => x.AdapterId == id && x.Time >= since).ToList();
         // Bucket older samples instead of dropping the requested history window. Preserve peaks.
         int bucket = Math.Max(1, (int)Math.Ceiling(samples.Count / 120.0));
         var points = samples.Chunk(bucket).Select(x => new TrafficSample(x[0].Time, x[0].AdapterId, x[0].AdapterName, x.Max(s => s.Download), x.Max(s => s.Upload))).ToList();
+        double peak = Plot(points, TrafficChart, DownloadLine, UploadLine);
+        ChartScale.Text = $"Peak {TrafficSample.Rate(peak)} · {samples.Count} samples" + (samples.Count > 1 ? $" · {samples[0].Time.ToLocalTime():g} – {samples[^1].Time.ToLocalTime():t}" : "");
+    }
+    // Scales both series to a shared peak and fits them to the canvas; returns that peak.
+    private static double Plot(IReadOnlyList<TrafficSample> points, Canvas canvas, Polyline download, Polyline upload)
+    {
         double peak = Math.Max(1, points.Select(x => Math.Max(x.Download, x.Upload)).DefaultIfEmpty().Max());
+        double width = Math.Max(0, canvas.ActualWidth), span = canvas.Height - 4;
+        double seconds = points.Count > 1 ? Math.Max(1, (points[^1].Time - points[0].Time).TotalSeconds) : 1;
         var down = new PointCollection(); var up = new PointCollection();
-        for (int i = 0; i < points.Count; i++)
+        foreach (var point in points)
         {
-            double seconds = Math.Max(1, (points[^1].Time - points[0].Time).TotalSeconds);
-            double x = (points[i].Time - points[0].Time).TotalSeconds * Math.Max(0, TrafficChart.ActualWidth) / seconds;
-            down.Add(new Point(x, 105 - points[i].Download / peak * 100)); up.Add(new Point(x, 105 - points[i].Upload / peak * 100));
+            double x = (point.Time - points[0].Time).TotalSeconds * width / seconds;
+            down.Add(new Point(x, 2 + span - point.Download / peak * span)); up.Add(new Point(x, 2 + span - point.Upload / peak * span));
         }
-        DownloadLine.Points = down; UploadLine.Points = up;
-        TrafficRates.Text = samples.LastOrDefault() is { } latest ? $"↓ {TrafficSample.Rate(latest.Download)}   ↑ {TrafficSample.Rate(latest.Upload)}" : "Waiting for traffic samples…";
-        ChartScale.Text = $"Peak {TrafficSample.Rate(peak)} · {samples.Count} retained samples" + (samples.Count > 1 ? $"\n{samples[0].Time.ToLocalTime():g} – {samples[^1].Time.ToLocalTime():g}" : "");
+        download.Points = down; upload.Points = up;
+        return peak;
     }
 }
