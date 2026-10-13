@@ -1,0 +1,4 @@
+{
+  "Xml": "\u003Ctoast duration=\u0022short\u0022\u003E\u003Cvisual\u003E\u003Cbinding template=\u0022ToastGeneric\u0022\u003E\u003Ctext\u003EFirst network activity\u003C/text\u003E\u003Ctext hint-maxLines=\u00221\u0022\u003EZikWall\u003C/text\u003E\u003Ctext hint-maxLines=\u00221\u0022\u003E1.1.1.1\u003C/text\u003E\u003Cimage placement=\u0022appLogoOverride\u0022 src=\u0022file:///F:/Projects/simplewall/artifacts/ZikWall/Assets/Flags/au.svg\u0022 alt=\u0022Australia (approx.)\u0022/\u003E\u003C/binding\u003E\u003C/visual\u003E\u003Caudio silent=\u0022true\u0022/\u003E\u003C/toast\u003E",
+  "Submitted": true
+}

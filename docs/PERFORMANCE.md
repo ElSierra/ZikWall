@@ -1,5 +1,312 @@
 # ZikWall performance and resource budgets
 
+## Foreground refresh and hostname-cache fixes, 13 October 2026
+
+The fixed foreground build passed the existing **2% of one core / 200 MiB private
+memory** budgets: **1.205% CPU and 175.58 MiB peak private memory** over 181.56
+seconds after a 15-second warmup. CPU is normalized to one logical core, not the
+entire 28-thread machine. The measured assembly SHA-256 is
+`7297E21CBB6DBEA50E78D51A393564EF4AD620F5735DF792EF56825382932D54`.
+
+The same build passed the 60.56-second hidden-window confirmation after a
+10-second warmup: **0.851% of one core, 138.45 MiB peak private memory**, and
+3.62 MiB private growth. Window invisibility was checked at every sample.
+[Final background report](benchmarks/2026-10-13-hostnames-background-final.json)
+contains the matching assembly hash and raw samples.
+
+App and process rows now retain their identity across changes to host names,
+socket counts, flags and status. Property notifications update the displayed
+cells, and sorting/insertion moves surviving rows instead of rebuilding their
+native controls. Host details use one popup created on first use and cleared on
+close. The Live indicator stays steady; the former 600 ms opacity animation
+ran after every refresh. Sampling pointed to native UI/WinRT object work rather
+than a large managed hostname-processing hot spot; managed sampling alone does
+not identify native CPU stacks.
+
+Unopened Activity and Log Analysis views are created on first navigation, and
+host cells notify their individual displayed properties so socket-count changes
+do not replace an unchanged flag source. The final memory fix gives the small
+monitor flags explicit **64 by 48 pixel SVG rasters**, preserving their displayed
+20 by 15 DIP size and country selection while bounding native image surfaces.
+
+| Sequential foreground experiment | CPU, one core | Peak private | Result |
+| --- | ---: | ---: | --- |
+| Shared lazy popup only | 26.066% | 376.74 MiB | Did not solve the failure |
+| Preserve rows and notify cells | 5.414% | 191.32 MiB | Memory passed; CPU exceeded |
+| Also remove periodic Live animation | 1.444% | 188.40 MiB | Both passed |
+| Final, including bounded flag rasters (181.56 s) | 1.205% | 175.58 MiB | Both passed |
+
+The first three used a 10-second warmup and 60-second measurement with normal host
+traffic and capture off. These are changing live workloads, not identical network
+replays; the table establishes the observed budget results, not an exact causal
+speedup for each individual change. There was no concurrent build, benchmark,
+forced collection or working-set trimming. The final three-minute run grew
+14.02 MiB during measurement, so it is not evidence of a permanent memory plateau.
+
+Regression checks cover retained row identity, updated host/flag properties and
+surviving rows after removal. The native check verifies an unchanged container
+while a host label changes, correct popup contents on reuse and released contents
+after closing. Native churn also passed 500 updates.
+
+[Popup-only experiment](benchmarks/2026-10-13-hostnames-foreground-lazy-flyout.json) ·
+[Incremental rows](benchmarks/2026-10-13-hostnames-foreground-incremental.json) ·
+[First passing short run](benchmarks/2026-10-13-hostnames-foreground-fixed.json) ·
+[Final three-minute foreground](benchmarks/2026-10-13-hostnames-foreground-bounded-flags.json)
+
+The first longer run held CPU at 1.418% but exceeded memory at 207.43 MiB.
+Deferring the unopened Activity and Log Analysis views did not by itself resolve
+the limit: that subsequent live workload reached 259.36 MiB. Precise host-field
+notifications then held CPU to 1.204% over 181.62 seconds, but peaked at
+239.30 MiB private memory. These failed longer runs are preserved rather than
+discarded. The final native-image check also asserts that a socket-count change
+does not replace the existing flag source.
+
+[First longer run](benchmarks/2026-10-13-hostnames-foreground-fixed-long.json) ·
+[Deferred pages](benchmarks/2026-10-13-hostnames-foreground-lazy-pages.json) ·
+[Precise host-field bindings](benchmarks/2026-10-13-hostnames-foreground-stable-images.json)
+
+The DNS cache now maintains one expiration index entry and one recency node per
+live address/name pair. Renewals replace their existing deadline; expiration and
+TTL-zero deletion remove both indexes. Capacity eviction no longer scans all
+8,192 entries for every new name. The fixed deterministic suite passes 269
+passive-DNS checks, including expiration before valid-entry eviction, renewed
+names and tied timestamps.
+
+| Cache workload | Original median / p95 | Fixed median / p95 |
+| --- | ---: | ---: |
+| Insert 256 new names at full capacity | 54.7721 / 57.0830 ms | 0.2553 / 0.2927 ms |
+| Read 2,048 IPs from full cache | 0.4071 / 0.4714 ms | 0.3439 / 0.4286 ms |
+| Parse/cache 10,000 repeated replies | 6.3293 / 6.6790 ms | 9.5818 / 12.7743 ms |
+
+Full-cache insertion is approximately 215 times faster in these synthetic runs,
+allocating 632 bytes/name instead of 888. Retained managed memory increases from
+1.41 to 2.16 MiB for the two indexes. Repeated-response parsing/cache updates were
+slower in the later run, as was unchanged parser-only code (4.0536 to 5.5272 ms
+per 10,000 replies); the table does not claim every operation improved. Warmup,
+fixture sizes and exclusions match the original passive-DNS benchmark below.
+
+[Fixed cache measurements](benchmarks/2026-10-13-passive-dns-core-fixed.json)
+
+The final general suite measured compact notification formatting at **0.0074 ms
+median / 0.0084 ms p95** (2,241 allocated bytes), 10,000 cached hostname reads at
+0.2873 ms median, and grouping 10,000 connections into 100 apps at 8.6245 ms
+median / 13.3040 ms p95. [Final core results](benchmarks/2026-10-13-hostnames-core-final.json)
+include the remaining workloads. An initial sandboxed attempt could not read
+Windows endpoint tables; the completed run used normal host access.
+
+### Completed production capture benchmark
+
+The corrected diagnostic completed all phases with **20 valid replies from 20
+queries, zero timeouts, 20 polls matching the observed test hostname, and verified
+trace/helper cleanup**. Final capture status reported 153 DNS reply observations,
+zero lost events and zero unsupported packets. Startup took 1,835.4 ms; hint IPC
+was 0.7437 ms median / 10.9784 ms p95 across 41 reads. Public DNS round trips were
+191.4 ms median / 619.8 ms p95; those are network timings, not parser latency.
+
+| Capture phase | Duration | Helpers' CPU, one core | Helpers' sum of private peaks | All tracked processes' CPU / sum of private peaks |
+| --- | ---: | ---: | ---: | ---: |
+| Off, diagnostic host only | 30.57 s | Not running | Not running | 1.1244% / 68.48 MiB |
+| On, ambient traffic | 41.68 s | 0.4124% | 115.48 MiB | 3.8614% / 187.26 MiB |
+| On, 20 paced DNS questions | 47.49 s | 0.3619% | 115.49 MiB | 3.4217% / 190.93 MiB |
+
+The PowerShell capture controller accounts for most helper memory: 96.83 MiB
+peak in the ambient phase versus the broker's 18.64 MiB. Its measured steady CPU
+was below process-timer resolution. The diagnostic host creates no window and
+runs no ordinary monitor; it polls the real authenticated broker. Its CPU and
+memory are included in the rightmost column, so helper-only figures must not be
+presented as total capture overhead. These process measurements exclude
+kernel/system-wide ETW work in other processes. The enabled helpers are additional
+to the normal UI footprint; the 200 MiB monitor budget above applies with optional
+capture off. Sums of per-process memory peaks need not be simultaneous peaks.
+
+Capture phases ran sequentially after the foreground benchmark, with no other
+benchmark or build in progress. Queries used a unique test name under sslip.io
+through 1.1.1.1, paced by two one-second delays plus reply/IPC time; no catch-up
+bursts or retries. This is a low-rate integration/resource test, not a maximum
+throughput, encrypted-DNS, VPN or multi-hour leak test. The UI hash matches the
+final foreground run; broker and engine hashes are also recorded.
+
+[Completed capture report and raw process samples](benchmarks/2026-10-13-domain-capture-resources.json)
+
+## Initial passive-hostname and compact-notification measurements, 13 October 2026
+
+**Background monitoring passed; foreground monitoring exceeded the CPU budget.**
+These Release x64 measurements ran sequentially on Windows 11 build 28120,
+Intel Core i7-14700HX (28 logical processors), 47.8 GiB RAM. CPU below uses
+**one logical core = 100%**. The existing monitor budgets are 2% CPU and
+200 MiB peak private memory. No build or other benchmark ran concurrently.
+
+| Normal Connections page | Warmup / measured | Average CPU | Peak private | Budget result |
+| --- | ---: | ---: | ---: | --- |
+| Foreground | 10 s / 60.53 s | 14.300% | 300.94 MiB | CPU and memory exceeded |
+| Foreground, longer warmup | 60 s / 60.51 s | 4.467% | 199.79 MiB | CPU exceeded |
+| Hidden, background monitoring | 10 s / 60.51 s | 0.620% | 137.70 MiB | Passed |
+
+Capture, usage collection, filtering, DNS proxy and desktop alerts were off in
+these whole-app runs. Foreground CPU remained above target after the longer
+warmup; the cause has not been isolated. The longer-warmup run had -0.60 MiB
+private-memory growth, versus +116.75 MiB in the first run and +2.62 MiB in the
+background run. These short, changing live workloads do not prove leak freedom
+or establish a controlled before/after regression. The background window was
+verified hidden during every sample.
+
+[Foreground](benchmarks/2026-10-13-hostnames-foreground.json) ·
+[Foreground, longer warmup](benchmarks/2026-10-13-hostnames-foreground-warm.json) ·
+[Background](benchmarks/2026-10-13-hostnames-background.json)
+
+### Initial capture resources: partial result
+
+The first live run completed its 30-second capture-off and 40-second ambient
+capture phases. The following figures are from the completed ambient phase,
+with hostname polling every two seconds:
+
+| Process | CPU, one core | Peak private memory |
+| --- | ---: | ---: |
+| DNS broker | 0.3513% | 17.68 MiB |
+| PowerShell capture controller | 0.0390% | 84.74 MiB |
+| Helpers combined | 0.3903% | 102.42 MiB (sum of peaks) |
+| App and helpers combined | 5.4250% | 295.27 MiB (sum of peaks) |
+
+The controller accounts for most helper memory. These are process counters;
+they exclude ETW kernel/system-wide costs in other processes. Summed individual
+memory peaks need not occur simultaneously. The app's ordinary monitoring was
+still running in this attempt, despite its original "inactive UI shell" label;
+its CPU was 4.6824% with capture off and 5.0347% with capture on. This is not a
+controlled measurement of total capture overhead.
+
+Startup took 1,278.5 ms. Hint IPC measured 0.6736 ms median / 2.7315 ms p95 across
+24 reads. The subsequent paced-query phase aborted when the fifth public DNS
+request exceeded its five-second receive timeout: four valid replies out of five
+attempts. It therefore **does not supply a completed 20-query load result**.
+At the final status read, capture reported 171 DNS reply observations and zero
+lost events. The trace and helper cleanup checks passed for this attempt.
+
+The harness was revised to record query timeouts and continue all 20 attempts.
+A second attempt then exceeded its 300-second deadline without writing samples
+or starting a capture broker. It awaited monitor pause before window activation;
+the exact blocking cause was not traced. The diagnostic was moved ahead of
+window creation and rebuilt successfully (zero warnings/errors). The initial
+cleanup elevation was canceled; the task-owned process was subsequently stopped
+and its exit verified before the performance-fix measurements above. No capture
+broker was present when the stalled process was inspected.
+
+[Preserved partial run](benchmarks/2026-10-13-domain-capture-resources-interrupted.json) ·
+[Timed-out attempt](benchmarks/2026-10-13-domain-capture-resources-timeout.json)
+
+Whole-app resource reports use assembly hash `EEE62B3A...039B9`; the partial
+capture report uses `568369F0...57E57`. The diagnostic-only correction compiled
+to `artifacts/DomainBenchmark` with hash `3AD657B9...BEDE4`; it has not been
+measured. Full hashes are in the raw reports or can be computed from the build.
+
+### Parser, cache and notification costs
+
+| Synthetic workload | Median / p95 per measured batch | Allocation |
+| --- | ---: | ---: |
+| Reject 1,000,000 non-DNS UDP frames | 9.2792 / 10.0124 ms | Effectively zero per frame |
+| Parse 10,000 Ethernet/IPv4 DNS replies | 4.0536 / 4.3456 ms | 1,632 bytes/reply |
+| Parse and cache 10,000 repeated replies | 6.3293 / 6.6790 ms | 2,056 bytes/reply |
+| Read 2,048 IPs from a full 8,192-entry cache | 0.4071 / 0.4714 ms | 517,974 bytes/read |
+| Insert 256 new names into a full cache | 54.7721 / 57.0830 ms | 888 bytes/name |
+| Format one compact notification with bundled flag | 0.0072 / 0.0086 ms | 2,240 bytes/notification |
+| Find 10,000 cached hostname hints | 0.3750 / 0.5149 ms | 11 bytes/batch |
+| Group 10,000 connections into 100 apps | 8.6675 / 11.7418 ms | 7,786,687 bytes/batch |
+
+The full hostname cache retained approximately **1.41 MiB of managed memory**.
+Full-cache insertion is the notable stress bottleneck: **0.214 ms per new name**,
+because eviction scans the bounded dictionary for expired entries and the oldest
+entry. Repeated-name parsing plus updates cost about **0.633 microseconds per
+reply** in the small fixture. These are separate workloads, not a capacity claim.
+
+The new passive-DNS suite warms each case for at least one second and collects
+garbage before measurement; the existing general suite uses five warmup calls.
+Parser fixtures send no traffic and exclude native capture callbacks, Windows
+ETW, broker IPC and rendering. Allocation counts are per calling thread and
+include small harness overhead. Notification timing measures formatting and
+local flag selection, excluding Windows toast submission and display.
+
+The general suite also measured live endpoint capture at 21.3315 ms median,
+live enrichment at 0.7296 ms median, and 1,000 local blocked UDP DNS round trips
+at 0.0426 ms median / 0.0733 ms p95. The Windows cache-provider scan was skipped
+in that non-administrator run. Historical notification formatting was
+0.0123 ms median / 2,601 bytes, while historical 10,000-hint lookup was
+0.1858 ms median; neither timing difference is a controlled speedup/regression
+measurement.
+
+[Passive DNS microbenchmarks](benchmarks/2026-10-13-passive-dns-core.json) ·
+[General core benchmarks](benchmarks/2026-10-13-hostnames-notifications-core.json)
+
+### Reproduce these measurements
+
+Build first with `tools/build-winui.ps1`, then run each command separately:
+
+```powershell
+dotnet run --project tests\ZikWall.Benchmarks -c Release -- artifacts\benchmarks\core.json
+dotnet run --project tests\ZikWall.Benchmarks -c Release -- artifacts\benchmarks\passive-dns.json --passive-dns-only
+.\tools\benchmark-app.ps1 -Label foreground -DurationSeconds 60 -OutputPath artifacts\benchmarks\foreground.json
+.\tools\benchmark-app.ps1 -Label foreground-warm -WarmupSeconds 60 -DurationSeconds 60 -OutputPath artifacts\benchmarks\foreground-warm.json
+.\tools\benchmark-app.ps1 -Label background -Background -DurationSeconds 60 -OutputPath artifacts\benchmarks\background.json
+.\tools\benchmark-domain-capture.ps1 -OutputPath artifacts\benchmarks\capture.json
+```
+
+The capture command requests administrator elevation, sends 20 paced DNS
+questions to 1.1.1.1 for a unique benchmark hostname under sslip.io, records
+five-second receive timeouts without retries, and verifies helper/trace cleanup.
+It uses the production capture path in a diagnostic process without a window
+or ordinary monitoring. It does not alter rules or saved settings. Add `-EnforceBudgets` to
+the app commands when a budget exceedance should fail the command.
+
+## Notification type controls and policy alignment, 13 October 2026
+
+The final installer for notification preferences and responsive policy controls
+passed a 60.66-second hidden-window run at **0.824% of one core** and
+**139.41 MiB peak private memory**, within the existing resource budgets. The
+new-app filter processed 10,000 events in **0.646 ms median**; local blocked DNS
+round trips measured **0.0684 ms median**. See the
+[validation report](NOTIFICATION-SETTINGS-VALIDATION.md) for scenarios, limits,
+before/after raw measurements and the verified installer assembly hash.
+
+## Event notifications, 13 October 2026
+
+Connection alerts now describe the observed event and include an offline country
+flag, remote IP/port and an available cached hostname. Formatting runs only when
+the existing bounded batch flushes (at most once per 30 seconds). It performs no
+network lookup, flag download, runtime image conversion or per-endpoint UI work.
+
+| Hidden-window monitoring | Before | Updated |
+| --- | ---: | ---: |
+| Measurement after 10-second warmup | 60.62 s | 60.57 s |
+| Average CPU (one logical core = 100%) | 0.825% | 0.567% |
+| Peak private memory | 138.11 MiB | 135.54 MiB |
+| Peak working set | 195.55 MiB | 195.17 MiB |
+| Private-memory growth during measurement | 4.09 MiB | 5.86 MiB |
+
+Both passed the enforced 2%-of-one-core / 200 MiB private-memory budgets. No
+performance fix was warranted by these measurements. These runs use changing
+host traffic, so the difference is not evidence of a speedup. Monitoring samples
+every 15 seconds while hidden; filtering, DNS, ETW collection and desktop alerts
+were off. They do not establish enabled-collector overhead, toast compositor
+cost or multi-hour memory stability. No build or other benchmark ran alongside
+either resource measurement. Windows 11 build 28120, i7-14700HX, 28 logical
+processors, 47.8 GiB RAM; assembly hashes are recorded in the reports.
+
+The new production notification formatter (including local flag selection and
+XML escaping) measured **0.0103 ms median / 0.0133 ms p95**, allocating **2,602
+bytes per batch**, across 1,000 warmed iterations. This excludes Windows toast
+submission. The core before/after runs also completed all existing workloads,
+including live endpoint capture and 1,000 local blocked DNS round trips.
+
+Validation: 312 model/service checks, 500 native list-churn updates, every flag
+decoded, native toast submission and XAML rendering, and native context-menu,
+usage, system-app and preference checks passed. The first Options-popup check
+found a missing presenter; an isolated rerun passed all three widths. No app
+change was made for that unreproduced diagnostic failure. Desktop toast
+appearance was not independently captured.
+
+[Background before](benchmarks/2026-10-13-notifications-before.json) ·
+[Background after](benchmarks/2026-10-13-notifications-after.json) ·
+[Core before](benchmarks/2026-10-13-notifications-core-before.json) ·
+[Core after](benchmarks/2026-10-13-notifications-core-after.json)
+
 ## Sortable usage column, 13 October 2026
 
 Connections now shows a sortable **Usage today** column while collection is

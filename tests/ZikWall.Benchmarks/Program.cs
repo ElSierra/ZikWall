@@ -10,6 +10,7 @@ using ZikWall.WinUI.Services;
 // No test framework/package, real firewall changes, public requests or user-data writes.
 string output = args.FirstOrDefault() ?? "artifacts/benchmarks/core.json";
 if (args.Contains("--usage-only")) { UsageBenchmarks.Run(output); return; }
+if (args.Contains("--passive-dns-only")) { PassiveDnsBenchmarks.Run(output); return; }
 var results = new List<object>();
 using var benchmarkProcess = Process.GetCurrentProcess();
 object? keepAlive = null;
@@ -36,6 +37,16 @@ void Measure(string name, int iterations, Func<object?> operation)
 var now = DateTimeOffset.UtcNow;
 var rows = Enumerable.Range(0, 10000).Select(i => new ConnectionEntry("TCPv4", "127.0.0.1", i + 1000, "192.0.2.1", 443, i % 100, "Established", "fixture", @"C:\Tests\fixture.exe")).ToArray();
 var groupedRows = rows.Select((x, i) => x with { ProcessPath = $@"C:\Tests\app{i % 100}.exe", ProcessName = $"App {i % 100}" }).ToArray();
+var alertEvents = groupedRows.Select(x => new ConnectionEvent(now, "First seen", x with { NetworkScope = "Internet", Direction = "Outgoing" })).ToArray();
+foreach (var type in Enum.GetValues<ConnectionNotificationType>())
+{
+    var alerts = new RecentConnections();
+    alerts.Observe([], now, true, type: type);
+    Measure($"Filter 10,000 connection events ({type})", 100, () => alerts.Observe(alertEvents, now.AddSeconds(1), true, type: type));
+}
+var notificationBatch = new RecentConnectionBatch([rows[0] with { CountryCode = "US", CountryName = "United States", Direction = "Outgoing", DomainHint = "example.com" }], 10000);
+string notificationAssets = Path.GetFullPath("ui/ZikWall.WinUI/Assets");
+Measure("Format batched connection notification with local flag", 1000, () => ConnectionNotification.From(notificationBatch).ToToastXml(notificationAssets));
 using var domainHints = new CachedDomainHints(_ => [new("192.0.2.1", "www.example.com", 60)], () => 0);
 domainHints.RequestRefresh(rows, false); await domainHints.Pending;
 Measure("Find 10,000 cached domain hints", 100, () =>

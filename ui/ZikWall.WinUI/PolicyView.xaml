@@ -3,7 +3,21 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="16">
         <InfoBar x:Name="PolicyStatus" IsOpen="True" IsClosable="False" Severity="Informational" Title="Filtering is off" Message="Saved rules are inactive until you enable filtering and approve Windows elevation." />
         <StackPanel Grid.Row="1" Spacing="12">
-            <Grid ColumnDefinitions="250,*,Auto" ColumnSpacing="12"><ComboBox x:Name="ProfileChoice" Header="Policy profile" DisplayMemberPath="Name" HorizontalAlignment="Stretch" SelectionChanged="ProfileChanged" /><StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom"><Button Content="New profile" Click="NewProfileClicked" /><Button Content="Associate network" Click="AssociateClicked" /><ToggleSwitch x:Name="AutoSwitch" Header="Switch by network" Toggled="AutoSwitchChanged" /></StackPanel><Button x:Name="FilteringButton" Grid.Column="2" Content="Enable filtering…" VerticalAlignment="Bottom" Click="FilteringClicked" Style="{ThemeResource AccentButtonStyle}" /></Grid>
+            <Grid x:Name="ProfileControls" ColumnDefinitions="250,Auto,*,Auto" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="12" SizeChanged="ProfileControlsSizeChanged">
+                <StackPanel x:Name="ProfileSelector" Spacing="8" VerticalAlignment="Bottom">
+                    <TextBlock Text="Policy profile" />
+                    <ComboBox x:Name="ProfileChoice" DisplayMemberPath="Name" HorizontalAlignment="Stretch" SelectionChanged="ProfileChanged" AutomationProperties.Name="Policy profile" />
+                </StackPanel>
+                <StackPanel x:Name="ProfileActions" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+                    <Button Content="New profile" Click="NewProfileClicked" VerticalAlignment="Bottom" />
+                    <Button Content="Associate network" Click="AssociateClicked" VerticalAlignment="Bottom" />
+                </StackPanel>
+                <StackPanel x:Name="NetworkSwitchGroup" Grid.Column="2" Spacing="8" VerticalAlignment="Bottom">
+                    <TextBlock Text="Switch by network" />
+                    <ToggleSwitch x:Name="AutoSwitch" MinHeight="32" Height="32" Toggled="AutoSwitchChanged" AutomationProperties.Name="Switch by network" />
+                </StackPanel>
+                <Button x:Name="FilteringButton" Grid.Column="3" Content="Enable filtering…" VerticalAlignment="Bottom" Click="FilteringClicked" Style="{ThemeResource AccentButtonStyle}" />
+            </Grid>
             <TextBlock x:Name="NetworkLabel" Text="No network association" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
             <TextBlock Text="First matching rule wins within ZikWall. Other firewall providers can still block traffic. Rules apply only while the broker is running; closing ZikWall removes its session filters." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel>

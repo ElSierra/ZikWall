@@ -5,13 +5,15 @@ namespace ZikWall.WinUI.Services;
 public sealed record MonitorPreferences(bool HideWindowsSystemApps = false,
     int Group = 0, int Direction = 0, int Scope = 1, int Refresh = 1, int HistoryRange = 0,
     bool RecentAlerts = true, bool DesktopAlerts = false, bool SaveHistory = false,
-    string? AdapterId = null, int UsageSort = 0, bool UsageCollection = false, bool DomainAccess = false, bool TcpDetails = false)
+    string? AdapterId = null, int UsageSort = 0, bool UsageCollection = false, bool DomainAccess = false, bool TcpDetails = false,
+    int NotificationType = 0, bool ReverseDns = false)
 {
     public MonitorPreferences Validated() => this with
     {
         Group = ValidIndex(Group, 1, 0), Direction = ValidIndex(Direction, 2, 0),
         Scope = ValidIndex(Scope, 2, 1), Refresh = ValidIndex(Refresh, 2, 1),
-        HistoryRange = ValidIndex(HistoryRange, 2, 0), UsageSort = ValidIndex(UsageSort, 2, 0)
+        HistoryRange = ValidIndex(HistoryRange, 2, 0), UsageSort = ValidIndex(UsageSort, 2, 0),
+        NotificationType = ValidIndex(NotificationType, 3, 0)
     };
     private static int ValidIndex(int value, int max, int fallback) => value >= 0 && value <= max ? value : fallback;
 }

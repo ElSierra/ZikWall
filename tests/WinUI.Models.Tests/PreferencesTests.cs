@@ -20,9 +20,14 @@ static class PreferencesTests
             var changed = new MonitorPreferences(true, 1, 2, 0, 2, 2, false, true, true, "fixture-adapter", 2, true, true);
             store.Save(changed);
             Check(new MonitorPreferencesStore(directory).Load() == changed, "All monitor choices must survive another version/store instance.");
+            foreach (int type in Enumerable.Range(0, 4))
+            {
+                store.Save(changed with { NotificationType = type });
+                Check(new MonitorPreferencesStore(directory).Load().NotificationType == type, "Notification types must survive restart.");
+            }
             store.Save(changed with { HideWindowsSystemApps = false });
             Check(store.Load() == changed with { HideWindowsSystemApps = false }, "Changing one toggle must retain all other choices.");
-            File.WriteAllText(path, "{\"Group\":-1,\"Refresh\":99,\"Scope\":99,\"UsageSort\":99}");
+            File.WriteAllText(path, "{\"Group\":-1,\"Refresh\":99,\"Scope\":99,\"UsageSort\":99,\"NotificationType\":99}");
             Check(store.Load() == new MonitorPreferences(), "Unknown choice indexes must fall back to valid UI defaults.");
 
             var themePanel = new AppearancePreferencesStore(directory);

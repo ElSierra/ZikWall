@@ -7,6 +7,8 @@ namespace ZikWall.WinUI;
 
 public sealed partial class MainWindow : Window
 {
+    private ActivityOverviewView? ActivityPanel;
+    private LogAnalysisView? LogPanel;
     internal Task ExerciseMonitorAsync() => MonitorPanel.ExerciseRowsAsync();
     internal Task ExerciseMonitorOptionsAsync() => MonitorPanel.ExerciseOptionsAsync();
     internal Task ExerciseUsageViewAsync(bool benchmark) => MonitorPanel.ExerciseUsageViewAsync(benchmark);
@@ -73,6 +75,7 @@ public sealed partial class MainWindow : Window
         MonitorPanel.Owner = this;
         GeoPanel.Owner = this;
         MonitorPanel.SnapshotChanged += GeoPanel.UpdateConnections;
+        MonitorPanel.ActivityOverviewChanged += () => { if (ActivityPanel is { Visibility: Visibility.Visible }) MonitorPanel.UpdateOverview(ActivityPanel); };
         MonitorPanel.BlockRequested = plan => PolicyPanel.BlockFromMonitorAsync(plan);
         MonitorPanel.ManageRulesRequested += () => Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "policy");
         PolicyPanel.Owner = this;
@@ -151,7 +154,7 @@ public sealed partial class MainWindow : Window
         if (!ready) return;
         view = args.IsSettingsSelected ? "settings" : (args.SelectedItem as NavigationViewItem)?.Tag?.ToString() ?? "all";
         PageTitle.Text = args.IsSettingsSelected ? "Settings" : (args.SelectedItem as NavigationViewItem)?.Content?.ToString() ?? "All entries";
-        bool monitor = view is "connections" or "activity";
+        bool monitor = view is "connections" or "activity" or "logs";
         PageSubtitle.Visibility = monitor || view == "map" ? Visibility.Collapsed : Visibility.Visible;
         bool settings = view == "settings";
         bool policy = view == "policy";
@@ -161,8 +164,23 @@ public sealed partial class MainWindow : Window
         RuleWorkspace.Visibility = monitor || settings || policy || privacy || map ? Visibility.Collapsed : Visibility.Visible;
         RuleToolbar.Visibility = monitor || settings || policy || privacy || map ? Visibility.Collapsed : Visibility.Visible;
         Search.Visibility = monitor || settings || policy || privacy || map ? Visibility.Collapsed : Visibility.Visible;
-        MonitorPanel.Visibility = monitor ? Visibility.Visible : Visibility.Collapsed;
-        if (monitor) MonitorPanel.Show(view == "activity");
+        MonitorPanel.Visibility = view == "connections" ? Visibility.Visible : Visibility.Collapsed;
+        // Keep unopened analysis pages out of the monitor's startup footprint.
+        if (view == "activity" && ActivityPanel is null)
+        {
+            ActivityPanel = new();
+            ActivityHost.Content = ActivityPanel;
+            ActivityPanel.EnableUsageRequested = MonitorPanel.EnableOverviewUsageAsync;
+            ActivityPanel.ConnectionsRequested += () => Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "connections");
+        }
+        if (view == "logs" && LogPanel is null) { LogPanel = new(); LogHost.Content = LogPanel; LogPanel.Connect(MonitorPanel); }
+        ActivityHost.Visibility = view == "activity" ? Visibility.Visible : Visibility.Collapsed;
+        LogHost.Visibility = view == "logs" ? Visibility.Visible : Visibility.Collapsed;
+        if (ActivityPanel is not null) ActivityPanel.Visibility = view == "activity" ? Visibility.Visible : Visibility.Collapsed;
+        if (LogPanel is not null) LogPanel.Visibility = view == "logs" ? Visibility.Visible : Visibility.Collapsed;
+        if (monitor) MonitorPanel.Show(false);
+        if (view == "logs") LogPanel?.Show();
+        if (view == "activity" && ActivityPanel is { } activity) { MonitorPanel.UpdateOverview(activity); activity.Show(); }
         ModeBanner.Visibility = monitor || policy || privacy || map || settings ? Visibility.Collapsed : Visibility.Visible;
         PolicyPanel.Visibility = policy ? Visibility.Visible : Visibility.Collapsed;
         if (policy) PolicyPanel.Show();

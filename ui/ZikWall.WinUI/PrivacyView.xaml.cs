@@ -29,10 +29,10 @@ public sealed partial class PrivacyView : UserControl
     public void Show()
     {
         if (loaded) return; loaded = true;
-        try { settings = store.Load(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status(ex.Message, true); }
+        try { settings = store.Load(); } catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status(ex.Message, true); }
         if (!diagnostic)
             try { var saved = preferencesStore.Load(); DnsEndpoint.Text = saved.DnsEndpoint; BootstrapAddress.Text = saved.BootstrapAddress; }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status($"Could not load DNS preferences: {ex.Message}", true); }
+            catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status($"Could not load DNS preferences: {ex.Message}", true); }
         Refresh(); timer.Start();
     }
     public void Stop() { SaveDnsPreferences(); closed = true; timer.Stop(); proxy?.Dispose(); proxy = null; }
@@ -41,7 +41,7 @@ public sealed partial class PrivacyView : UserControl
     {
         if (!loaded || diagnostic) return;
         try { preferencesStore.Update(value => value with { DnsEndpoint = DnsEndpoint.Text.Trim(), BootstrapAddress = BootstrapAddress.Text.Trim() }); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status($"DNS choices could not be saved: {ex.Message}", true); }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status($"DNS choices could not be saved: {ex.Message}", true); }
     }
     private void Refresh()
     {
@@ -87,7 +87,7 @@ public sealed partial class PrivacyView : UserControl
             Save(settings with { Subscriptions = [.. settings.Subscriptions, subscription] });
             Status($"Added {subscription.Data.Domains.Count} domains and {subscription.Data.Networks.Count} IP networks; {subscription.Data.UnsupportedLines} unsupported lines skipped.");
         }
-        catch (Exception ex) when (ex is IOException or HttpRequestException or OperationCanceledException or UnauthorizedAccessException or System.Text.DecoderFallbackException) { Status(ex.Message, true); }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or HttpRequestException or OperationCanceledException or UnauthorizedAccessException or System.Text.DecoderFallbackException) { Status(ex.Message, true); }
         finally { downloading = false; }
     }
     private async void RefreshClicked(object sender, RoutedEventArgs args) => await RefreshListsAsync();
@@ -106,7 +106,7 @@ public sealed partial class PrivacyView : UserControl
                     if (settings.Subscriptions.All(x => x.Id != item.Id)) continue;
                     Save(settings with { Subscriptions = settings.Subscriptions.Select(x => x.Id == item.Id ? next : x).ToList() }); updated++;
                 }
-                catch (Exception ex) when (ex is IOException or HttpRequestException or OperationCanceledException or UnauthorizedAccessException or System.Text.DecoderFallbackException) { errors.Add($"{item.Name}: {ex.Message}"); }
+                catch (Exception ex) when (ex is InvalidDataException or IOException or HttpRequestException or OperationCanceledException or UnauthorizedAccessException or System.Text.DecoderFallbackException) { errors.Add($"{item.Name}: {ex.Message}"); }
             }
             Status($"Refreshed {updated} lists. Previous data retained for failures. " + string.Join("; ", errors), errors.Count > 0);
         }
@@ -116,13 +116,13 @@ public sealed partial class PrivacyView : UserControl
     {
         if (Subscriptions.SelectedItem is not BlocklistSubscription item) return;
         try { Save(settings with { Subscriptions = settings.Subscriptions.Where(x => x.Id != item.Id).ToList() }); Status("Subscription removed. Copied IP policy rules are separate and remain until you remove them."); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Status(ex.Message, true); }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException) { Status(ex.Message, true); }
     }
     private void AutomaticChanged(object sender, RoutedEventArgs args)
     {
         if (!loaded || refreshing) return;
         try { Save(settings with { AutomaticUpdates = AutomaticUpdates.IsChecked == true }); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Status(ex.Message, true); }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException) { Status(ex.Message, true); }
     }
     private void ExceptionsClicked(object sender, RoutedEventArgs args)
     {
@@ -131,7 +131,7 @@ public sealed partial class PrivacyView : UserControl
             var domains = Exceptions.Text.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries).Select(x => BlocklistParser.Domain(x) ?? throw new InvalidDataException($"Invalid domain: {x}")).Distinct().ToList();
             Save(settings with { AllowedDomains = domains }); Status("Domain exceptions saved.");
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Status(ex.Message, true); }
+        catch (Exception ex) when (ex is InvalidDataException or IOException or UnauthorizedAccessException) { Status(ex.Message, true); }
     }
     private void CopyIpsClicked(object sender, RoutedEventArgs args)
     {

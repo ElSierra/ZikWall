@@ -6,6 +6,6 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <PropertyGroup><OutDir>$(ProjectDir)..\..\temp\engine\</OutDir><IntDir>$(ProjectDir)..\..\temp\engine\obj\</IntDir></PropertyGroup>
   <ItemDefinitionGroup><ClCompile><WarningLevel>Level4</WarningLevel><TreatWarningAsError>true</TreatWarningAsError><LanguageStandard>stdcpp20</LanguageStandard><RuntimeLibrary>MultiThreaded</RuntimeLibrary><Optimization>MaxSpeed</Optimization><SDLCheck>true</SDLCheck><ControlFlowGuard>Guard</ControlFlowGuard><PreprocessorDefinitions>UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile><Link><AdditionalDependencies>fwpuclnt.lib;ws2_32.lib;advapi32.lib;ole32.lib;%(AdditionalDependencies)</AdditionalDependencies><SubSystem>Windows</SubSystem><DataExecutionPrevention>true</DataExecutionPrevention><RandomizedBaseAddress>true</RandomizedBaseAddress><ControlFlowGuard>Guard</ControlFlowGuard></Link></ItemDefinitionGroup>
-  <ItemGroup><ClCompile Include="engine.cpp" /><ClCompile Include="usage.cpp" /></ItemGroup>
+  <ItemGroup><ClCompile Include="engine.cpp" /><ClCompile Include="usage.cpp" /><ClCompile Include="dns.cpp" /></ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

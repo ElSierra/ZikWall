@@ -22,7 +22,7 @@ try
     if (!PipeSecurityNative.GetNamedPipeClientProcessId(pipe.SafePipeHandle, out uint clientId) || clientId != parentId) return;
     if (args.Length == 4)
     {
-        // A separate read-only session: never creates a WFP engine or ETW trace.
+        // A separate observation session: passive DNS capture, no WFP engine or rule changes.
         await DomainCacheSession.RunAsync(pipe, parent);
         return;
     }

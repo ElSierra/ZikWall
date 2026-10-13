@@ -31,7 +31,11 @@ internal static class MonitorSelfTest
                 notifications.Enable();
                 results["WindowsNotificationsRegistered"] = true;
                 // Silent, explicitly labeled test of the requested Windows notifications.
-                notifications.Show("Notification test: ZikWall can report newly observed Internet connections here.");
+                var sample = new Models.ConnectionEntry("TCPv6", "::1", 50000, "2001:db8::1", 443, 1,
+                    "Established", "Example browser", Direction: "Outgoing", CountryCode: "US", CountryName: "United States", NetworkScope: "Internet");
+                var message = Models.ConnectionNotification.From(new([sample], 1, Models.ConnectionNotificationType.NewApps));
+                results["NotificationXml"] = message.ToToastXml(Path.Combine(AppContext.BaseDirectory, "Assets"));
+                notifications.Show(message with { Title = "Notification test: " + message.Title });
                 results["WindowsNotificationSubmitted"] = true;
             }
             var bitmap = new RenderTargetBitmap();

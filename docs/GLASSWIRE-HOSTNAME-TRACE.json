@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-13T15:03:56.395094Z",
+  "glasswire_version": "3.10.1138.0",
+  "service_sha256": "e13893ac68ccdcc48840193793384b200398c94cf9af47106e4fd038cb893095",
+  "driver_sha256": "b4dc2ba0e2a8a35711815f94a583ef2f7cf9c46a901542e5eaa04f2fe96a74b3",
+  "rea_revision": "30e9b83a68c4729745ca6413ea306dbffb30f07a",
+  "rea_local_patch": "JadxAnalysis.ts normalizes optional direct_invokes_exhaustive to null",
+  "evidence_id": "ev_bb520f05d871ae3f8e06183ca79e53210f9ac89b928877537831244b48a85895",
+  "probe": {
+    "token": "rea-mv6t90tb",
+    "domain": "rea-mv6t90tb.1-0-0-1.sslip.io",
+    "testAddress": "1.0.0.1",
+    "candidateCounts": [
+      {
+        "ip": "1.0.0.1",
+        "count": 0
+      },
+      {
+        "ip": "9.9.9.9",
+        "count": 0
+      },
+      {
+        "ip": "8.8.4.4",
+        "count": 0
+      },
+      {
+        "ip": "149.112.112.112",
+        "count": 0
+      }
+    ],
+    "before": [],
+    "probes": [
+      {
+        "server": "192.168.1.1",
+        "time": "2026-10-13T15:03:13.485Z",
+        "answers": [
+          "1.0.0.1"
+        ]
+      },
+      {
+        "server": "1.1.1.1",
+        "time": "2026-10-13T15:03:13.977Z",
+        "answers": [
+          "1.0.0.1"
+        ]
+      }
+    ],
+    "tcp_connected": true,
+    "cli_exit": 0,
+    "after": [
+      {
+        "address_hex": "08011081808008",
+        "hostname": "rea-mv6t90tb.1-0-0-1.sslip.io",
+        "type": 1
+      }
+    ]
+  },
+  "observations": [
+    {
+      "time": "2026-10-13T15:03:10.611Z",
+      "event": "ready",
+      "pid": 6544,
+      "marker": "rea-mv6t90tb"
+    },
+    {
+      "time": "2026-10-13T15:03:10.824Z",
+      "event": "device",
+      "name": "\\Device\\GlassWireGeneric",
+      "code": "0x126006",
+      "size": 1048576,
+      "stack": [
+        "KERNELBASE.dll+0x26cf0",
+        "KERNEL32.DLL+0x26734",
+        "GWCtlSrv.exe+0x10690e2",
+        "GWCtlSrv.exe+0x105fa8b",
+        "GWCtlSrv.exe+0x1061352",
+        "GWCtlSrv.exe+0x1049fb5",
+        "GWCtlSrv.exe+0x59c843",
+        "GWCtlSrv.exe+0x14ef872",
+        "ucrtbase.dll+0x47730",
+        "KERNEL32.DLL+0x313d3",
+        "ntdll.dll+0x87570"
+      ]
+    },
+    {
+      "time": "2026-10-13T15:03:10.825Z",
+      "event": "io_status",
+      "status": 259
+    },
+    {
+      "time": "2026-10-13T15:03:13.971Z",
+      "event": "driver_buffer_previous",
+      "marker": "rea-mv6t90tb",
+      "offset": 97,
+      "length": 1048576,
+      "device": "\\Device\\GlassWireGeneric",
+      "dns_question": "rea-mv6t90tb.1-0-0-1.sslip.io",
+      "dns_response": true,
+      "answer_type": "A",
+      "answer_address": "1.0.0.1",
+      "ttl": 3600,
+      "stack": [
+        "KERNELBASE.dll+0x26cf0",
+        "KERNEL32.DLL+0x26734",
+        "GWCtlSrv.exe+0x10690e2",
+        "GWCtlSrv.exe+0x105fa8b",
+        "GWCtlSrv.exe+0x1061352",
+        "GWCtlSrv.exe+0x1049fb5",
+        "GWCtlSrv.exe+0x59c843",
+        "GWCtlSrv.exe+0x14ef872",
+        "ucrtbase.dll+0x47730",
+        "KERNEL32.DLL+0x313d3",
+        "ntdll.dll+0x87570"
+      ]
+    },
+    {
+      "time": "2026-10-13T15:03:38.72Z",
+      "event": "cache_page_marker",
+      "marker": "rea-mv6t90tb",
+      "offset": 2323,
+      "length": 4096,
+      "stack": [
+        "KERNELBASE.dll+0x2623a",
+        "GWCtlSrv.exe+0x10782e2",
+        "GWCtlSrv.exe+0x11105ac",
+        "GWCtlSrv.exe+0x11104f6",
+        "GWCtlSrv.exe+0x10fc9b9",
+        "GWCtlSrv.exe+0x10a6d65",
+        "GWCtlSrv.exe+0x10d9610",
+        "GWCtlSrv.exe+0x10bc8ba",
+        "GWCtlSrv.exe+0x1109a6d",
+        "GWCtlSrv.exe+0x10f677c",
+        "GWCtlSrv.exe+0x10f3cdf",
+        "GWCtlSrv.exe+0x10e7e8f",
+        "GWCtlSrv.exe+0x106c93a",
+        "GWCtlSrv.exe+0x107fb8d",
+        "GWCtlSrv.exe+0x86bf77",
+        "GWCtlSrv.exe+0x86bb75"
+      ]
+    }
+  ],
+  "reverse_lookup_setting": "NslookupEnabled = false",
+  "cleanup_error": null,
+  "service_state_after": "Running",
+  "service_pid_before": 6544,
+  "service_pid_after": 6544,
+  "script_sha256": "296b959cc101115642f58b26f289c2fd9453dfd8c19e50c06065190952df5fed",
+  "trace_file_sha256": "35c8b7ac6b3008af0a608fd159b67bb7e397ded36f1c4af41fa228a19fa718bf",
+  "limitations": [
+    "Controlled IPv4 A-record test; does not establish all DNS record types or encrypted DNS visibility.",
+    "Internal service DNS parser function and exact alias/TTL/persistence policy were not recovered.",
+    "A captured DNS name mapped to an IP does not uniquely identify an application hostname on shared hosting."
+  ],
+  "sources": [
+    "https://www.glasswire.com/changes/",
+    "https://forum.glasswire.com/t/any-feedback-yet-on-update-v2-1-166-released-sept-17th/8865"
+  ]
+}

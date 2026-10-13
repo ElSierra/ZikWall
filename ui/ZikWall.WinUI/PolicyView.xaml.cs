@@ -20,6 +20,21 @@ public sealed partial class PolicyView : UserControl
     private bool dialogOpen;
     private ContentDialog? monitorDialog;
     private ContentDialog? ruleDialog;
+    private void ProfileControlsSizeChanged(object sender, SizeChangedEventArgs args)
+    {
+        bool narrow = args.NewSize.Width < 900;
+        ProfileControls.RowSpacing = narrow ? 12 : 0;
+        ProfileControls.ColumnDefinitions[0].Width = narrow ? new GridLength(1, GridUnitType.Star) : new GridLength(250);
+        ProfileControls.ColumnDefinitions[1].Width = narrow ? new GridLength(0) : GridLength.Auto;
+        ProfileControls.ColumnDefinitions[2].Width = narrow ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
+        ProfileControls.ColumnDefinitions[3].Width = narrow ? new GridLength(0) : GridLength.Auto;
+        FrameworkElement[] groups = [ProfileSelector, ProfileActions, NetworkSwitchGroup, FilteringButton];
+        for (int i = 0; i < groups.Length; i++)
+        {
+            Grid.SetColumn(groups[i], narrow ? 0 : i);
+            Grid.SetRow(groups[i], narrow ? i : 0);
+        }
+    }
     internal void UseDiagnosticStore(string directory)
     {
         if (loaded) throw new InvalidOperationException("Configure the diagnostic store before loading rules.");

@@ -1,0 +1,8 @@
+{
+  "Failure": "Process exceeded 300-second deadline without producing a fresh report. No capture broker was present at inspection. Diagnostic had awaited monitor pause before window activation; exact blocking cause was not traced.",
+  "AssemblySha256": "EEE62B3A7A6935A8DFCE65EE2F09F4EB63388F13687AB6E1C03B979874F039B9",
+  "ProcessId": 62700,
+  "Completed": false,
+  "Scope": "Invalid capture benchmark attempt; no resource samples available.",
+  "TimestampUtc": "2026-10-13T16:40:12.1006035+00:00"
+}

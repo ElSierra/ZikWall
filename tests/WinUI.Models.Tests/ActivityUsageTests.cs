@@ -11,6 +11,22 @@ static class ActivityUsageTests
         var tree = new ActivityTree();
         tree.Update([entry, other]);
         Check(tree.Rows.Count == 2, "Equal names must not merge unrelated executables.");
+        var stableRows = new ActivityTree(); stableRows.Update([entry, other]);
+        var retainedApp = stableRows.Rows[0]; var retainedOther = stableRows.Rows[1];
+        var changedProperties = new HashSet<string>(); int rowChanges = 0;
+        retainedApp.PropertyChanged += (_, args) => changedProperties.Add(args.PropertyName!);
+        stableRows.Rows.CollectionChanged += (_, _) => rowChanges++;
+        var namedEntry = entry with { DomainHint = "updated.example", CountryCode = "US", CountryName = "United States" };
+        stableRows.Update([namedEntry, other]);
+        Check(ReferenceEquals(retainedApp, stableRows.Rows[0]) && rowChanges == 0 && retainedApp.Entry == namedEntry
+            && retainedApp.Hosts.Primary == "updated.example" && changedProperties.Contains("Hosts") && changedProperties.Contains("CountryFlags"),
+            "Changing host details must update bindings without replacing the realized app row.");
+        changedProperties.Clear();
+        stableRows.Update([namedEntry, namedEntry with { LocalPort = 45099 }, other]);
+        Check(changedProperties.Contains("Hosts") && !changedProperties.Contains("HostFlag") && !changedProperties.Contains("HostPrimary")
+            && retainedApp.Hosts.Items.Single().Connections == 2, "Socket-count changes must not reload the unchanged native flag or hostname label.");
+        stableRows.Update([other]);
+        Check(ReferenceEquals(retainedOther, stableRows.Rows[0]), "Removing an earlier app must preserve surviving row identity.");
         var helper = entry with { ProcessId = 11, LocalPort = 45001 };
         tree.Update([entry, helper]);
         Check(tree.Rows.Count == 1 && tree.Rows[0].Subtitle.Contains("2 processes"), "Identical executable processes collapse into one row.");

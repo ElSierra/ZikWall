@@ -1,0 +1,10 @@
+{
+  "CaptureStatus": "Listening for website names \u00B7 3 DNS reply observations \u00B7 0 lost events \u00B7 0 unsupported packets.",
+  "DirectUdpReplyVerified": true,
+  "ObservedReplyMatched": true,
+  "CaptureToHintMs": 1812.5851,
+  "ConnectionEnrichmentVerified": true,
+  "FirewallAndInvalidAddressRequestsRejected": true,
+  "Passed": true,
+  "OwnedTraceStopped": true
+}

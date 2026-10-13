@@ -1,0 +1,200 @@
+{
+  "TimestampUtc": "2026-10-13T11:28:10.0821119+00:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "LogicalProcessors": 28,
+  "LiveEndpointCount": 737,
+  "Results": [
+    {
+      "Name": "Filter 10,000 connection events (AllConnections)",
+      "Iterations": 100,
+      "MedianMs": 4.2241,
+      "P95Ms": 6.9698,
+      "MeanCpuMs": 4.21875,
+      "AllocatedBytesPerOperation": 1352122
+    },
+    {
+      "Name": "Filter 10,000 connection events (NewApps)",
+      "Iterations": 100,
+      "MedianMs": 0.6457,
+      "P95Ms": 1.0315,
+      "MeanCpuMs": 0.78125,
+      "AllocatedBytesPerOperation": 1352115
+    },
+    {
+      "Name": "Filter 10,000 connection events (Outgoing)",
+      "Iterations": 100,
+      "MedianMs": 1.574,
+      "P95Ms": 2.2418,
+      "MeanCpuMs": 1.875,
+      "AllocatedBytesPerOperation": 1352115
+    },
+    {
+      "Name": "Filter 10,000 connection events (Incoming)",
+      "Iterations": 100,
+      "MedianMs": 0.6151,
+      "P95Ms": 1.0016,
+      "MeanCpuMs": 0.78125,
+      "AllocatedBytesPerOperation": 1352115
+    },
+    {
+      "Name": "Format batched connection notification with local flag",
+      "Iterations": 1000,
+      "MedianMs": 0.0123,
+      "P95Ms": 0.0232,
+      "MeanCpuMs": 0.015625,
+      "AllocatedBytesPerOperation": 2601
+    },
+    {
+      "Name": "Find 10,000 cached domain hints",
+      "Iterations": 100,
+      "MedianMs": 0.1858,
+      "P95Ms": 0.2901,
+      "MeanCpuMs": 0.15625,
+      "AllocatedBytesPerOperation": 11
+    },
+    {
+      "Name": "10,000 domain refresh requests before next scan",
+      "Iterations": 100,
+      "MedianMs": 0.367,
+      "P95Ms": 0.5602,
+      "MeanCpuMs": 0.46875,
+      "AllocatedBytesPerOperation": 11
+    },
+    {
+      "Name": "Group 10,000 connections into 100 collapsed apps",
+      "Iterations": 100,
+      "MedianMs": 5.2895,
+      "P95Ms": 6.623,
+      "MeanCpuMs": 5.625,
+      "AllocatedBytesPerOperation": 4533855
+    },
+    {
+      "Name": "Update 512 apps with 30 daily usage buckets each",
+      "Iterations": 100,
+      "MedianMs": 2.435,
+      "P95Ms": 7.7888,
+      "MeanCpuMs": 5.46875,
+      "AllocatedBytesPerOperation": 2153060
+    },
+    {
+      "Name": "Track 10,000 unchanged endpoints",
+      "Iterations": 100,
+      "MedianMs": 3.3265,
+      "P95Ms": 4.1185,
+      "MeanCpuMs": 3.125,
+      "AllocatedBytesPerOperation": 606791
+    },
+    {
+      "Name": "Update 10,000 unchanged UI rows",
+      "Iterations": 100,
+      "MedianMs": 2.3718,
+      "P95Ms": 3.16,
+      "MeanCpuMs": 2.5,
+      "AllocatedBytesPerOperation": 606797
+    },
+    {
+      "Name": "Search 10,000 endpoints (empty)",
+      "Iterations": 100,
+      "MedianMs": 0.2057,
+      "P95Ms": 0.3245,
+      "MeanCpuMs": 0.3125,
+      "AllocatedBytesPerOperation": 67
+    },
+    {
+      "Name": "Search 10,000 endpoints (address)",
+      "Iterations": 100,
+      "MedianMs": 2.6233,
+      "P95Ms": 3.4102,
+      "MeanCpuMs": 2.5,
+      "AllocatedBytesPerOperation": 67
+    },
+    {
+      "Name": "Trim full 10k-event / 15k-sample archive",
+      "Iterations": 100,
+      "MedianMs": 0.2218,
+      "P95Ms": 0.2723,
+      "MeanCpuMs": 0.15625,
+      "AllocatedBytesPerOperation": 200343
+    },
+    {
+      "Name": "Trim full archive in place (monitor path)",
+      "Iterations": 100,
+      "MedianMs": 0.1628,
+      "P95Ms": 0.2109,
+      "MeanCpuMs": 0.15625,
+      "AllocatedBytesPerOperation": 171
+    },
+    {
+      "Name": "Parse 10,000 IPv4 TCP rows",
+      "Iterations": 100,
+      "MedianMs": 2.2123,
+      "P95Ms": 9.7522,
+      "MeanCpuMs": 3.28125,
+      "AllocatedBytesPerOperation": 3760274
+    },
+    {
+      "Name": "Analyze 1,500 rules (bounded worst case)",
+      "Iterations": 10,
+      "MedianMs": 3.607,
+      "P95Ms": 27.3277,
+      "MeanCpuMs": 12.5,
+      "AllocatedBytesPerOperation": 599327
+    },
+    {
+      "Name": "Parse 100,000 blocklist domains",
+      "Iterations": 10,
+      "MedianMs": 172.8863,
+      "P95Ms": 212.078,
+      "MeanCpuMs": 168.75,
+      "AllocatedBytesPerOperation": 45479811
+    },
+    {
+      "Name": "Find 1,000 IPs in 50,000 geolocation networks",
+      "Iterations": 100,
+      "MedianMs": 0.7685,
+      "P95Ms": 0.9655,
+      "MeanCpuMs": 0.9375,
+      "AllocatedBytesPerOperation": 308816
+    },
+    {
+      "Name": "Capture live Windows endpoints",
+      "Iterations": 30,
+      "MedianMs": 28.6505,
+      "P95Ms": 36.5753,
+      "MeanCpuMs": 31.770833333333332,
+      "AllocatedBytesPerOperation": 651856
+    },
+    {
+      "Name": "Capture live adapter counters",
+      "Iterations": 30,
+      "MedianMs": 23.7107,
+      "P95Ms": 25.5347,
+      "MeanCpuMs": 5.208333333333333,
+      "AllocatedBytesPerOperation": 39330
+    },
+    {
+      "Name": "Enrich live endpoints with direction and country",
+      "Iterations": 30,
+      "MedianMs": 0.9736,
+      "P95Ms": 2.1789,
+      "MeanCpuMs": 1.0416666666666667,
+      "AllocatedBytesPerOperation": 324010
+    },
+    {
+      "Name": "10,000 offline country lookups (cache churn)",
+      "Iterations": 30,
+      "MedianMs": 8.4518,
+      "P95Ms": 15.1546,
+      "MeanCpuMs": 11.458333333333334,
+      "AllocatedBytesPerOperation": 3184573
+    },
+    {
+      "Name": "1,000 sequential local UDP DNS blocks",
+      "Queries": 1000,
+      "MedianMs": 0.0684,
+      "P95Ms": 0.1609,
+      "QueriesPerSecond": 11826.509831377623,
+      "TotalCpuMs": 156.25
+    }
+  ]
+}

@@ -10,17 +10,30 @@ public sealed class ActivityRow(string Key, string Title, string Subtitle, strin
     string Usage = "", string Total = "", bool IsNew = false) : INotifyPropertyChanged
 {
     public string Key { get; } = Key;
-    public string Title { get; } = Title;
-    public string Subtitle { get; } = Subtitle;
-    public string Chevron { get; } = Chevron;
-    public double Indent { get; } = Indent;
-    public ConnectionEntry Entry { get; } = Entry;
-    public string Direction { get; } = Direction;
-    public string Endpoint { get; } = Endpoint;
-    public string Country { get; } = Country;
-    public string Flag { get; } = Flag;
-    public string State { get; } = State;
-    public bool IsNew { get; } = IsNew;
+    private string title = Title, subtitle = Subtitle, chevron = Chevron, direction = Direction,
+        endpoint = Endpoint, country = Country, flag = Flag, state = State;
+    private double indent = Indent;
+    private ConnectionEntry entry = Entry;
+    private bool isNew = IsNew;
+    private HostSummary hosts = HostSummary.Empty;
+    public string Title => title;
+    public string Subtitle => subtitle;
+    public string Chevron => chevron;
+    public double Indent => indent;
+    public ConnectionEntry Entry => entry;
+    public string Direction => direction;
+    public string Endpoint => endpoint;
+    public string Country => country;
+    public string Flag => flag;
+    public string State => state;
+    public bool IsNew => isNew;
+    public HostSummary Hosts { get => hosts; init => hosts = value; }
+    public string HostPrimary => hosts.Primary;
+    public string HostFlag => hosts.Flag;
+    public string HostMore => hosts.More;
+    public string HostTitle => hosts.Title;
+    public string HostDescription => hosts.Description;
+    public bool HasHosts => hosts.Available;
     private string usage = Usage, total = Total, usageHint = "";
     private bool usageVisible;
     public string Usage => usage;
@@ -40,9 +53,37 @@ public sealed class ActivityRow(string Key, string Title, string Subtitle, strin
         if (EqualityComparer<T>.Default.Equals(field, value)) return;
         field = value; PropertyChanged?.Invoke(this, new(property));
     }
-    internal bool SameContent(ActivityRow other) => Key == other.Key && Title == other.Title && Subtitle == other.Subtitle
-        && Chevron == other.Chevron && Indent == other.Indent && Entry == other.Entry && Direction == other.Direction
-        && Endpoint == other.Endpoint && Country == other.Country && Flag == other.Flag && State == other.State && IsNew == other.IsNew;
+    internal void UpdateFrom(ActivityRow other)
+    {
+        string oldHint = TitleHint, oldPath = ProcessPath;
+        bool flagsChanged = country != other.Country || flag != other.Flag || Expandable != other.Expandable || indent != other.Indent;
+        Set(ref title, other.Title, nameof(Title));
+        if (subtitle != other.Subtitle) { Set(ref subtitle, other.Subtitle, nameof(Subtitle)); Changed(nameof(Details)); }
+        if (chevron != other.Chevron) { Set(ref chevron, other.Chevron, nameof(Chevron)); Changed(nameof(ChevronGlyph)); Changed(nameof(Expandable)); }
+        Set(ref indent, other.Indent, nameof(Indent));
+        Set(ref entry, other.Entry, nameof(Entry));
+        Set(ref direction, other.Direction, nameof(Direction));
+        Set(ref endpoint, other.Endpoint, nameof(Endpoint));
+        Set(ref country, other.Country, nameof(Country));
+        Set(ref flag, other.Flag, nameof(Flag));
+        Set(ref state, other.State, nameof(State));
+        Set(ref isNew, other.IsNew, nameof(IsNew));
+        if (!hosts.SameContent(other.Hosts))
+        {
+            var before = hosts;
+            hosts = other.Hosts; Changed(nameof(Hosts));
+            if (before.Primary != hosts.Primary) Changed(nameof(HostPrimary));
+            if (before.Flag != hosts.Flag) Changed(nameof(HostFlag));
+            if (before.More != hosts.More) Changed(nameof(HostMore));
+            if (before.Title != hosts.Title) Changed(nameof(HostTitle));
+            if (before.Description != hosts.Description) Changed(nameof(HostDescription));
+            if (before.Available != hosts.Available) Changed(nameof(HasHosts));
+        }
+        if (flagsChanged) Changed(nameof(CountryFlags));
+        if (oldPath != ProcessPath) Changed(nameof(ProcessPath));
+        if (oldHint != TitleHint) Changed(nameof(TitleHint));
+    }
+    private void Changed(string property) => PropertyChanged?.Invoke(this, new(property));
     public bool Expandable => Chevron.Length > 0;
     public string Details => Subtitle;
     public string ChevronGlyph => Chevron == "›" ? "" : Chevron.Length > 0 ? "" : "";
@@ -89,18 +130,24 @@ public sealed class ActivityTree
                 WithDomains($"{Count(processes.Count, "process", "processes")} · {Count(entries.Count, "endpoint", "endpoints")}", entries), expanded.Contains(app.Key) ? "⌄" : "›", 0, first,
                 string.Join(" / ", entries.Select(x => x.Direction).Distinct()), Count(destinations, "remote IP", "remote IPs"),
                 string.Join(", ", countries), countries.Count == 1 ? (first with { CountryCode = countries[0] }).CountryFlag : "ms-appx:///Assets/Flags/unknown.svg",
-                "", stats.Item1, stats.Item2, entries.Any(IsNew)));
+                "", stats.Item1, stats.Item2, entries.Any(IsNew)) { Hosts = HostSummary.Create(entries) });
             if (!expanded.Contains(app.Key)) { blocks.Add((app.Key, start, next.Count - start)); continue; }
             foreach (var process in processes)
             {
                 var entry = process.First();
-                next.Add(new(process.Key, entry.ProcessLabel, WithDomains(Count(process.Count(), "endpoint", "endpoints"), process), expanded.Contains(process.Key) ? "⌄" : "›", 20, entry, "", "", "", "ms-appx:///Assets/Flags/unknown.svg", "", IsNew: process.Any(IsNew)));
+                next.Add(new(process.Key, entry.ProcessLabel, WithDomains(Count(process.Count(), "endpoint", "endpoints"), process), expanded.Contains(process.Key) ? "⌄" : "›", 20, entry, "", "", "", "ms-appx:///Assets/Flags/unknown.svg", "", IsNew: process.Any(IsNew)) { Hosts = HostSummary.Create(process) });
                 if (expanded.Contains(process.Key)) next.AddRange(process.Select(x => Leaf(x, 40, IsNew(x))));
             }
             blocks.Add((app.Key, start, next.Count - start));
         }
         // Expansion memory is bounded, including vanished process IDs.
         expanded.IntersectWith(valid);
+        // Socket churn changes an app's summary, not its identity. Keep its
+        // native controls and notify only the cells whose displayed values changed.
+        var retained = new Dictionary<string, ActivityRow>(StringComparer.Ordinal);
+        foreach (var row in Rows) retained.TryAdd(row.Key, row);
+        for (int i = 0; i < next.Count; i++)
+            if (retained.Remove(next[i].Key, out var row)) { row.UpdateFrom(next[i]); next[i] = row; }
         baseRows = next;
         ApplyUsage(showUsage, sort, usageDisplay);
     }
@@ -140,24 +187,28 @@ public sealed class ActivityTree
     }
     private void Publish(List<ActivityRow> next)
     {
-        // Preserve equal rows and selection. A reset bounds work under extreme churn.
-        if (Math.Abs(Rows.Count - next.Count) > 64) { Rows.Clear(); foreach (var row in next) Rows.Add(row); return; }
+        // Remove vanished identities first; shifting a surviving app must not
+        // recreate every row below it. Usage sorting also moves existing rows.
+        var wanted = next.ToHashSet();
+        for (int i = Rows.Count - 1; i >= 0; i--) if (!wanted.Contains(Rows[i])) Rows.RemoveAt(i);
         for (int i = 0; i < next.Count; i++)
         {
             if (i == Rows.Count) Rows.Add(next[i]);
-            else if (!Rows[i].SameContent(next[i])) Rows[i] = next[i];
-            else if (!ReferenceEquals(Rows[i], next[i])) Rows[i].SetUsage(next[i].UsageVisible, next[i].Total, next[i].Usage, next[i].UsageHint);
+            else if (!ReferenceEquals(Rows[i], next[i]))
+            {
+                int existing = Rows.IndexOf(next[i]);
+                if (existing >= 0) Rows.Move(existing, i); else Rows.Insert(i, next[i]);
+            }
         }
-        while (Rows.Count > next.Count) Rows.RemoveAt(Rows.Count - 1);
     }
     private static string Count(int count, string one, string many) => $"{count} {(count == 1 ? one : many)}";
     private static string WithDomains(string summary, IEnumerable<ConnectionEntry> entries)
     {
-        var names = entries.Where(x => x.DomainHint.Length > 0).SelectMany(x => x.DomainHint.Split(", "))
+        var names = entries.Where(x => x.HostNames.Length > 0).SelectMany(x => x.HostNames.Split(", "))
             .Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase).Take(4).ToArray();
         return names.Length == 0 ? summary : $"{string.Join(", ", names.Take(3))}{(names.Length > 3 ? ", …" : "")} · DNS hints · {summary}";
     }
     private static ActivityRow Leaf(ConnectionEntry entry, double indent, bool fresh) => new("connection:" + entry.Key,
-        entry.DestinationLabel, entry.DomainHint.Length > 0 ? $"{entry.RemoteEndpoint} · DNS cache hint · {entry.Protocol}" : $"{entry.Protocol} · domain unknown · local {entry.LocalEndpoint}", "", indent, entry, entry.DirectionLabel,
-        "", entry.NetworkLabel, entry.CountryFlag, entry.State, IsNew: fresh);
+        entry.DestinationLabel, entry.HostNames.Length > 0 ? $"{entry.RemoteEndpoint} · {entry.HostNameSource} · {entry.Protocol}" : $"{entry.Protocol} · domain unknown · local {entry.LocalEndpoint}", "", indent, entry, entry.DirectionLabel,
+        "", entry.NetworkLabel, entry.CountryFlag, entry.State, IsNew: fresh) { Hosts = HostSummary.Create([entry]) };
 }

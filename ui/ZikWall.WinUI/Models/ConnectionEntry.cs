@@ -8,7 +8,8 @@ public sealed record ConnectionEntry(string Protocol, string LocalAddress, int L
     string ProcessName = "", string ProcessPath = "", string Direction = "Unknown",
     string CountryCode = "", string CountryName = "", string NetworkScope = "Unknown",
     string PackageFamily = "", long ProcessStarted = 0, [property: JsonIgnore] string DomainHint = "",
-    string NetworkName = "", uint NetworkAsn = 0)
+    string NetworkName = "", uint NetworkAsn = 0, [property: JsonIgnore] string ReverseDnsName = "",
+    [property: JsonIgnore] bool DomainHintObserved = false)
 {
     [JsonIgnore] public string AppKey => PackageFamily.Length > 0 ? "package:" + PackageFamily.ToUpperInvariant()
         : ProcessPath.Length > 0 ? "path:" + ProcessPath.ToUpperInvariant() : $"unknown:{ProcessId}:{ProcessStarted}";
@@ -19,8 +20,10 @@ public sealed record ConnectionEntry(string Protocol, string LocalAddress, int L
     [JsonIgnore] public string ProcessLabel => ConnectionContinuity.IsOrphaned(this) ? $"{Application} · closing" : $"{Application} · PID {ProcessId}";
     [JsonIgnore] public string LocalEndpoint => Endpoint(LocalAddress, LocalPort);
     [JsonIgnore] public string RemoteEndpoint => RemotePort.HasValue ? Endpoint(RemoteAddress, RemotePort.Value) : "Not available for UDP";
-    [JsonIgnore] public string DestinationLabel => DomainHint.Length > 0 ? DomainHint : RemoteEndpoint;
-    [JsonIgnore] public string DomainDescription => DomainHint.Length > 0 ? $"{DomainHint} (Windows DNS cache hint; shared IPs may host other domains)" : "Unknown (no matching Windows DNS cache entry)";
+    [JsonIgnore] public string HostNames => DomainHint.Length > 0 ? DomainHint : ReverseDnsName;
+    [JsonIgnore] public string HostNameSource => DomainHint.Length > 0 ? DomainHintObserved ? "Observed DNS response" : "Windows DNS cache hint" : ReverseDnsName.Length > 0 ? "Reverse DNS hint" : "No hostname available";
+    [JsonIgnore] public string DestinationLabel => HostNames.Length > 0 ? HostNames : RemoteEndpoint;
+    [JsonIgnore] public string DomainDescription => HostNames.Length > 0 ? $"{HostNames} ({HostNameSource}; may not be the website requested by this app)" : "Unknown (no hostname available)";
     [JsonIgnore] public string CountryLabel => CountryCode.Length == 2 ? $"{CountryName} · {CountryCode}" : NetworkScope == "Internet" ? "Country unknown" : NetworkScope;
     // Who operates the remote IP (e.g. "Microsoft · GB"); recognisable where a country alone is not.
     [JsonIgnore] public string NetworkLabel => NetworkName.Length == 0 ? CountryLabel : CountryCode.Length == 2 ? $"{NetworkName} · {CountryCode}" : NetworkName;
@@ -41,6 +44,7 @@ public sealed record ConnectionEntry(string Protocol, string LocalAddress, int L
         || LocalAddress.Contains(query, StringComparison.OrdinalIgnoreCase)
         || RemoteAddress.Contains(query, StringComparison.OrdinalIgnoreCase)
         || DomainHint.Contains(query, StringComparison.OrdinalIgnoreCase)
+        || ReverseDnsName.Contains(query, StringComparison.OrdinalIgnoreCase)
         || LocalEndpoint.Contains(query, StringComparison.OrdinalIgnoreCase)
         || RemoteEndpoint.Contains(query, StringComparison.OrdinalIgnoreCase)
         || ProcessId.ToString().Contains(query, StringComparison.OrdinalIgnoreCase);
@@ -58,7 +62,7 @@ public sealed record ConnectionEvent(DateTimeOffset Time, string Event, Connecti
     [JsonIgnore] public string FullTime => Time.ToLocalTime().ToString("G");
     [JsonIgnore] public string Summary => $"{Connection.Application} · {Activity}";
     [JsonIgnore] public string Endpoints => Connection.RemotePort is > 0
-        ? Connection.DomainHint.Length > 0 ? $"{Connection.DomainHint} · {Connection.RemoteEndpoint} · DNS hint" : Connection.RemoteEndpoint
+        ? Connection.HostNames.Length > 0 ? $"{Connection.HostNames} · {Connection.RemoteEndpoint} · {Connection.HostNameSource}" : Connection.RemoteEndpoint
         : $"Local {Connection.LocalEndpoint}";
     [JsonIgnore] public string Details => $"{Connection.ProcessLabel} · {Connection.Protocol} · {Event}\n{Connection.LocalEndpoint} → {Connection.RemoteEndpoint}";
     [JsonIgnore] public string Activity => Event switch

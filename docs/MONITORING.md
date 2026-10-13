@@ -65,14 +65,43 @@ Rebuild from the documented downloads with `tools/build-country-data.py` and `to
 
 In-app recent alerts default on. Windows notifications are separately opt-in under Monitor options. Both report **newly observed Internet endpoints**, not exact connection creation times or firewall decisions. Startup/resume/enabling alerts suppresses the next baseline, local endpoints are excluded, repeated app/destination/port/direction combinations are deduplicated for five minutes, and batches are limited to once per 30 seconds. Tracking and pending samples are bounded. Windows alerts are silent and replace the previous monitor toast. Clicking one activates the app. Windows notification settings or Focus Assist can prevent display even after submission succeeds.
 
-Activity remains the detailed record. Saved history stays opt-in; notification settings currently reset on app restart. Notifications can contain app names and IPs, including in Windows Notification Center when enabled.
+Notifications use a compact three-line layout: "Network activity" (or "First network activity" for the new-app notification mode), app name, and remote IP. Additional batched connections appear as "+N more" on the address line. The bundled country flag remains beside the content, with an accessible country description and a neutral globe for unknown countries. Ports, hostname explanations and country prose remain in connection details. Windows controls the native toast frame and app attribution. Formatting uses existing snapshot data and local images; it makes no DNS, signature or image requests and does not invent an unsigned badge.
+
+Activity remains the detailed record. Saved history stays opt-in; notification settings are saved with monitor preferences. Notifications can contain app names, cached domain hints and IPs, including in Windows Notification Center when enabled.
+
+Monitor options → Notifications → **Notify me about** selects all new Internet
+connections, **New apps only**, outgoing only, or incoming only. The selection
+applies to both the in-app banner and optional Windows notifications and survives
+restart. Direction-specific choices exclude unknown direction. Existing installs
+keep the all-connections default.
+
+New-app detection remembers application paths (case-insensitively) or package
+identities for the current session; unidentified processes use PID and start
+time. A different destination or restarted process from the same known path does
+not announce another new app. Startup/resume baselines, muted apps and apps seen
+while notifications are off are remembered silently. Changing notification type
+discards the old pending batch. The memory is capped at 16,384 identities; once
+full, additional apps are not announced as new until the next session. It is not
+a persistent inventory of installed applications or a firewall connection prompt.
 
 ## Validation
 
 The automated suite covers real IPv4/IPv6 initiating and accepted sockets, country table boundaries and invalid headers, all dataset country-code/flag mappings, private/reserved/mapped IP classification, backward-compatible history JSON, filters, startup suppression, cooldown/deduplication, disabled alerts and degraded country-data behavior.
+
+The event-notification formatter has 19 additional checks for state/direction wording, cached-domain hints, IPv6 formatting, batch counts, unknown countries, bundled flag paths, XML escaping, bounded labels and missing assets. The native diagnostic records the production toast XML and submits a labeled example through the same notification service. Windows notification submission and SVG decoding are tested; desktop appearance remains outside the automated render check.
 
 The explicit `ZikWall.exe --test-monitor` diagnostic loads the application's real executable icon, decodes every bundled SVG, registers with Windows notifications, submits one labeled silent test notification and renders the native window to a local PNG. It changes no firewall/DNS settings. Diagnostic outputs stay under ignored `artifacts/ZikWall`; rendered live data is not committed. Submission/registration succeeded locally; actual desktop toast appearance and activation were not independently observed. RenderTargetBitmap validates XAML layout/content but does not capture compositor Mica or all native window chrome.
 
 See [performance measurements](PERFORMANCE.md) and [remaining Little Snitch gaps](LITTLE-SNITCH-COMPARISON.md).
 
 The native churn regression runs 500 deterministic insert/remove/replace/reset cycles with executable icons, flags and alert-banner resizing. During validation, a live run failed inside WinUI with `0xc000027b`; this stress test reproduced it quickly. Disabling banner resizing or replacing incremental updates did not fix it; disabling executable icons did. Separate per-row bitmaps improved isolation but did not resolve the complete test. Deferring icon visual changes through the UI dispatcher, outside the dependency-property callback used during native template binding/layout, removed the reproduced failure. Icons retain a bounded pixel cache and per-row native bitmap ownership. `tools/test-monitor-ui.ps1` runs the regression twice by default; `-RenderAndNotify` also runs the explicit render/toast diagnostic. Temporary exception logging and isolation switches were removed.
+
+### Compact notification validation (October 13, 2026)
+
+The Release build and full model/service checks pass. The focused
+`ZikWall.exe --test-notification` diagnostic successfully submitted a labeled,
+silent Windows notification using three text lines and the bundled country flag.
+[Submitted payload](benchmarks/2026-10-13-simple-notification.json). Windows owns
+the toast frame; submission confirms API acceptance, not a desktop screenshot.
+The broader monitor render diagnostic timed out; the focused notification check
+completed successfully without that unrelated rendering path.

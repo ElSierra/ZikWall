@@ -16,9 +16,11 @@ public sealed partial class MonitoringView
         RefreshChoice.SelectedIndex = saved.Refresh;
         HistoryWindow.SelectedIndex = saved.HistoryRange;
         RecentAlerts.IsOn = saved.RecentAlerts;
+        NotificationTypeChoice.SelectedIndex = saved.NotificationType;
         DesktopAlerts.IsOn = saved.DesktopAlerts;
         SaveHistory.IsOn = saved.SaveHistory;
         TcpDetails.IsOn = saved.TcpDetails;
+        ReverseDnsLookup.IsOn = saved.ReverseDns;
         preferredAdapterId = saved.AdapterId;
         usageSort = (UsageSort)saved.UsageSort;
         rememberUsage = saved.UsageCollection;
@@ -32,7 +34,7 @@ public sealed partial class MonitoringView
             preferencesStore.Save(new(HideSystemApps.IsOn, GroupChoice.SelectedIndex, DirectionChoice.SelectedIndex,
                 ScopeChoice.SelectedIndex, RefreshChoice.SelectedIndex, HistoryWindow.SelectedIndex,
                 RecentAlerts.IsOn, DesktopAlerts.IsOn, SaveHistory.IsOn, preferredAdapterId, (int)usageSort,
-                rememberUsage, rememberDomains, TcpDetails.IsOn));
+                rememberUsage, rememberDomains, TcpDetails.IsOn, NotificationTypeChoice.SelectedIndex, ReverseDnsLookup.IsOn));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         { MonitorStatus.Text = $"Settings apply for now but could not be saved: {ex.Message}"; }

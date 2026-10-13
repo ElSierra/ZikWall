@@ -49,3 +49,17 @@ Run-Diagnostic '--test-preferences'
 $preferences = Get-Content (Join-Path $directory 'preferences-selftest.txt') -Raw
 if ($preferences -notmatch '^PASS:') { throw "Settings restart checks failed: $preferences" }
 Write-Host $preferences
+
+Run-Diagnostic '--test-policy-layout'
+$policyLayout = Get-Content (Join-Path $directory 'policy-layout-selftest.txt') -Raw
+if ($policyLayout -notmatch '^PASS:' -or ($policyLayout | Select-String 'PASS:' -AllMatches).Matches.Count -ne 4) { throw "Policy layout checks failed: $policyLayout" }
+Write-Host $policyLayout
+
+foreach ($page in @('activity-overview', 'log-analysis')) {
+    $started = Get-Date
+    Run-Diagnostic "--test-$page"
+    $report = Get-Item (Join-Path $directory "$page-selftest.txt")
+    $result = Get-Content $report.FullName -Raw
+    if ($report.LastWriteTime -lt $started -or $result -notmatch '^PASS:') { throw "$page checks failed: $result" }
+    Write-Host $result
+}

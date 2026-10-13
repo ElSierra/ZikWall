@@ -11,3 +11,21 @@ Subscriptions support plain domains, common hosts-file entries, simple `||domain
 Domain updates take effect in the running proxy. **Copy IPs to policy** creates a snapshot of IP/CIDR block rules in the selected policy profile, ready for review and explicit Apply. Copied IP rules are separate from subscriptions; refreshing/removing a subscription does not rewrite those copies. No third-party list is subscribed by default.
 
 Validation includes real loopback UDP and TCP blocking, DNS framing/ID preservation, malformed-query rejection, domain boundaries/exceptions and bounded response reads. An explicit network smoke test resolved `example.com` through the local proxy and certificate-validated Cloudflare HTTPS. No system DNS settings were changed during these tests.
+
+On 13 October 2026, the live DoH check passed again, and a real HTTPS download of
+the StevenBlack source list parsed 2,852 domains without saving a subscription.
+Deterministic checks also cover successful refresh, matching/mismatched SHA-256
+pins, rejected HTTP URLs/redirects/failed responses/empty lists, retention of the
+previous data, and settings persistence. The UI now catches validation errors
+(`InvalidDataException`) as well as transport errors, so invalid domains or list
+content produce an error banner instead of escaping the event handler. A native
+view check exercises invalid domain exception entry.
+
+Reproduce both optional public-network checks with:
+
+```powershell
+dotnet run --project tests/WinUI.Models.Tests -c Release -- bin/profile_internal.xml --doh --subscriptions
+```
+
+These checks verify the resolver and download paths. They do not claim that this
+machine's adapters currently use ZikWall DNS, or exercise a 24-hour refresh wait.

@@ -1,0 +1,2546 @@
+{
+  "TimestampUtc": "2026-10-13T17:58:00.810141+00:00",
+  "Completed": true,
+  "CleanupVerified": true,
+  "StartupMs": 1835.4087,
+  "AssemblySha256": "7297E21CBB6DBEA50E78D51A393564EF4AD620F5735DF792EF56825382932D54",
+  "BrokerSha256": "79FF0F571F827C1429C5566418E22A44629CF46AFC35E92B264E5C68A15710C1",
+  "EngineSha256": "BA6419C290676A7ABB983B7A9124493DB1201AEC780C95A970BEE2B8830E00E2",
+  "LogicalProcessors": 28,
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "Scope": "Production DNS capture, broker and controller; diagnostic host without a window or monitoring plus diagnostic polling. Whole-app live UI is measured separately. Process CPU excludes kernel/system-wide ETW overhead and other applications. Network workload is 20 low-rate DNS attempts with a 5-second receive timeout, not NIC throughput or maximum capture capacity. Timeouts are recorded, not retried or excluded. No forced GC or working-set trimming in resource phases.",
+  "QueriesSent": 20,
+  "ValidReplies": 20,
+  "QueryTimeouts": 0,
+  "PollsMatchingObservedHostname": 20,
+  "DnsRoundTrip": {
+    "Count": 20,
+    "MedianMs": 191.4139,
+    "P95Ms": 619.8062
+  },
+  "HintIpc": {
+    "Count": 41,
+    "MedianMs": 0.7437,
+    "P95Ms": 10.9784
+  },
+  "LastStatus": "Listening for website names \u00B7 153 DNS reply observations \u00B7 0 lost events \u00B7 0 unsupported packets.",
+  "Phases": [
+    {
+      "Scenario": "Capture off; diagnostic host without window",
+      "Seconds": 30.572323,
+      "CombinedCpuOneCorePercent": 1.124443351065715,
+      "SumOfPeakPrivateMiB": 68.484375,
+      "Processes": [
+        {
+          "Process": "Diagnostic host (no window)",
+          "CpuOneCorePercent": 1.124443351065715,
+          "PeakPrivateMiB": 68.484375,
+          "PeakWorkingSetMiB": 96.6484375,
+          "PrivateGrowthMiB": -0.36328125,
+          "PeakHandles": 621
+        }
+      ],
+      "Samples": [
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 1.0069052,
+          "CpuMs": 0,
+          "PrivateMiB": 68.48046875,
+          "WorkingSetMiB": 96.59375,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 2.0294333,
+          "CpuMs": 15.625,
+          "PrivateMiB": 68.484375,
+          "WorkingSetMiB": 96.63671875,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 3.0532359,
+          "CpuMs": 31.25,
+          "PrivateMiB": 68.484375,
+          "WorkingSetMiB": 96.6484375,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 4.0747625,
+          "CpuMs": 31.25,
+          "PrivateMiB": 67.1015625,
+          "WorkingSetMiB": 95.0703125,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 5.0999728,
+          "CpuMs": 46.875,
+          "PrivateMiB": 67.1015625,
+          "WorkingSetMiB": 95.10546875,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 6.1246471,
+          "CpuMs": 46.875,
+          "PrivateMiB": 67.1015625,
+          "WorkingSetMiB": 95.10546875,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 7.139896,
+          "CpuMs": 78.125,
+          "PrivateMiB": 67.10546875,
+          "WorkingSetMiB": 95.11328125,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 8.149699,
+          "CpuMs": 93.75,
+          "PrivateMiB": 67.29296875,
+          "WorkingSetMiB": 95.15625,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 9.1609141,
+          "CpuMs": 109.375,
+          "PrivateMiB": 67.29296875,
+          "WorkingSetMiB": 95.15625,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 10.1812546,
+          "CpuMs": 109.375,
+          "PrivateMiB": 67.28515625,
+          "WorkingSetMiB": 95.16796875,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 11.2038241,
+          "CpuMs": 125,
+          "PrivateMiB": 67.2890625,
+          "WorkingSetMiB": 95.1796875,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 12.2247684,
+          "CpuMs": 140.625,
+          "PrivateMiB": 67.2890625,
+          "WorkingSetMiB": 95.1796875,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 13.2332447,
+          "CpuMs": 140.625,
+          "PrivateMiB": 67.29296875,
+          "WorkingSetMiB": 95.1953125,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 14.2515264,
+          "CpuMs": 203.125,
+          "PrivateMiB": 67.3515625,
+          "WorkingSetMiB": 95.26171875,
+          "Handles": 621
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 15.2681932,
+          "CpuMs": 203.125,
+          "PrivateMiB": 67.296875,
+          "WorkingSetMiB": 95.28125,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 16.2921917,
+          "CpuMs": 203.125,
+          "PrivateMiB": 67.30859375,
+          "WorkingSetMiB": 95.31640625,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 17.3091585,
+          "CpuMs": 218.75,
+          "PrivateMiB": 67.3125,
+          "WorkingSetMiB": 95.3359375,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 18.3304727,
+          "CpuMs": 234.375,
+          "PrivateMiB": 67.31640625,
+          "WorkingSetMiB": 95.34765625,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 19.3472013,
+          "CpuMs": 234.375,
+          "PrivateMiB": 67.31640625,
+          "WorkingSetMiB": 95.3515625,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 20.358227,
+          "CpuMs": 234.375,
+          "PrivateMiB": 67.3125,
+          "WorkingSetMiB": 95.34765625,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 21.3792856,
+          "CpuMs": 250,
+          "PrivateMiB": 67.3828125,
+          "WorkingSetMiB": 95.36328125,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 22.3999155,
+          "CpuMs": 250,
+          "PrivateMiB": 67.3828125,
+          "WorkingSetMiB": 95.37890625,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 23.4226186,
+          "CpuMs": 265.625,
+          "PrivateMiB": 67.77734375,
+          "WorkingSetMiB": 95.828125,
+          "Handles": 619
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 24.4348168,
+          "CpuMs": 296.875,
+          "PrivateMiB": 67.73828125,
+          "WorkingSetMiB": 95.82421875,
+          "Handles": 615
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 25.456993,
+          "CpuMs": 312.5,
+          "PrivateMiB": 67.734375,
+          "WorkingSetMiB": 95.8515625,
+          "Handles": 615
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 26.4813787,
+          "CpuMs": 312.5,
+          "PrivateMiB": 67.734375,
+          "WorkingSetMiB": 95.8203125,
+          "Handles": 615
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 27.5054712,
+          "CpuMs": 328.125,
+          "PrivateMiB": 68.10546875,
+          "WorkingSetMiB": 96.28515625,
+          "Handles": 615
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 28.5190691,
+          "CpuMs": 328.125,
+          "PrivateMiB": 68.10546875,
+          "WorkingSetMiB": 96.32421875,
+          "Handles": 615
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 29.5403153,
+          "CpuMs": 328.125,
+          "PrivateMiB": 68.10546875,
+          "WorkingSetMiB": 96.3671875,
+          "Handles": 617
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 30.5507274,
+          "CpuMs": 343.75,
+          "PrivateMiB": 68.1171875,
+          "WorkingSetMiB": 96.5390625,
+          "Handles": 616
+        }
+      ]
+    },
+    {
+      "Scenario": "Capture on; normal host traffic; 2-second hint polling",
+      "Seconds": 41.6788904,
+      "CombinedCpuOneCorePercent": 3.86136964052624,
+      "SumOfPeakPrivateMiB": 187.2578125,
+      "Processes": [
+        {
+          "Process": "Diagnostic host (no window)",
+          "CpuOneCorePercent": 3.4489904804863616,
+          "PeakPrivateMiB": 71.78125,
+          "PeakWorkingSetMiB": 113.2578125,
+          "PrivateGrowthMiB": 0.609375,
+          "PeakHandles": 764
+        },
+        {
+          "Process": "DNS broker",
+          "CpuOneCorePercent": 0.4123791600398785,
+          "PeakPrivateMiB": 18.64453125,
+          "PeakWorkingSetMiB": 50.96484375,
+          "PrivateGrowthMiB": 3.33984375,
+          "PeakHandles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "CpuOneCorePercent": 0,
+          "PeakPrivateMiB": 96.83203125,
+          "PeakWorkingSetMiB": 121.38671875,
+          "PrivateGrowthMiB": -0.63671875,
+          "PeakHandles": 691
+        }
+      ],
+      "Samples": [
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 1.0246315,
+          "CpuMs": 15.625,
+          "PrivateMiB": 70.12890625,
+          "WorkingSetMiB": 110.87890625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 1.0364377,
+          "CpuMs": 31.25,
+          "PrivateMiB": 15.3046875,
+          "WorkingSetMiB": 46.4453125,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 1.0467055,
+          "CpuMs": 0,
+          "PrivateMiB": 96.79296875,
+          "WorkingSetMiB": 121.29296875,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 2.0629411,
+          "CpuMs": 46.875,
+          "PrivateMiB": 70.27734375,
+          "WorkingSetMiB": 111.265625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 2.0745275,
+          "CpuMs": 31.25,
+          "PrivateMiB": 15.3046875,
+          "WorkingSetMiB": 46.4453125,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 2.0863734,
+          "CpuMs": 0,
+          "PrivateMiB": 96.79296875,
+          "WorkingSetMiB": 121.29296875,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 3.1053694,
+          "CpuMs": 93.75,
+          "PrivateMiB": 70.34375,
+          "WorkingSetMiB": 111.40625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 3.1178578,
+          "CpuMs": 46.875,
+          "PrivateMiB": 15.3046875,
+          "WorkingSetMiB": 46.48828125,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 3.1299713,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8203125,
+          "WorkingSetMiB": 121.328125,
+          "Handles": 691
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 4.1574925,
+          "CpuMs": 171.875,
+          "PrivateMiB": 70.33984375,
+          "WorkingSetMiB": 111.421875,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 4.1677098,
+          "CpuMs": 46.875,
+          "PrivateMiB": 15.3046875,
+          "WorkingSetMiB": 46.48828125,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 4.1777264,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8203125,
+          "WorkingSetMiB": 121.328125,
+          "Handles": 691
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 5.1929249,
+          "CpuMs": 187.5,
+          "PrivateMiB": 70.34375,
+          "WorkingSetMiB": 111.4453125,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 5.2038478,
+          "CpuMs": 62.5,
+          "PrivateMiB": 14.99609375,
+          "WorkingSetMiB": 46.23828125,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 5.2148926,
+          "CpuMs": 0,
+          "PrivateMiB": 96.79296875,
+          "WorkingSetMiB": 121.3125,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 6.2314553,
+          "CpuMs": 218.75,
+          "PrivateMiB": 70.34375,
+          "WorkingSetMiB": 111.453125,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 6.2407715,
+          "CpuMs": 62.5,
+          "PrivateMiB": 14.99609375,
+          "WorkingSetMiB": 46.23828125,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 6.2508459,
+          "CpuMs": 0,
+          "PrivateMiB": 96.83203125,
+          "WorkingSetMiB": 121.38671875,
+          "Handles": 691
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 7.2762482,
+          "CpuMs": 265.625,
+          "PrivateMiB": 70.40625,
+          "WorkingSetMiB": 111.5234375,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 7.2874091,
+          "CpuMs": 78.125,
+          "PrivateMiB": 14.99609375,
+          "WorkingSetMiB": 46.33984375,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 7.2980072,
+          "CpuMs": 0,
+          "PrivateMiB": 96.83203125,
+          "WorkingSetMiB": 121.38671875,
+          "Handles": 691
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 8.311928,
+          "CpuMs": 296.875,
+          "PrivateMiB": 70.77734375,
+          "WorkingSetMiB": 111.54296875,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 8.3219413,
+          "CpuMs": 78.125,
+          "PrivateMiB": 14.99609375,
+          "WorkingSetMiB": 46.33984375,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 8.3313343,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8046875,
+          "WorkingSetMiB": 121.37109375,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 9.3460874,
+          "CpuMs": 328.125,
+          "PrivateMiB": 70.78125,
+          "WorkingSetMiB": 111.6015625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 9.3559742,
+          "CpuMs": 78.125,
+          "PrivateMiB": 15.17578125,
+          "WorkingSetMiB": 46.359375,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 9.3657681,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8046875,
+          "WorkingSetMiB": 121.37109375,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 10.387633,
+          "CpuMs": 343.75,
+          "PrivateMiB": 70.78125,
+          "WorkingSetMiB": 111.63671875,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 10.3978429,
+          "CpuMs": 109.375,
+          "PrivateMiB": 16.09375,
+          "WorkingSetMiB": 47.85546875,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 10.4080971,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8046875,
+          "WorkingSetMiB": 121.37109375,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 11.4295967,
+          "CpuMs": 375,
+          "PrivateMiB": 70.78125,
+          "WorkingSetMiB": 111.69921875,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 11.439023,
+          "CpuMs": 125,
+          "PrivateMiB": 16.09375,
+          "WorkingSetMiB": 47.91796875,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 11.4481922,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8046875,
+          "WorkingSetMiB": 121.37109375,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 12.4618908,
+          "CpuMs": 406.25,
+          "PrivateMiB": 70.83984375,
+          "WorkingSetMiB": 112.11328125,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 12.4713272,
+          "CpuMs": 125,
+          "PrivateMiB": 16.09375,
+          "WorkingSetMiB": 47.91796875,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 12.4809455,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8046875,
+          "WorkingSetMiB": 121.37109375,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 13.5010203,
+          "CpuMs": 437.5,
+          "PrivateMiB": 70.83984375,
+          "WorkingSetMiB": 112.16015625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 13.5114476,
+          "CpuMs": 125,
+          "PrivateMiB": 16.11328125,
+          "WorkingSetMiB": 47.9375,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 13.5214534,
+          "CpuMs": 0,
+          "PrivateMiB": 96.8046875,
+          "WorkingSetMiB": 121.37109375,
+          "Handles": 690
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 14.5372191,
+          "CpuMs": 468.75,
+          "PrivateMiB": 70.84375,
+          "WorkingSetMiB": 112.12109375,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 14.547917,
+          "CpuMs": 125,
+          "PrivateMiB": 16.11328125,
+          "WorkingSetMiB": 47.9609375,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 14.5576413,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 15.5794431,
+          "CpuMs": 546.875,
+          "PrivateMiB": 70.84375,
+          "WorkingSetMiB": 112.1796875,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 15.5904465,
+          "CpuMs": 125,
+          "PrivateMiB": 16.11328125,
+          "WorkingSetMiB": 47.9765625,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 15.6003555,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 16.6179716,
+          "CpuMs": 562.5,
+          "PrivateMiB": 70.90625,
+          "WorkingSetMiB": 112.1875,
+          "Handles": 754
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 16.6288405,
+          "CpuMs": 125,
+          "PrivateMiB": 16.11328125,
+          "WorkingSetMiB": 47.9765625,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 16.6394836,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 17.6580795,
+          "CpuMs": 593.75,
+          "PrivateMiB": 70.94140625,
+          "WorkingSetMiB": 112.20703125,
+          "Handles": 761
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 17.6679302,
+          "CpuMs": 125,
+          "PrivateMiB": 15,
+          "WorkingSetMiB": 46.921875,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 17.6775623,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 18.6971058,
+          "CpuMs": 609.375,
+          "PrivateMiB": 70.94140625,
+          "WorkingSetMiB": 112.21484375,
+          "Handles": 761
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 18.7071533,
+          "CpuMs": 125,
+          "PrivateMiB": 15,
+          "WorkingSetMiB": 46.93359375,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 18.7181652,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 19.7427081,
+          "CpuMs": 640.625,
+          "PrivateMiB": 71.046875,
+          "WorkingSetMiB": 112.2734375,
+          "Handles": 764
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 19.7528671,
+          "CpuMs": 125,
+          "PrivateMiB": 15.0625,
+          "WorkingSetMiB": 46.97265625,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 19.7622444,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 20.7810215,
+          "CpuMs": 671.875,
+          "PrivateMiB": 71.58203125,
+          "WorkingSetMiB": 112.921875,
+          "Handles": 764
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 20.7915358,
+          "CpuMs": 125,
+          "PrivateMiB": 15.0625,
+          "WorkingSetMiB": 46.97265625,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 20.8033964,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 21.8183075,
+          "CpuMs": 734.375,
+          "PrivateMiB": 71.58203125,
+          "WorkingSetMiB": 113.16015625,
+          "Handles": 764
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 21.8279718,
+          "CpuMs": 125,
+          "PrivateMiB": 15.1953125,
+          "WorkingSetMiB": 47.16796875,
+          "Handles": 340
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 21.8370219,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 22.8591727,
+          "CpuMs": 765.625,
+          "PrivateMiB": 71.54296875,
+          "WorkingSetMiB": 113.15625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 22.8689401,
+          "CpuMs": 125,
+          "PrivateMiB": 15.25390625,
+          "WorkingSetMiB": 47.17578125,
+          "Handles": 339
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 22.8780023,
+          "CpuMs": 0,
+          "PrivateMiB": 96.5546875,
+          "WorkingSetMiB": 121.2421875,
+          "Handles": 688
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 23.9001965,
+          "CpuMs": 812.5,
+          "PrivateMiB": 71.6015625,
+          "WorkingSetMiB": 113.19921875,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 23.9101919,
+          "CpuMs": 140.625,
+          "PrivateMiB": 15.3125,
+          "WorkingSetMiB": 47.35546875,
+          "Handles": 339
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 23.9204273,
+          "CpuMs": 0,
+          "PrivateMiB": 96.19921875,
+          "WorkingSetMiB": 120.5390625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 24.9417972,
+          "CpuMs": 843.75,
+          "PrivateMiB": 71.140625,
+          "WorkingSetMiB": 112.34765625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 24.9513442,
+          "CpuMs": 140.625,
+          "PrivateMiB": 15.3125,
+          "WorkingSetMiB": 47.37109375,
+          "Handles": 339
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 24.9622737,
+          "CpuMs": 0,
+          "PrivateMiB": 96.19921875,
+          "WorkingSetMiB": 120.5390625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 25.9865653,
+          "CpuMs": 875,
+          "PrivateMiB": 71.171875,
+          "WorkingSetMiB": 112.40625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 26.0090981,
+          "CpuMs": 140.625,
+          "PrivateMiB": 15.671875,
+          "WorkingSetMiB": 47.875,
+          "Handles": 339
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 26.0215066,
+          "CpuMs": 0,
+          "PrivateMiB": 96.19921875,
+          "WorkingSetMiB": 120.5390625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 27.0372483,
+          "CpuMs": 921.875,
+          "PrivateMiB": 71.17578125,
+          "WorkingSetMiB": 112.4375,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 27.0470717,
+          "CpuMs": 140.625,
+          "PrivateMiB": 15.671875,
+          "WorkingSetMiB": 47.875,
+          "Handles": 339
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 27.056936,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 28.0761272,
+          "CpuMs": 953.125,
+          "PrivateMiB": 71.2421875,
+          "WorkingSetMiB": 112.51953125,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 28.0874062,
+          "CpuMs": 140.625,
+          "PrivateMiB": 15.671875,
+          "WorkingSetMiB": 47.84375,
+          "Handles": 339
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 28.0967989,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 29.1207786,
+          "CpuMs": 984.375,
+          "PrivateMiB": 71.2421875,
+          "WorkingSetMiB": 112.53125,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 29.130228,
+          "CpuMs": 140.625,
+          "PrivateMiB": 15.703125,
+          "WorkingSetMiB": 47.8359375,
+          "Handles": 339
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 29.1392528,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 30.1597396,
+          "CpuMs": 1015.625,
+          "PrivateMiB": 71.25,
+          "WorkingSetMiB": 112.56640625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 30.1693905,
+          "CpuMs": 156.25,
+          "PrivateMiB": 18.51171875,
+          "WorkingSetMiB": 50.77734375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 30.1791344,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 31.204482,
+          "CpuMs": 1062.5,
+          "PrivateMiB": 71.25390625,
+          "WorkingSetMiB": 112.5859375,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 31.2241889,
+          "CpuMs": 156.25,
+          "PrivateMiB": 18.51171875,
+          "WorkingSetMiB": 50.7890625,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 31.244186,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 32.285473,
+          "CpuMs": 1125,
+          "PrivateMiB": 71.703125,
+          "WorkingSetMiB": 113.1875,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 32.2969709,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.515625,
+          "WorkingSetMiB": 50.8515625,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 32.3084752,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 33.3261978,
+          "CpuMs": 1156.25,
+          "PrivateMiB": 71.7734375,
+          "WorkingSetMiB": 113.21484375,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 33.3361085,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.515625,
+          "WorkingSetMiB": 50.8515625,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 33.3460864,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 34.3587557,
+          "CpuMs": 1187.5,
+          "PrivateMiB": 71.77734375,
+          "WorkingSetMiB": 113.22265625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 34.3716693,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.58203125,
+          "WorkingSetMiB": 50.859375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 34.3850462,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 35.4017687,
+          "CpuMs": 1234.375,
+          "PrivateMiB": 71.78125,
+          "WorkingSetMiB": 113.234375,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 35.4116167,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.58203125,
+          "WorkingSetMiB": 50.859375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 35.4214758,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 36.4438373,
+          "CpuMs": 1265.625,
+          "PrivateMiB": 71.7578125,
+          "WorkingSetMiB": 113.2265625,
+          "Handles": 755
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 36.4558264,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.58203125,
+          "WorkingSetMiB": 50.9140625,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 36.468248,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 37.4905921,
+          "CpuMs": 1296.875,
+          "PrivateMiB": 71.765625,
+          "WorkingSetMiB": 113.203125,
+          "Handles": 753
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 37.5006255,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.96484375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 37.5101413,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 38.5337084,
+          "CpuMs": 1328.125,
+          "PrivateMiB": 71.765625,
+          "WorkingSetMiB": 113.22265625,
+          "Handles": 753
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 38.5438733,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.96484375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 38.5549542,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 39.5709836,
+          "CpuMs": 1359.375,
+          "PrivateMiB": 71.76953125,
+          "WorkingSetMiB": 113.2421875,
+          "Handles": 753
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 39.5808073,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.96484375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 39.5904479,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 40.6101629,
+          "CpuMs": 1390.625,
+          "PrivateMiB": 71.76953125,
+          "WorkingSetMiB": 113.2578125,
+          "Handles": 753
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 40.6208697,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.96484375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 40.6321648,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 41.6491624,
+          "CpuMs": 1437.5,
+          "PrivateMiB": 70.73828125,
+          "WorkingSetMiB": 112.2265625,
+          "Handles": 753
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 41.6597034,
+          "CpuMs": 171.875,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.96484375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 41.6693398,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        }
+      ]
+    },
+    {
+      "Scenario": "Capture on; 20 direct UDP DNS questions, one every 2 seconds",
+      "Seconds": 47.4905402,
+      "CombinedCpuOneCorePercent": 3.421735451841104,
+      "SumOfPeakPrivateMiB": 190.9296875,
+      "Processes": [
+        {
+          "Process": "Diagnostic host (no window)",
+          "CpuOneCorePercent": 3.0598212022104625,
+          "PeakPrivateMiB": 75.4375,
+          "PeakWorkingSetMiB": 118.74609375,
+          "PrivateGrowthMiB": 3.9609375,
+          "PeakHandles": 776
+        },
+        {
+          "Process": "DNS broker",
+          "CpuOneCorePercent": 0.36191424963064167,
+          "PeakPrivateMiB": 19.3359375,
+          "PeakWorkingSetMiB": 52.76171875,
+          "PrivateGrowthMiB": 0.640625,
+          "PeakHandles": 356
+        },
+        {
+          "Process": "Capture controller",
+          "CpuOneCorePercent": 0,
+          "PeakPrivateMiB": 96.15625,
+          "PeakWorkingSetMiB": 120.515625,
+          "PrivateGrowthMiB": -0.08984375,
+          "PeakHandles": 673
+        }
+      ],
+      "Samples": [
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 1.6476076,
+          "CpuMs": 0,
+          "PrivateMiB": 71.4765625,
+          "WorkingSetMiB": 113.97265625,
+          "Handles": 769
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 1.6571562,
+          "CpuMs": 0,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.984375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 1.6684903,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 2.6887325,
+          "CpuMs": 31.25,
+          "PrivateMiB": 71.4765625,
+          "WorkingSetMiB": 113.9765625,
+          "Handles": 769
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 2.7035341,
+          "CpuMs": 0,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.9921875,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 2.7166908,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 4.2955606,
+          "CpuMs": 78.125,
+          "PrivateMiB": 71.6015625,
+          "WorkingSetMiB": 114.22265625,
+          "Handles": 769
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 4.3055401,
+          "CpuMs": 0,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.94921875,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 4.3154894,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 5.3333163,
+          "CpuMs": 109.375,
+          "PrivateMiB": 71.49609375,
+          "WorkingSetMiB": 114.16015625,
+          "Handles": 769
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 5.3429317,
+          "CpuMs": 0,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.95703125,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 5.3520778,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 6.5460292,
+          "CpuMs": 140.625,
+          "PrivateMiB": 71.58984375,
+          "WorkingSetMiB": 114.25390625,
+          "Handles": 774
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 6.5555917,
+          "CpuMs": 0,
+          "PrivateMiB": 18.64453125,
+          "WorkingSetMiB": 50.99609375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 6.5641335,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 7.581778,
+          "CpuMs": 187.5,
+          "PrivateMiB": 71.65234375,
+          "WorkingSetMiB": 114.26171875,
+          "Handles": 774
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 7.5911949,
+          "CpuMs": 0,
+          "PrivateMiB": 18.5703125,
+          "WorkingSetMiB": 50.9375,
+          "Handles": 342
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 7.6016521,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 8.8001389,
+          "CpuMs": 234.375,
+          "PrivateMiB": 73.61328125,
+          "WorkingSetMiB": 116.578125,
+          "Handles": 776
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 8.8102749,
+          "CpuMs": 15.625,
+          "PrivateMiB": 18.6015625,
+          "WorkingSetMiB": 51.0390625,
+          "Handles": 345
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 8.822465,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 9.8388171,
+          "CpuMs": 250,
+          "PrivateMiB": 73.61328125,
+          "WorkingSetMiB": 116.578125,
+          "Handles": 776
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 9.8500699,
+          "CpuMs": 15.625,
+          "PrivateMiB": 18.6015625,
+          "WorkingSetMiB": 51.04296875,
+          "Handles": 345
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 9.8617609,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 11.0609027,
+          "CpuMs": 296.875,
+          "PrivateMiB": 73.734375,
+          "WorkingSetMiB": 116.73046875,
+          "Handles": 776
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 11.0705241,
+          "CpuMs": 31.25,
+          "PrivateMiB": 18.515625,
+          "WorkingSetMiB": 51.03125,
+          "Handles": 345
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 11.0806818,
+          "CpuMs": 0,
+          "PrivateMiB": 96.15625,
+          "WorkingSetMiB": 120.515625,
+          "Handles": 673
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 12.0949539,
+          "CpuMs": 328.125,
+          "PrivateMiB": 73.73828125,
+          "WorkingSetMiB": 116.74609375,
+          "Handles": 776
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 12.1049888,
+          "CpuMs": 31.25,
+          "PrivateMiB": 18.515625,
+          "WorkingSetMiB": 51.03125,
+          "Handles": 344
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 12.1152982,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 670
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 13.6498525,
+          "CpuMs": 390.625,
+          "PrivateMiB": 72.77734375,
+          "WorkingSetMiB": 115.9765625,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 13.6642378,
+          "CpuMs": 78.125,
+          "PrivateMiB": 18.84765625,
+          "WorkingSetMiB": 51.82421875,
+          "Handles": 350
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 13.6748544,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 670
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 14.68931,
+          "CpuMs": 437.5,
+          "PrivateMiB": 72.77734375,
+          "WorkingSetMiB": 115.9765625,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 14.6989476,
+          "CpuMs": 78.125,
+          "PrivateMiB": 18.91015625,
+          "WorkingSetMiB": 51.8984375,
+          "Handles": 350
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 14.7089756,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 15.9333583,
+          "CpuMs": 468.75,
+          "PrivateMiB": 72.90234375,
+          "WorkingSetMiB": 116.04296875,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 15.9459587,
+          "CpuMs": 78.125,
+          "PrivateMiB": 19.03515625,
+          "WorkingSetMiB": 51.9921875,
+          "Handles": 350
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 15.9584074,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 16.9722462,
+          "CpuMs": 500,
+          "PrivateMiB": 72.90625,
+          "WorkingSetMiB": 116.05859375,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 16.9839154,
+          "CpuMs": 78.125,
+          "PrivateMiB": 19.03515625,
+          "WorkingSetMiB": 52,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 16.9954669,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 18.2095964,
+          "CpuMs": 531.25,
+          "PrivateMiB": 72.97265625,
+          "WorkingSetMiB": 116.171875,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 18.2194386,
+          "CpuMs": 78.125,
+          "PrivateMiB": 19.03515625,
+          "WorkingSetMiB": 52.01953125,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 18.2289287,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 19.2502342,
+          "CpuMs": 562.5,
+          "PrivateMiB": 72.97265625,
+          "WorkingSetMiB": 116.1796875,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 19.2596894,
+          "CpuMs": 78.125,
+          "PrivateMiB": 19.03515625,
+          "WorkingSetMiB": 52.0234375,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 19.2691619,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 20.4807496,
+          "CpuMs": 593.75,
+          "PrivateMiB": 73.09375,
+          "WorkingSetMiB": 116.36328125,
+          "Handles": 768
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 20.503091,
+          "CpuMs": 78.125,
+          "PrivateMiB": 19.09765625,
+          "WorkingSetMiB": 52.03125,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 20.5158949,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 21.5352923,
+          "CpuMs": 625,
+          "PrivateMiB": 73.09375,
+          "WorkingSetMiB": 116.36328125,
+          "Handles": 768
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 21.5471301,
+          "CpuMs": 78.125,
+          "PrivateMiB": 19.09765625,
+          "WorkingSetMiB": 52.04296875,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 21.5586364,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 23.2105728,
+          "CpuMs": 687.5,
+          "PrivateMiB": 72.7734375,
+          "WorkingSetMiB": 115.80859375,
+          "Handles": 768
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 23.2217461,
+          "CpuMs": 109.375,
+          "PrivateMiB": 19.109375,
+          "WorkingSetMiB": 52.2578125,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 23.2331299,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 24.2592415,
+          "CpuMs": 734.375,
+          "PrivateMiB": 72.77734375,
+          "WorkingSetMiB": 115.81640625,
+          "Handles": 768
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 24.2694324,
+          "CpuMs": 109.375,
+          "PrivateMiB": 19.109375,
+          "WorkingSetMiB": 52.265625,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 24.279412,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 25.504837,
+          "CpuMs": 781.25,
+          "PrivateMiB": 72.90234375,
+          "WorkingSetMiB": 115.859375,
+          "Handles": 768
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 25.5145064,
+          "CpuMs": 109.375,
+          "PrivateMiB": 19.11328125,
+          "WorkingSetMiB": 52.51953125,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 25.5236708,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 26.5438784,
+          "CpuMs": 812.5,
+          "PrivateMiB": 72.84765625,
+          "WorkingSetMiB": 115.82421875,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 26.553756,
+          "CpuMs": 109.375,
+          "PrivateMiB": 19.11328125,
+          "WorkingSetMiB": 52.51953125,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 26.5631983,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 27.7660384,
+          "CpuMs": 875,
+          "PrivateMiB": 72.91015625,
+          "WorkingSetMiB": 115.9375,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 27.7758623,
+          "CpuMs": 140.625,
+          "PrivateMiB": 19.11328125,
+          "WorkingSetMiB": 52.52734375,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 27.7850174,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 28.7995928,
+          "CpuMs": 906.25,
+          "PrivateMiB": 72.97265625,
+          "WorkingSetMiB": 115.94921875,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 28.810211,
+          "CpuMs": 140.625,
+          "PrivateMiB": 19.11328125,
+          "WorkingSetMiB": 52.53515625,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 28.8202975,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 30.5029975,
+          "CpuMs": 937.5,
+          "PrivateMiB": 73.03515625,
+          "WorkingSetMiB": 116.0625,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 30.5128683,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.11328125,
+          "WorkingSetMiB": 52.55078125,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 30.52308,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 31.5433236,
+          "CpuMs": 968.75,
+          "PrivateMiB": 73.03125,
+          "WorkingSetMiB": 116.05859375,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 31.5528108,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.11328125,
+          "WorkingSetMiB": 52.5546875,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 31.5622875,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 32.7617581,
+          "CpuMs": 1015.625,
+          "PrivateMiB": 73.09375,
+          "WorkingSetMiB": 116.1328125,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 32.7719493,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.17578125,
+          "WorkingSetMiB": 52.5625,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 32.7818764,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 33.7984629,
+          "CpuMs": 1046.875,
+          "PrivateMiB": 73.16015625,
+          "WorkingSetMiB": 116.14453125,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 33.8080248,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.17578125,
+          "WorkingSetMiB": 52.57421875,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 33.8175418,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 35.0417655,
+          "CpuMs": 1078.125,
+          "PrivateMiB": 73.22265625,
+          "WorkingSetMiB": 116.31640625,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 35.0529516,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.17578125,
+          "WorkingSetMiB": 52.57421875,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 35.0664408,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 36.0920953,
+          "CpuMs": 1109.375,
+          "PrivateMiB": 73.21484375,
+          "WorkingSetMiB": 116.30859375,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 36.1043272,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.17578125,
+          "WorkingSetMiB": 52.57421875,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 36.1159046,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 37.3252292,
+          "CpuMs": 1156.25,
+          "PrivateMiB": 73.28125,
+          "WorkingSetMiB": 116.51953125,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 37.3354853,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.23828125,
+          "WorkingSetMiB": 52.65234375,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 37.3453262,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 38.3629036,
+          "CpuMs": 1203.125,
+          "PrivateMiB": 73.34765625,
+          "WorkingSetMiB": 116.54296875,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 38.3734583,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.23828125,
+          "WorkingSetMiB": 52.65234375,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 38.3834842,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 39.5870496,
+          "CpuMs": 1234.375,
+          "PrivateMiB": 73.41015625,
+          "WorkingSetMiB": 116.65234375,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 39.5963297,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.23828125,
+          "WorkingSetMiB": 52.671875,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 39.6061009,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 40.6251251,
+          "CpuMs": 1265.625,
+          "PrivateMiB": 73.40625,
+          "WorkingSetMiB": 116.65234375,
+          "Handles": 766
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 40.6349338,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.23828125,
+          "WorkingSetMiB": 52.6796875,
+          "Handles": 352
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 40.6445712,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 41.8426688,
+          "CpuMs": 1296.875,
+          "PrivateMiB": 73.72265625,
+          "WorkingSetMiB": 116.83203125,
+          "Handles": 771
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 41.8525073,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.26953125,
+          "WorkingSetMiB": 52.703125,
+          "Handles": 356
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 41.8618925,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 42.8989971,
+          "CpuMs": 1328.125,
+          "PrivateMiB": 73.71875,
+          "WorkingSetMiB": 116.84375,
+          "Handles": 771
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 42.9301699,
+          "CpuMs": 156.25,
+          "PrivateMiB": 19.19921875,
+          "WorkingSetMiB": 52.6328125,
+          "Handles": 353
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 42.9482647,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 44.1616,
+          "CpuMs": 1359.375,
+          "PrivateMiB": 75.3125,
+          "WorkingSetMiB": 118.64453125,
+          "Handles": 773
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 44.1763658,
+          "CpuMs": 171.875,
+          "PrivateMiB": 19.3359375,
+          "WorkingSetMiB": 52.74609375,
+          "Handles": 356
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 44.1962507,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 45.2128277,
+          "CpuMs": 1390.625,
+          "PrivateMiB": 75.3125,
+          "WorkingSetMiB": 118.6484375,
+          "Handles": 773
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 45.2222674,
+          "CpuMs": 171.875,
+          "PrivateMiB": 19.3359375,
+          "WorkingSetMiB": 52.75390625,
+          "Handles": 356
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 45.2317407,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 46.4264641,
+          "CpuMs": 1421.875,
+          "PrivateMiB": 75.4375,
+          "WorkingSetMiB": 118.74609375,
+          "Handles": 773
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 46.4362562,
+          "CpuMs": 171.875,
+          "PrivateMiB": 19.3359375,
+          "WorkingSetMiB": 52.76171875,
+          "Handles": 356
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 46.4457491,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        },
+        {
+          "Process": "Diagnostic host (no window)",
+          "Pid": 61796,
+          "Seconds": 47.4612154,
+          "CpuMs": 1453.125,
+          "PrivateMiB": 75.4375,
+          "WorkingSetMiB": 118.74609375,
+          "Handles": 773
+        },
+        {
+          "Process": "DNS broker",
+          "Pid": 67632,
+          "Seconds": 47.4719393,
+          "CpuMs": 171.875,
+          "PrivateMiB": 19.28515625,
+          "WorkingSetMiB": 52.7265625,
+          "Handles": 353
+        },
+        {
+          "Process": "Capture controller",
+          "Pid": 97504,
+          "Seconds": 47.4813319,
+          "CpuMs": 0,
+          "PrivateMiB": 96.06640625,
+          "WorkingSetMiB": 120.4609375,
+          "Handles": 672
+        }
+      ]
+    }
+  ],
+  "Failure": null
+}

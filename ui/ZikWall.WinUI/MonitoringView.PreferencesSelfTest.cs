@@ -13,6 +13,7 @@ public sealed partial class MonitoringView
         first.RefreshChoice.SelectedIndex = 2;
         first.HistoryWindow.SelectedIndex = 2;
         first.RecentAlerts.IsOn = false;
+        first.NotificationTypeChoice.SelectedIndex = 1;
         first.SaveHistory.IsOn = true;
         first.UsageSortClicked(first, new Microsoft.UI.Xaml.RoutedEventArgs());
         // Construct a fresh view before Stop: settings must be durable as soon as changed.
@@ -20,7 +21,7 @@ public sealed partial class MonitoringView
         if (reopened.GroupChoice.SelectedIndex != 1 || reopened.DirectionChoice.SelectedIndex != 2 ||
             reopened.ScopeChoice.SelectedIndex != 0 || reopened.RefreshChoice.SelectedIndex != 2 ||
             reopened.HistoryWindow.SelectedIndex != 2 || reopened.RecentAlerts.IsOn || !reopened.SaveHistory.IsOn ||
-            reopened.usageSort != Models.UsageSort.Descending)
+            reopened.usageSort != Models.UsageSort.Descending || reopened.NotificationTypeChoice.SelectedIndex != 1)
             throw new InvalidOperationException("Changed monitor settings reset when a fresh view is opened.");
         first.SaveHistory.IsOn = reopened.SaveHistory.IsOn = false;
         first.Stop(); reopened.Stop();

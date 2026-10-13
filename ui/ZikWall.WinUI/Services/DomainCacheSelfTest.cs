@@ -50,7 +50,7 @@ public static class DomainCacheSelfTest
             if (!sample.Success || sample.Domains is null) throw new IOException("Cache reader failed: " + sample.Message);
             if (sample.Domains.Any(x => !addresses.Contains(x.Address))) throw new IOException("Unexpected address returned.");
             var throttled = await client.SendAsync(new("domains", RemoteAddresses: addresses));
-            if (throttled.Domains?.Count != 0) throw new IOException("Cache scan rate limit failed.");
+            if (throttled.Domains is null || throttled.Domains.Any(x => !x.ObservedResponse)) throw new IOException("Windows cache scan rate limit failed.");
             result["Passed"] = true;
             result["MatchedHints"] = sample.Domains.Count;
             result["FirewallCommandsRejected"] = true;

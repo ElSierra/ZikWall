@@ -14,7 +14,8 @@
         <NavigationView x:Name="Navigation" Grid.Row="1" PaneDisplayMode="Left" OpenPaneLength="232" IsBackButtonVisible="Collapsed" IsPaneToggleButtonVisible="False" IsSettingsVisible="True" SelectionChanged="NavigationChanged" AlwaysShowHeader="False">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Connections" Tag="connections"><NavigationViewItem.Icon><FontIcon Glyph="&#xE968;" /></NavigationViewItem.Icon></NavigationViewItem>
-                <NavigationViewItem Content="Activity" Tag="activity"><NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;" /></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem Content="My activity" Tag="activity"><NavigationViewItem.Icon><FontIcon Glyph="&#xE81C;" /></NavigationViewItem.Icon></NavigationViewItem>
+                <NavigationViewItem Content="Log analysis" Tag="logs"><NavigationViewItem.Icon><FontIcon Glyph="&#xE9D9;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem Content="Map" Tag="map"><NavigationViewItem.Icon><FontIcon Glyph="&#xE707;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem Content="Firewall policy" Tag="policy"><NavigationViewItem.Icon><FontIcon Glyph="&#xE83D;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem Content="DNS and subscriptions" Tag="privacy"><NavigationViewItem.Icon><FontIcon Glyph="&#xE72E;" /></NavigationViewItem.Icon></NavigationViewItem>
@@ -95,6 +96,8 @@
                     </Border>
                 </Grid>
                 <local:MonitoringView x:Name="MonitorPanel" Grid.Row="3" Visibility="Collapsed" />
+                <ContentControl x:Name="ActivityHost" Grid.Row="3" Visibility="Collapsed" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+                <ContentControl x:Name="LogHost" Grid.Row="3" Visibility="Collapsed" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
                 <local:PolicyView x:Name="PolicyPanel" Grid.Row="3" Visibility="Collapsed" />
                 <local:PrivacyView x:Name="PrivacyPanel" Grid.Row="3" Visibility="Collapsed" />
                 <local:GeoView x:Name="GeoPanel" Grid.Row="3" Visibility="Collapsed" />

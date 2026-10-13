@@ -1,0 +1,60 @@
+{
+  "TimestampUtc": "2026-10-13T16:24:37.4555777+00:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "LogicalProcessors": 28,
+  "Scenario": "Warmed synthetic parser/cache workloads; no capture session, packets sent, native callback, IPC or UI rendering. Full-cache retained memory is an approximate managed-heap delta, not total process memory.",
+  "FullCacheEntries": 8192,
+  "ApproximateFullCacheRetainedBytes": 1475104,
+  "Results": [
+    {
+      "Name": "Reject non-DNS UDP packets",
+      "Iterations": 25,
+      "OperationsPerIteration": 1000000,
+      "MedianMs": 9.2792,
+      "P95Ms": 10.0124,
+      "NanosecondsPerOperation": 9.2792,
+      "AllocatedBytesPerOperation": 3.904E-05,
+      "MeanCpuMsPerIteration": 9.375
+    },
+    {
+      "Name": "Parse complete Ethernet/IPv4 DNS responses",
+      "Iterations": 30,
+      "OperationsPerIteration": 10000,
+      "MedianMs": 4.0536,
+      "P95Ms": 4.3456,
+      "NanosecondsPerOperation": 405.36000000000007,
+      "AllocatedBytesPerOperation": 1632.00096,
+      "MeanCpuMsPerIteration": 3.6458333333333335
+    },
+    {
+      "Name": "Parse and cache repeated DNS responses",
+      "Iterations": 30,
+      "OperationsPerIteration": 10000,
+      "MedianMs": 6.3293,
+      "P95Ms": 6.679,
+      "NanosecondsPerOperation": 632.93,
+      "AllocatedBytesPerOperation": 2056.00096,
+      "MeanCpuMsPerIteration": 6.25
+    },
+    {
+      "Name": "Read 2048 IPs from full 8192-entry cache",
+      "Iterations": 50,
+      "OperationsPerIteration": 1,
+      "MedianMs": 0.4071,
+      "P95Ms": 0.4714,
+      "NanosecondsPerOperation": 407100,
+      "AllocatedBytesPerOperation": 517973.76,
+      "MeanCpuMsPerIteration": 0.3125
+    },
+    {
+      "Name": "Insert new names into full cache (eviction stress)",
+      "Iterations": 20,
+      "OperationsPerIteration": 256,
+      "MedianMs": 54.7721,
+      "P95Ms": 57.083,
+      "NanosecondsPerOperation": 213953.515625,
+      "AllocatedBytesPerOperation": 888.1609375,
+      "MeanCpuMsPerIteration": 55.46875
+    }
+  ]
+}

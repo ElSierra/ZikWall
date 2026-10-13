@@ -19,6 +19,10 @@ public sealed partial class PrivacyView
                 throw new InvalidOperationException("DNS provider fields reset when reopened.");
             if (new Services.AppearancePreferencesStore(directory).Load().Theme != 2)
                 throw new InvalidOperationException("Editing DNS replaced the saved theme.");
+            reopened.Exceptions.Text = "https://not-a-domain.example/path";
+            reopened.ExceptionsClicked(reopened, new RoutedEventArgs());
+            if (reopened.PrivacyStatus.Title != "Action failed" || reopened.settings.AllowedDomains.Count != 0)
+                throw new InvalidOperationException("Invalid domain exceptions must report an error without changing the saved list.");
         }
         finally { first.Stop(); reopened.Stop(); }
         return Task.CompletedTask;

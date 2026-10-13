@@ -11,6 +11,10 @@ public partial class App : Application
     public App() => InitializeComponent();
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        if (Environment.GetCommandLineArgs().Skip(1).SequenceEqual(new[] { "--test-domain-benchmark" }))
+        {
+            await Services.DomainCaptureBenchmark.RunAsync(); Exit(); return;
+        }
         if (Environment.GetCommandLineArgs().Skip(1).SequenceEqual(new[] { "--test-throughput" }))
         {
             await Services.ThroughputSelfTest.RunAsync(); Exit(); return;
@@ -35,6 +39,35 @@ public partial class App : Application
         }
         var main = new MainWindow(diagnostic && !arguments.Contains("--test-lifecycle"));
         window = main;
+        if (arguments.SequenceEqual(new[] { "--test-notification" }))
+        {
+            var report = new Dictionary<string, object>();
+            try
+            {
+                var sample = new Models.ConnectionEntry("TCPv4", "192.0.2.1", 50000, "1.1.1.1", 443, Environment.ProcessId,
+                    "Established", "ZikWall", CountryCode: "AU", CountryName: "Australia");
+                var message = Models.ConnectionNotification.From(new([sample], 1, Models.ConnectionNotificationType.NewApps));
+                report["Xml"] = message.ToToastXml(Path.Combine(AppContext.BaseDirectory, "Assets"));
+                using var notifications = new Presentation.DesktopNotifications();
+                notifications.Enable();
+                notifications.Show(message with { Title = "Notification test: " + message.Title });
+                report["Submitted"] = true;
+            }
+            catch (Exception ex) { report["Error"] = ex.ToString(); }
+            File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "notification-selftest.json"), System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+            main.Close(); return;
+        }
+        if (arguments.Contains("--test-log-analysis"))
+        {
+            window.Activate();
+            try { await Task.Delay(500); await main.ExerciseLogAnalysisAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "log-analysis-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
+        if (arguments.Contains("--test-passive-dns"))
+        {
+            await Services.PassiveDnsSelfTest.RunAsync(); main.Close(); return;
+        }
         if (arguments.Contains("--test-domain-cache"))
         {
             await Services.DomainCacheSelfTest.RunAsync(); main.Close(); return;
@@ -45,6 +78,18 @@ public partial class App : Application
         }
         if (wake is not null) wakeRegistration = ThreadPool.RegisterWaitForSingleObject(wake, (_, _) => main.DispatcherQueue.TryEnqueue(main.ShowFromTray), null, -1, false);
         window.Activate();
+        if (arguments.SequenceEqual(new[] { "--test-activity-overview" }))
+        {
+            try { await Task.Delay(500); await main.ExerciseActivityOverviewAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "activity-overview-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
+        if (arguments.SequenceEqual(new[] { "--test-policy-layout" }))
+        {
+            try { await Task.Delay(500); await main.ExercisePolicyLayoutAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "policy-layout-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
         if (arguments.SequenceEqual(new[] { "--test-preferences" }))
         {
             try { await main.ExercisePreferencesAsync(); }

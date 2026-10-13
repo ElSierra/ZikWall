@@ -9,6 +9,12 @@ internal static class DomainCacheSession
     public static async Task RunAsync(NamedPipeServerStream pipe, Process parent)
     {
         var cache = new WindowsDnsCache();
+        var observed = new ObservedDnsCache();
+        PassiveDnsCapture? capture = null;
+        string captureError = "";
+        try { capture = new(observed); }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or DllNotFoundException or EntryPointNotFoundException)
+        { captureError = "Packet capture unavailable: " + ex.Message + " Windows cached names remain available."; }
         long nextRead = 0;
         using var lifetime = new CancellationTokenSource();
         parent.EnableRaisingEvents = true;
@@ -25,17 +31,21 @@ internal static class DomainCacheSession
                 BrokerResponse response;
                 try
                 {
-                    if (request.Command == "status") response = new(true, "Read-only DNS cache session ready");
+                    if (request.Command == "status") response = new(true, capture?.Status() ?? captureError);
                     else if (request.Command == "domains")
                     {
                         var wanted = Validate(request);
                         long now = Environment.TickCount64;
-                        if (now < nextRead) response = new(true, "DNS cache refresh throttled", Domains: []);
-                        else
+                        var answers = observed.Read(wanted);
+                        string status = capture?.Status() ?? captureError;
+                        if (now >= nextRead)
                         {
-                            nextRead = now + 59000; // Defense in depth; UI cadence is >= 60 seconds.
-                            response = new(true, "Windows DNS cache hints", Domains: cache.Read(wanted).Take(8192).ToList());
+                            nextRead = now + 59000;
+                            try { answers.AddRange(cache.Read(wanted).Take(8192 - answers.Count)); }
+                            catch (Exception ex) when (ex is System.Management.ManagementException or UnauthorizedAccessException or System.Runtime.InteropServices.ExternalException)
+                            { status += " Windows cache unavailable: " + ex.Message; }
                         }
+                        response = new(true, status, Domains: answers);
                     }
                     else throw new InvalidDataException("Only status and domain-cache reads are allowed in this session.");
                 }
@@ -44,7 +54,7 @@ internal static class DomainCacheSession
                 await BrokerWire.WriteAsync(pipe, response, timeout.Token);
             }
         }
-        finally { parent.Exited -= Exited; }
+        finally { parent.Exited -= Exited; capture?.Dispose(); }
     }
 
     internal static HashSet<string> Validate(BrokerRequest request)

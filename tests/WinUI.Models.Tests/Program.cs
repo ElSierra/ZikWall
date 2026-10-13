@@ -2,6 +2,11 @@ using System.Text;
 using System.Xml;
 using ZikWall.WinUI.Models;
 
+if (args.Contains("--activity-overview-only")) { ActivityOverviewTests.Run(); return; }
+if (args.Contains("--passive-dns-only")) { await PassiveDnsTests.RunAsync(); return; }
+
+if (args.SequenceEqual(new[] { "--log-analysis" })) { LogAnalysisTests.Run(); return; }
+
 var checks = 0;
 void Check(bool condition, string message) { if (!condition) throw new Exception(message); checks++; }
 IReadOnlyList<RuleEntry> Read(string xml) => ProfileReader.Read(new MemoryStream(Encoding.UTF8.GetBytes(xml)));
@@ -56,12 +61,18 @@ if (args.Length > 0)
 Console.WriteLine($"PASS: {checks} model and profile-reader checks.");
 MonitorTests.Run();
 MonitorEnrichmentTests.Run();
+NotificationTests.Run();
 SystemAppTests.Run();
 PreferencesTests.Run();
 await CachedDomainTests.RunAsync(args.Contains("--dns-cache"));
+await HostNameTests.RunAsync();
+await PassiveDnsTests.RunAsync();
 PolicyTests.Run();
 PolicyAnalysisTests.Run();
 PrivacyTests.RunAsync().GetAwaiter().GetResult();
+await SubscriptionTests.RunAsync(args.Contains("--subscriptions"));
 if (args.Contains("--doh")) PrivacyTests.TestDohAsync().GetAwaiter().GetResult();
 ActivityUsageTests.Run();
+ActivityOverviewTests.Run();
 MonitorActionTests.Run();
+LogAnalysisTests.Run();

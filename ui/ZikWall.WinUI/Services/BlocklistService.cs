@@ -10,13 +10,17 @@ public static class BlocklistService
 {
     public static async Task<BlocklistSubscription> DownloadAsync(BlocklistSubscription subscription, CancellationToken token)
     {
+        using var handler = new HttpClientHandler { AllowAutoRedirect = false, AutomaticDecompression = DecompressionMethods.None };
+        using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(20) };
+        return await DownloadAsync(subscription, client, token);
+    }
+    internal static async Task<BlocklistSubscription> DownloadAsync(BlocklistSubscription subscription, HttpClient client, CancellationToken token)
+    {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
         timeout.CancelAfter(TimeSpan.FromSeconds(20)); token = timeout.Token;
         if (!Uri.TryCreate(subscription.Url, UriKind.Absolute, out var uri) || uri.Scheme != "https" || uri.UserInfo.Length > 0 || uri.Fragment.Length > 0) throw new InvalidDataException("Use an HTTPS URL without credentials or a fragment.");
         string expected = subscription.ExpectedSha256.Trim();
         if (expected.Length > 0 && (expected.Length != 64 || expected.Any(c => !Uri.IsHexDigit(c)))) throw new InvalidDataException("An optional SHA-256 pin must contain 64 hexadecimal characters.");
-        using var handler = new HttpClientHandler { AllowAutoRedirect = false, AutomaticDecompression = DecompressionMethods.None };
-        using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(20) };
         using var response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, token);
         response.EnsureSuccessStatusCode();
         if (response.Content.Headers.ContentLength > BlocklistParser.MaximumBytes) throw new InvalidDataException("Blocklist exceeds 8 MB.");

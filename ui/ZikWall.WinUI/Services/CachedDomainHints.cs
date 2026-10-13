@@ -10,10 +10,11 @@ public enum DomainCacheState { Waiting, Reading, Ready, AccessDenied, Unavailabl
 public sealed class CachedDomainHints : IDisposable
 {
     internal const int MaxAddresses = 2048;
-    private sealed record Hint(string Names, long Expires);
+    private sealed record Hint(string Names, long Expires, bool Observed = false);
     private Dictionary<string, Hint> snapshot = new(StringComparer.Ordinal);
     private readonly Func<IReadOnlySet<string>, IReadOnlyList<CachedDomainAnswer>> read;
     private readonly Func<long> clock;
+    private readonly bool liveResponses;
     private readonly object gate = new();
     private long nextRefresh;
     private bool disposed;
@@ -22,8 +23,8 @@ public sealed class CachedDomainHints : IDisposable
     internal Task Pending { get; private set; } = Task.CompletedTask;
 
     public CachedDomainHints() : this(new WindowsDnsCache().Read, () => Environment.TickCount64) { }
-    internal CachedDomainHints(Func<IReadOnlySet<string>, IReadOnlyList<CachedDomainAnswer>> read, Func<long> clock)
-    { this.read = read; this.clock = clock; }
+    internal CachedDomainHints(Func<IReadOnlySet<string>, IReadOnlyList<CachedDomainAnswer>> read, Func<long> clock, bool liveResponses = false)
+    { this.read = read; this.clock = clock; this.liveResponses = liveResponses; }
 
     public void RequestRefresh(IReadOnlyList<ConnectionEntry> rows, bool background)
     {
@@ -38,8 +39,8 @@ public sealed class CachedDomainHints : IDisposable
                     addresses.Add(ip.IsIPv4MappedToIPv6 ? ip.MapToIPv4().ToString() : ip.ToString());
                 if (addresses.Count >= MaxAddresses) break;
             }
-            if (addresses.Count == 0) { Volatile.Write(ref snapshot, new(StringComparer.Ordinal)); state = DomainCacheState.Waiting; return; }
-            nextRefresh = now + (background ? 120000 : 60000);
+            if (addresses.Count == 0 && !liveResponses) { Volatile.Write(ref snapshot, new(StringComparer.Ordinal)); state = DomainCacheState.Waiting; return; }
+            nextRefresh = now + (liveResponses ? (background ? 10000 : 2000) : (background ? 120000 : 60000));
             state = DomainCacheState.Reading;
             Pending = StartRefresh(addresses, now);
         }
@@ -55,23 +56,25 @@ public sealed class CachedDomainHints : IDisposable
             // A budgeted scan may cover only part of the OS cache. Keep
             // earlier hints until their original expiry, never extend it.
             foreach (var (address, hint) in Volatile.Read(ref snapshot))
-                if (addresses.Contains(address) && hint.Expires > now) next[address] = hint;
+                if (addresses.Contains(address) && hint.Expires > now && !(liveResponses && hint.Observed)) next[address] = hint;
             // Keep only a few names per IP. A shared CDN IP is ambiguous;
             // no app-specific domain claim can be made from the OS cache.
             var grouped = new Dictionary<string, SortedDictionary<string, long>>(StringComparer.Ordinal);
+            var observed = answers.Take(8192).Where(x => x.ObservedResponse && x.TtlSeconds > 0 && ValidName(x.Name)).Select(x => x.Address).ToHashSet(StringComparer.Ordinal);
             int seen = 0;
             foreach (var answer in answers)
             {
                 if (++seen > 8192) break;
                 if (!addresses.Contains(answer.Address) || answer.TtlSeconds == 0 || !ValidName(answer.Name)) continue;
+                if (observed.Contains(answer.Address) && !answer.ObservedResponse) continue;
                 string name = answer.Name.TrimEnd('.').ToLowerInvariant();
                 if (!grouped.TryGetValue(answer.Address, out var names)) grouped[answer.Address] = names = new(StringComparer.Ordinal);
-                long expires = now + Math.Min(answer.TtlSeconds, 120u) * 1000L;
+                long expires = now + Math.Min(answer.TtlSeconds, answer.ObservedResponse ? 3600u : 120u) * 1000L;
                 if (names.TryGetValue(name, out long previous)) names[name] = Math.Min(previous, expires);
                 else if (names.Count < 3) names[name] = expires;
             }
             foreach (var (address, names) in grouped)
-                next[address] = new(string.Join(", ", names.Keys), names.Values.Min());
+                next[address] = new(string.Join(", ", names.Keys), names.Values.Min(), observed.Contains(address));
         }
         catch (Exception ex) when (ex is System.Management.ManagementException or IOException or OperationCanceledException or UnauthorizedAccessException or System.ComponentModel.Win32Exception or NotSupportedException or System.Runtime.InteropServices.ExternalException)
         {
@@ -81,15 +84,22 @@ public sealed class CachedDomainHints : IDisposable
         lock (gate) { if (!disposed) { Volatile.Write(ref snapshot, next); state = result; } }
     });
 
-    public string Find(string address)
+    public string Find(string address) => Resolve(address).Name;
+
+    internal (string Name, bool Observed) Resolve(string address)
     {
         var current = Volatile.Read(ref snapshot);
-        if (current.Count == 0) return "";
+        if (current.Count == 0) return ("", false);
         // ConnectionMonitor already supplies canonical addresses. Only normalize
         // mapped IPv6 when needed; the common IPv4/IPv6 path allocates nothing.
         if (address.StartsWith("::ffff:", StringComparison.OrdinalIgnoreCase) && IPAddress.TryParse(address, out var ip) && ip.IsIPv4MappedToIPv6)
             address = ip.MapToIPv4().ToString();
-        return current.TryGetValue(address, out var hint) && clock() < hint.Expires ? hint.Names : "";
+        return current.TryGetValue(address, out var hint) && clock() < hint.Expires ? (hint.Names, hint.Observed) : ("", false);
+    }
+
+    public bool IsObserved(string address)
+    {
+        return Resolve(address).Observed;
     }
 
     internal static bool ValidName(string name)

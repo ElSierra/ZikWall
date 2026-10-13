@@ -14,6 +14,7 @@ public sealed class FirewallClient : IDisposable
     private NamedPipeClientStream? pipe;
     private readonly SemaphoreSlim gate = new(1);
     public bool Connected => pipe?.IsConnected == true;
+    internal int BrokerProcessId { get; private set; }
     public async Task StartAsync(bool domainsOnly = false)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
@@ -30,6 +31,7 @@ public sealed class FirewallClient : IDisposable
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             await connection.ConnectAsync(timeout.Token);
             if (!GetNamedPipeServerProcessId(connection.SafePipeHandle, out uint serverPid) || serverPid != process.Id) throw new IOException("The broker process identity did not match.");
+            BrokerProcessId = process.Id;
             pipe = connection;
             var status = await SendAsync(new("status"));
             if (!status.Success) throw new IOException(status.Message);

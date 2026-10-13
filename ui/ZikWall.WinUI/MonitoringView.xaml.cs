@@ -27,6 +27,7 @@ public sealed partial class MonitoringView : UserControl
     private MonitorEnrichment? enrichment;
     private FirewallClient? usageClient;
     private FirewallClient? domainClient;
+    private string domainCaptureStatus = "";
     private readonly UsageLedger usage = new();
     private readonly UsageStore usageStore = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZikWall"));
     private DateTimeOffset lastUsageSaved;
@@ -124,17 +125,21 @@ public sealed partial class MonitoringView : UserControl
         try
         {
             bool domainBackground = background || !pageActive || WindowMinimized;
+            bool reverseDnsEnabled = ReverseDnsLookup.IsOn;
             var snapshot = await Task.Run(() =>
             {
                 enrichment ??= new(Path.Combine(AppContext.BaseDirectory, "Assets", "Countries"));
+                enrichment.SetReverseDnsEnabled(reverseDnsEnabled);
                 return (Connections: enrichment.Enrich(ConnectionMonitor.Capture(), domainBackground), Counters: ConnectionMonitor.CaptureTraffic());
             });
             if (closed || !timer.IsEnabled) return;
             if (domainClient is { Connected: false })
             {
                 domainClient.Dispose(); domainClient = null; enrichment?.SetDomainReader(null);
-                DomainButton.Content = "Enable domain hints";
-                DomainStatus.Text = "Domain cache session ended. Enable hints to reconnect; IP monitoring continues.";
+                current = current.Select(x => enrichment?.WithDomainHint(x) ?? x).ToList();
+                UpdateLists();
+                DomainButton.Content = "Capture website names";
+                DomainStatus.Text = "Website-name session ended. Enable capture to reconnect; IP monitoring continues.";
             }
             var now = DateTimeOffset.UtcNow;
             var next = snapshot.Connections.OrderBy(x => x.Application, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.RemoteAddress).ThenBy(x => x.LocalPort).ThenBy(x => x.Protocol).ThenBy(x => x.RemotePort).ThenBy(x => x.ProcessId).ThenBy(x => x.LocalAddress).ToList();
@@ -147,14 +152,13 @@ public sealed partial class MonitoringView : UserControl
             var nextFresh = baselineTaken ? observed.Where(x => x.Event == "First seen").Select(x => x.Connection.Key).ToHashSet() : [];
             bool freshChanged = fresh.Count > 0 || nextFresh.Count > 0;
             fresh = nextFresh; baselineTaken = true;
-            if (recent.Observe(observed, now, RecentAlerts.IsOn || DesktopAlerts.IsOn, IsVisibleApp) is { } batch)
+            if (recent.Observe(observed, now, RecentAlerts.IsOn || DesktopAlerts.IsOn, IsVisibleApp,
+                (ConnectionNotificationType)NotificationTypeChoice.SelectedIndex) is { } batch)
             {
-                var first = batch.Connections[0];
-                string message = $"{first.Application} · {first.Direction} · {first.RemoteEndpoint} · {first.PlaceDescription}";
-                if (batch.Count > 1) message += $" · +{batch.Count - 1} more (see Activity)";
-                RecentBanner.Title = "New connections";
+                var message = ConnectionNotification.From(batch);
+                RecentBanner.Title = message.Title;
                 RecentBanner.Severity = InfoBarSeverity.Informational;
-                RecentBanner.Message = message;
+                RecentBanner.Message = message.Body;
                 RecentBanner.IsOpen = RecentAlerts.IsOn;
                 if (DesktopAlerts.IsOn)
                     try { desktopNotifications.Show(message); }
@@ -163,6 +167,8 @@ public sealed partial class MonitoringView : UserControl
             }
             archive.Traffic.AddRange(traffic.Observe(snapshot.Counters, now));
             ActivityStore.TrimInPlace(archive, now);
+            LogChanged?.Invoke();
+            if (Visibility != Visibility.Visible && !WindowMinimized) ActivityOverviewChanged?.Invoke();
             if (Visibility == Visibility.Visible && !WindowMinimized)
             {
                 // Counter values are not displayed in the picker. Rebind only if its
@@ -182,7 +188,6 @@ public sealed partial class MonitoringView : UserControl
                 }
                 UpdateLists(freshChanged);
                 DrawTraffic();
-                if (new Windows.UI.ViewManagement.UISettings().AnimationsEnabled) ((Microsoft.UI.Xaml.Media.Animation.Storyboard)Resources["LivePulse"]).Begin();
             }
             MonitorStatus.Text = $"Updated {now.ToLocalTime():T} · {current.Count} endpoints · {archive.Events.Count} history events";
             CountryDataStatus.Text = enrichment is null ? "" : $"{enrichment.CountryDataStatus}. {enrichment.NetworkDataStatus}.";
@@ -196,6 +201,7 @@ public sealed partial class MonitoringView : UserControl
     private void UpdateLists(bool force = true)
     {
         if (ConnectionList is null || HistoryList is null || GroupChoice is null || HistoryWindow is null) return;
+        ActivityOverviewChanged?.Invoke();
         string query = MonitorSearch.Text ?? "";
         bool showUsage = usageEnabled;
         UpdateUsageHeader(showUsage);
@@ -298,6 +304,13 @@ public sealed partial class MonitoringView : UserControl
         await new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Observed usage · last 30 days", Content = list.Items.Count == 0 ? "No recorded usage. Enable usage to begin collecting. Totals cover collection time only." : list, CloseButtonText = "Close" }.ShowAsync();
     }
     private async void DomainClicked(object sender, RoutedEventArgs args) => await ToggleDomainAsync();
+    private void ReverseDnsChanged(object sender, RoutedEventArgs args)
+    {
+        if (!preferencesReady) return;
+        enrichment?.SetReverseDnsEnabled(ReverseDnsLookup.IsOn);
+        current = current.Select(x => enrichment?.WithDomainHint(x) ?? x).ToList();
+        UpdateLists(); SavePreferences();
+    }
     private async Task ToggleDomainAsync()
     {
         if (!DomainButton.IsEnabled) return;
@@ -309,8 +322,11 @@ public sealed partial class MonitoringView : UserControl
             if (domainClient is not null)
             {
                 domainClient.Dispose(); domainClient = null; enrichment?.SetDomainReader(null);
-                DomainButton.Content = "Enable domain hints";
-                DomainStatus.Text = "Elevated cache access stopped. Windows may still provide unprivileged cache hints.";
+                current = current.Select(x => enrichment?.WithDomainHint(x) ?? x).ToList();
+                UpdateLists(); PublishVisibleSnapshot();
+                domainCaptureStatus = "";
+                DomainButton.Content = "Capture website names";
+                DomainStatus.Text = "Website capture stopped. Windows may still provide cached names.";
                 rememberDomains = false; SavePreferences();
                 return;
             }
@@ -326,12 +342,13 @@ public sealed partial class MonitoringView : UserControl
                     // Runs exclusively on the hint worker, never blocks UI capture.
                     var result = client.SendAsync(new("domains", RemoteAddresses: wanted.ToList())).GetAwaiter().GetResult();
                     if (!result.Success) { client.Dispose(); throw new IOException(result.Message); }
+                    Volatile.Write(ref domainCaptureStatus, result.Message);
                     return result.Domains ?? [];
                 });
                 domainClient = client;
                 rememberDomains = true; SavePreferences();
-                DomainButton.Content = "Stop elevated access";
-                DomainStatus.Text = "Reading cached names in the background. Available names appear below apps and on expanded connections after the next live refresh.";
+                DomainButton.Content = "Stop website capture";
+                DomainStatus.Text = "Listening for DNS replies and reading Windows cached names. Open an app or website to collect new names.";
                 _ = CaptureAsync();
             }
             catch (Exception ex) when (ex is IOException or Win32Exception or UnauthorizedAccessException or OperationCanceledException)
@@ -362,7 +379,7 @@ public sealed partial class MonitoringView : UserControl
             usageClient = client;
             usageEnabled = true;
             rememberUsage = true; SavePreferences();
-            if (result.Usage is { } sample) { usage.Observe(sample); usageDirty = true; }
+            if (result.Usage is { } sample) { usage.Observe(sample); overviewUsage.Observe(sample); usageDirty = true; }
             UsageButton.Content = "Pause usage"; usageTimer.Start();
             UsageStatus.Text = "Observing TCP and UDP packet sizes. Counts start now and may be partial; VPNs/proxies affect attribution.";
         }
@@ -380,7 +397,8 @@ public sealed partial class MonitoringView : UserControl
             if (closed) return;
             if (!response.Success || response.Usage is null) throw new IOException(response.Message);
             var sample = response.Usage;
-            usage.Observe(sample); usageDirty = true;
+            usage.Observe(sample); overviewUsage.Observe(sample); usageDirty = true;
+            ActivityOverviewChanged?.Invoke();
             UsageStatus.Text = $"Observed network traffic · {sample.Events:N0} events · {sample.BufferKiB / 1024d:0.0} MB trace buffers · {sample.LostEvents} lost events · {UsageLedger.Bytes(sample.UnattributedBytes)} unattributed · {sample.RejectedEvents} unsupported events. Totals cover collection time only.";
             if (sample.Events == 0) UsageStatus.Text += " Waiting for supported network events; coverage is unverified.";
             if (sample.LostEvents > 0 || sample.UnattributedBytes > 0 || sample.RejectedEvents > 0) UsageStatus.Text += " Accounting is incomplete.";
@@ -405,10 +423,15 @@ public sealed partial class MonitoringView : UserControl
     private void UpdateDomainStatus()
     {
         int matched = current.Count(x => x.DomainHint.Length > 0);
-        string access = domainClient?.Connected == true ? "Elevated cache access is on. " : "";
+        if (domainClient?.Connected == true)
+        {
+            DomainStatus.Text = Volatile.Read(ref domainCaptureStatus) + $" Names available for {matched} connections; updated while monitoring is live.";
+            return;
+        }
+        string access = "";
         DomainStatus.Text = access + (enrichment?.DomainState switch
         {
-            DomainCacheState.AccessDenied => "Windows denied cache access. Choose Enable domain hints and accept the Windows prompt for this session.",
+            DomainCacheState.AccessDenied => "Windows denied cache access. Choose Capture website names and accept the Windows prompt for this session.",
             DomainCacheState.Unavailable => "Windows DNS cache could not be read. IP addresses remain available; lookup will retry automatically.",
             DomainCacheState.Reading => "Reading cached website names… Results appear after the next live refresh.",
             DomainCacheState.Ready when matched > 0 => $"Website hints found for {matched} connections. Names refresh about once a minute while live.",
@@ -422,6 +445,7 @@ public sealed partial class MonitoringView : UserControl
         ArrangeOptions(ViewOptionsGrid, narrow ? 1 : 3);
         ArrangeOptions(AdapterOptionsGrid, narrow ? 1 : 2);
         ArrangeOptions(HistoryOptionsGrid, narrow ? 1 : 2);
+        ArrangeOptions(NotificationOptionsGrid, narrow ? 1 : 2);
         ArrangeOptions(UsageOptionsGrid, narrow ? 1 : 2);
     }
     private static void ArrangeOptions(Grid grid, int columns)
@@ -450,6 +474,7 @@ public sealed partial class MonitoringView : UserControl
         RecentBanner.IsOpen = false;
         UpdateLists();
         PublishVisibleSnapshot();
+        LogChanged?.Invoke();
         SavePreferences();
         if (HideSystemApps.IsOn)
             try { await desktopNotifications.ClearRecentAsync(); }
@@ -458,6 +483,12 @@ public sealed partial class MonitoringView : UserControl
     }
     private void TcpDetailsChanged(object sender, RoutedEventArgs args) { if (HistoryList is null) return; UpdateLists(); SavePreferences(); }
     private void RecentAlertsChanged(object sender, RoutedEventArgs args) { recent.ResetBaseline(); if (RecentBanner is not null) RecentBanner.IsOpen = false; SavePreferences(); }
+    private void NotificationTypeChanged(object sender, SelectionChangedEventArgs args)
+    {
+        recent.ClearPending();
+        if (RecentBanner is not null) RecentBanner.IsOpen = false;
+        SavePreferences();
+    }
     private void DesktopAlertsChanged(object sender, RoutedEventArgs args)
     {
         if (DesktopAlerts is null || MonitorStatus is null) return;
@@ -493,7 +524,7 @@ public sealed partial class MonitoringView : UserControl
     {
         var dialog = new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Clear local activity?", Content = "This removes the displayed activity and the saved ZikWall activity file on this PC.", PrimaryButtonText = "Clear", CloseButtonText = "Cancel" };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
-        try { store.Clear(); archive = new([], []); connections.Reset(); recent.ResetBaseline(); traffic.Reset(); baselineTaken = false; fresh = []; UpdateLists(); DrawTraffic(); MonitorStatus.Text = "Local activity cleared."; }
+        try { store.Clear(); archive = new([], []); connections.Reset(); recent.ResetBaseline(); traffic.Reset(); baselineTaken = false; fresh = []; UpdateLists(); LogChanged?.Invoke(); DrawTraffic(); MonitorStatus.Text = "Local activity cleared."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { MonitorStatus.Text = ex.Message; }
     }
     private async void DetailsClicked(object sender, RoutedEventArgs args) => await RunRowActionAsync(() => ShowDetailsAsync(SelectedActionRow()));
@@ -549,8 +580,8 @@ public sealed partial class MonitoringView : UserControl
         var rows = history ? archive.Events.Where(x => x.Time >= HistorySince() && MatchesFilters(x.Connection, MonitorSearch.Text)).Select(x => (x.Time.ToString("O"), x.Event, x.Connection))
             : current.Where(x => MatchesFilters(x, MonitorSearch.Text)).Select(x => (DateTimeOffset.UtcNow.ToString("O"), "Snapshot", x));
         static string Cell(string value) => "\"" + (value.Length > 0 && "=+-@\t\r".Contains(value[0]) ? "'" : "") + value.Replace("\"", "\"\"") + "\"";
-        var csv = new StringBuilder("Time,Event,Application,PID,Protocol,Local,Remote,State,Path,Direction,CountryCode,Country,Scope,DomainCacheHint,Network,ASN\r\n");
-        foreach (var (time, action, row) in rows) csv.AppendLine(string.Join(',', new[] { time, action, row.Application, row.ProcessId.ToString(), row.Protocol, row.LocalEndpoint, row.RemoteEndpoint, row.State, row.ProcessPath, row.Direction, row.CountryCode, row.CountryName, row.NetworkScope, row.DomainHint, row.NetworkName, row.NetworkAsn > 0 ? $"AS{row.NetworkAsn}" : "" }.Select(Cell)));
+        var csv = new StringBuilder("Time,Event,Application,PID,Protocol,Local,Remote,State,Path,Direction,CountryCode,Country,Scope,DomainHint,ReverseDnsHint,Network,ASN,HostNameSource\r\n");
+        foreach (var (time, action, row) in rows) csv.AppendLine(string.Join(',', new[] { time, action, row.Application, row.ProcessId.ToString(), row.Protocol, row.LocalEndpoint, row.RemoteEndpoint, row.State, row.ProcessPath, row.Direction, row.CountryCode, row.CountryName, row.NetworkScope, row.DomainHint, row.ReverseDnsName, row.NetworkName, row.NetworkAsn > 0 ? $"AS{row.NetworkAsn}" : "", row.HostNameSource }.Select(Cell)));
         try { await Windows.Storage.FileIO.WriteTextAsync(file, csv.ToString()); MonitorStatus.Text = $"Exported {file.Name}."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { MonitorStatus.Text = $"Export failed: {ex.Message}"; }
     }

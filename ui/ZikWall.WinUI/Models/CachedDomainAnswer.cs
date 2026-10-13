@@ -1,3 +1,3 @@
 namespace ZikWall.WinUI.Models;
 
-public sealed record CachedDomainAnswer(string Address, string Name, uint TtlSeconds);
+public sealed record CachedDomainAnswer(string Address, string Name, uint TtlSeconds, bool ObservedResponse = false);
