@@ -1,0 +1,77 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <UI Id="ZikWallUI">
+      <TextStyle Id="WixUI_Font_Normal" FaceName="Segoe UI" Size="9" />
+      <TextStyle Id="WixUI_Font_Bigger" FaceName="Segoe UI" Size="18" Bold="yes" Red="16" Green="37" Blue="68" />
+      <TextStyle Id="WixUI_Font_Title" FaceName="Segoe UI" Size="11" Bold="yes" Red="16" Green="37" Blue="68" />
+      <TextStyle Id="ZikWallAccent" FaceName="Segoe UI" Size="10" Bold="yes" Red="0" Green="99" Blue="220" />
+      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
+      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+      <Property Id="ARPNOMODIFY" Value="1" />
+
+      <Dialog Id="ZikWelcome" Width="370" Height="270" Title="ZikWall Setup">
+        <Control Id="Background" Type="Bitmap" X="0" Y="0" Width="370" Height="234" Text="WixUI_Bmp_Dialog" TabSkip="yes" />
+        <Control Id="Title" Type="Text" X="140" Y="22" Width="218" Height="56" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Bigger}Your network.&#13;&#10;In clear view." />
+        <Control Id="Intro" Type="Text" X="140" Y="86" Width="215" Height="28" Transparent="yes" NoPrefix="yes" Text="Meet ZikWall, your Windows connection monitor and firewall." />
+        <Control Id="FeatureOne" Type="Text" X="140" Y="126" Width="215" Height="16" Transparent="yes" Text="{\ZikWallAccent}See what connects" />
+        <Control Id="DetailOne" Type="Text" X="140" Y="145" Width="215" Height="22" Transparent="yes" Text="Explore live apps, connections and destinations." />
+        <Control Id="FeatureTwo" Type="Text" X="140" Y="177" Width="215" Height="16" Transparent="yes" Text="{\ZikWallAccent}Choose what gets through" />
+        <Control Id="DetailTwo" Type="Text" X="140" Y="196" Width="215" Height="28" Transparent="yes" Text="Start with monitoring. Enable firewall policies when you are ready." />
+        <Control Id="Site" Type="Hyperlink" X="12" Y="245" Width="115" Height="17" Text="&lt;a href=&quot;https://isaacojo.me&quot;&gt;isaacojo.me&lt;/a&gt;" />
+        <Control Id="Next" Type="PushButton" X="230" Y="243" Width="62" Height="19" Default="yes" Text="Next &gt;">
+          <Publish Event="NewDialog" Value="LicenseAgreementDlg" />
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="300" Y="243" Width="60" Height="19" Cancel="yes" Text="Cancel">
+          <Publish Event="SpawnDialog" Value="CancelDlg" />
+        </Control>
+      </Dialog>
+
+      <Dialog Id="ZikFinish" Width="370" Height="270" Title="ZikWall Setup">
+        <Control Id="Background" Type="Bitmap" X="0" Y="0" Width="370" Height="234" Text="WixUI_Bmp_Dialog" TabSkip="yes" />
+        <Control Id="Title" Type="Text" X="140" Y="25" Width="215" Height="50" Transparent="yes" Text="{\WixUI_Font_Bigger}Setup complete." />
+        <Control Id="Description" Type="Text" X="140" Y="90" Width="210" Height="38" Transparent="yes" Text="Open ZikWall from the Start menu to explore your connections." HideCondition="REMOVE = &quot;ALL&quot;" />
+        <Control Id="Removed" Type="Text" X="140" Y="90" Width="210" Height="38" Transparent="yes" Text="ZikWall has been removed. Your saved settings and history have been kept." Hidden="yes" ShowCondition="REMOVE = &quot;ALL&quot;" />
+        <Control Id="Note" Type="Text" X="140" Y="149" Width="210" Height="58" Transparent="yes" Text="The app starts in monitoring mode. Enable filtering and Start at sign-in from the app when you are ready." HideCondition="REMOVE = &quot;ALL&quot;" />
+        <Control Id="Site" Type="Hyperlink" X="12" Y="245" Width="115" Height="17" Text="&lt;a href=&quot;https://isaacojo.me&quot;&gt;isaacojo.me&lt;/a&gt;" />
+        <Control Id="Finish" Type="PushButton" X="290" Y="243" Width="70" Height="19" Default="yes" Cancel="yes" Text="Finish">
+          <Publish Event="EndDialog" Value="Return" />
+        </Control>
+      </Dialog>
+
+      <DialogRef Id="BrowseDlg" />
+      <DialogRef Id="DiskCostDlg" />
+      <DialogRef Id="ErrorDlg" />
+      <DialogRef Id="FatalError" />
+      <DialogRef Id="FilesInUse" />
+      <DialogRef Id="MsiRMFilesInUse" />
+      <DialogRef Id="PrepareDlg" />
+      <DialogRef Id="ProgressDlg" />
+      <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="UserExit" />
+      <Publish Dialog="LicenseAgreementDlg" Control="Print" Event="DoAction" Value="WixUIPrintEula_X64" />
+      <Publish Dialog="LicenseAgreementDlg" Control="Back" Event="NewDialog" Value="ZikWelcome" />
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Condition="LicenseAccepted = &quot;1&quot;" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SetTargetPath" Value="[WIXUI_INSTALLDIR]" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="DoAction" Value="WixUIValidatePath_X64" Order="2" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="SpawnDialog" Value="InvalidDirDlg" Order="3" Condition="WIXUI_INSTALLDIR_VALID &lt;&gt; &quot;1&quot;" />
+      <Publish Dialog="InstallDirDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg" Order="4" Condition="WIXUI_INSTALLDIR_VALID = &quot;1&quot;" />
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Property="_BrowseProperty" Value="[WIXUI_INSTALLDIR]" Order="1" />
+      <Publish Dialog="InstallDirDlg" Control="ChangeFolder" Event="SpawnDialog" Value="BrowseDlg" Order="2" />
+      <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath_X64" Order="3" />
+      <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="4" Condition="WIXUI_INSTALLDIR_VALID &lt;&gt; &quot;1&quot;" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="InstallDirDlg" Order="1" Condition="NOT Installed" />
+      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2" Condition="Installed" />
+      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg" />
+      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg" />
+      <InstallUISequence>
+        <Show Dialog="ZikWelcome" Before="ProgressDlg" Condition="NOT Installed" />
+        <Show Dialog="ZikFinish" OnExit="success" />
+      </InstallUISequence>
+      <AdminUISequence><Show Dialog="ZikFinish" OnExit="success" /></AdminUISequence>
+    </UI>
+    <UIRef Id="WixUI_Common" />
+  </Fragment>
+</Wix>

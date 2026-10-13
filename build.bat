@@ -1,6 +1,4 @@
 @echo off
 
-cd ..\builder
-call build ZikWall 3.9.1 ZikWall
-
-pause
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\build-setup.ps1" %*
+exit /b %errorlevel%

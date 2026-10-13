@@ -14,7 +14,7 @@ public sealed partial class MonitoringView
     private bool rowActionBusy;
     private MenuFlyout? activeRowMenu;
     private static ActivityRow HistoryRow(ConnectionEntry entry) => new("connection:" + entry.Key, entry.ProcessLabel,
-        entry.RemoteEndpoint, "", 0, entry, entry.Direction, entry.RemoteEndpoint, entry.CountryLabel, entry.CountryFlag, entry.State);
+        entry.RemoteEndpoint, "", 0, entry, entry.Direction, entry.RemoteEndpoint, entry.NetworkLabel, entry.CountryFlag, entry.State);
     private ActivityRow? SelectedActionRow() => history
         ? HistoryList.SelectedItem is ConnectionEvent item ? HistoryRow(item.Connection) : null
         : ConnectionList.SelectedItem as ActivityRow;

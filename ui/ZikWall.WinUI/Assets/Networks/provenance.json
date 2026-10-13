@@ -1,0 +1,23 @@
+{
+  "source": "https://download.db-ip.com/free/dbip-asn-lite-2026-10.csv.gz",
+  "sourceSha256": "ed175994548b59d168b2ab9faf1d64a1e2bf44e73099e1482e61c84b5a959af3",
+  "edition": "2026-10",
+  "license": "CC-BY-4.0",
+  "files": {
+    "ipv4.zwn": {
+      "ranges": 402389,
+      "sha256": "e33fbd745d3a312bf807e71485b1d0d4367097f4f0c8f43ded578d78906fb776",
+      "bytes": 4828676
+    },
+    "ipv6.zwn": {
+      "ranges": 74973,
+      "sha256": "bca06079aa7b6b02cb932d2f9d2857d7e788f542bef4110d66e4af8d199fee84",
+      "bytes": 2699036
+    },
+    "names.zwn": {
+      "networks": 82135,
+      "sha256": "8f8bd1439ea54840273b9e6f72adf7fb7d1a8d50fc7dc02fa3397e467f4ca8a4",
+      "bytes": 2461933
+    }
+  }
+}

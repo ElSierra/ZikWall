@@ -14,6 +14,12 @@ The screenshots below show the verified layout before the ZikWall branding chang
 
 ## Run
 
+To build the current app as an installable MSI, run `build.bat` from the repository
+root, then open `artifacts/installer/setup.msi`. Repeat after new changes for an
+upgrade installer. See [installer details](../docs/INSTALLER.md).
+
+For a portable development build:
+
 On Windows with .NET SDK 8 or newer, Visual Studio C++/Windows build tooling and Windows SDK installed:
 
 ```powershell
@@ -28,9 +34,9 @@ The self-contained x64 output is `artifacts\ZikWall\ZikWall.exe`. Keep its outpu
 | --- | --- |
 | Native Windows 11 navigation, Mica, light/dark/system themes | Implemented |
 | Rule list and selection inspector | Implemented; inspector collapses at narrow widths, Details remains accessible |
-| Allowed, blocked, temporary, system and blocklist views | Implemented over preview/imported records |
+| Allowed, blocked, temporary, system and blocklist views | Implemented over the selected saved firewall profile; legacy XML inspection remains read-only |
 | Search by app/path/address/protocol/comment | Implemented |
-| Rule editor and time-limited permissions | Preview-only, in memory; no persistence/enforcement |
+| Rule editor and time-limited permissions | Saved to the shared policy store; apply through the WFP broker with expiry enforcement |
 | Open legacy XML profile | Implemented, read-only, bounded parser |
 | Live connections and activity | Live TCP IPv4/IPv6 endpoints, UDP local endpoints, app logos, process/PID, TCP direction, offline country flags, Internet/direction filters, recent observation alerts, search, pause, CSV export and optional local history |
 | Bandwidth chart | Per-adapter download/upload rates; not per-app accounting |
@@ -43,9 +49,9 @@ The self-contained x64 output is `artifacts\ZikWall\ZikWall.exe`. Keep its outpu
 | Encrypted/compressed profile containers, internal overrides | Not supported by the reader |
 | Full Little Snitch feature parity | Not claimed; per-app domain policy, per-app accounting, connection prompts and broader lifecycle validation remain |
 
-The app opens on live Connections. Labeled sample data remains under Imported / sample rules. **Open profile** can inspect a plain XML `profile.xml` export or the repository's `bin\profile_internal.xml`. Disabled application blanket permissions are shown as Disabled, not falsely labeled explicit Block rules. Imported profiles cannot be edited. Unsupported profile formats produce an error without replacing the current data.
+The app opens on live Connections. **Firewall rules** shows the selected profile from **Firewall policy**, with no sample entries. Create, edit, disable, remove, and search saved rules here. **Enable filtering** requests Windows elevation and applies the selected profile; after editing, **Apply saved policy** updates the active session. The banner and inspector distinguish saved/pending rules from applied rules. System and blocklist groups are saved with each rule; subscription IP imports use the Blocklists group. Rule order and profile selection are managed in Firewall policy. Session rules end when ZikWall closes; saved definitions survive restart. **Open profile** can inspect a plain XML `profile.xml` export or the repository's `bin\profile_internal.xml`. Disabled application blanket permissions are shown as Disabled, not falsely labeled explicit Block rules. Imported profiles cannot be edited. Unsupported profile formats produce an error without replacing the current data.
 
-Settings changes only the UI theme for this session. Reset preview discards in-memory preview edits and restores sample records. All UI strings introduced here are currently English.
+After opening a legacy XML profile, **Saved rules** returns to the working policy without changing it. Imported XML entries are never automatically enforced. Settings changes the UI theme for this session and supports current-user sign-in startup. All UI strings introduced here are currently English.
 
 Current output is `artifacts\ZikWall\ZikWall.exe`, accompanied by the WFP broker, engine DLL, runtime and assets. Keep this folder together. [Current implementation status](../docs/FEATURE-STATUS.md) distinguishes tested features from the privileged runtime gate and remaining parity work. The early screenshots below/above predate the new monitoring, policy, DNS and map pages.
 
@@ -77,3 +83,5 @@ The monitor puts connection rows first, with a live summary (apps, connections, 
 ## Expandable monitor, tray and usage
 
 See [monitor and usage behavior](../docs/MONITOR-AND-USAGE.md) for grouping, offline country markers, 30-day observed traffic, current-user sign-in startup, and the collector validation limitation. Run `ZikWall.exe --enable-startup` once to register the current output path for sign-in. Normal launch restores the existing instance. X hides; tray Exit quits.
+
+Run `ZikWall.exe --test-rules` for the native rule-browser diagnostic. It uses an isolated policy directory in the build output, exercises list synchronization, filters, search, editor cancellation, saving/reloading edits and removal, writes `rules-selftest.txt` and `rules-preview.png`, and leaves filtering off.

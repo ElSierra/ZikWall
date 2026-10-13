@@ -16,10 +16,15 @@ Windows App SDK and the Windows SDK.
 Build on Windows with .NET 8+, Visual Studio C++ tools and the Windows SDK:
 
 ```powershell
-.\tools\build-winui.ps1
+.\build.bat
 ```
 
-Run `artifacts\ZikWall\ZikWall.exe`; keep the output folder together.
+Install `artifacts\installer\setup.msi`. Repeat the build after source changes
+to produce the next installer. See [installer details](docs/INSTALLER.md).
+GNU Make users can run `make setup`, `make dev`, and `make check`; `make help`
+lists every target. See [developer commands](docs/DEVELOPMENT.md).
+For a portable development build, run `tools/build-winui.ps1` and keep the
+entire `artifacts\ZikWall` output folder together.
 See [build and usage](ui/README.md), [feature status](docs/FEATURE-STATUS.md),
 [performance measurements](docs/PERFORMANCE.md), and [security review](docs/SECURITY-REVIEW.md).
 
@@ -31,4 +36,9 @@ app/broker closes; Windows Firewall settings are unchanged.
 
 Licensed under [GPLv3](LICENSE). [Upstream attribution and changes](docs/UPSTREAM-NOTICES.md)
 are preserved. This repository contains both the new WinUI application and the
-legacy native source; use the PowerShell build above for the working application.
+legacy native source; use the build above for the working application.
+
+ZikWall is maintained independently. This checkout has no configured Git remote
+or upstream tracking branch. The supported build does not fetch simplewall,
+routine or builder; inherited submodule and funding configuration has been removed.
+Historical source references remain for attribution and audit evidence.

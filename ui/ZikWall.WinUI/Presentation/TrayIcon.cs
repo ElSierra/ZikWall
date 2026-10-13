@@ -18,7 +18,7 @@ internal sealed class TrayIcon : IDisposable
         window = hwnd; this.open = open; this.hide = hide; this.pause = pause; this.exit = exit;
         callback = WindowProc;
         data = new() { Size = (uint)Marshal.SizeOf<NotifyIcon>(), Window = hwnd, Id = 1, Flags = 7, CallbackMessage = Callback,
-            Icon = LoadImage(0, Path.Combine(AppContext.BaseDirectory, "Assets", "ZikWall.ico"), 1, 16, 16, 0x10), Tip = "ZikWall · network monitor", Info = "", InfoTitle = "" };
+            Icon = LoadImage(0, Path.Combine(AppContext.BaseDirectory, "Assets", "ZikWall-tray.ico"), 1, 16, 16, 0x10), Tip = "ZikWall · network monitor", Info = "", InfoTitle = "" };
         if (data.Icon == 0 || !SetWindowSubclass(window, callback, 73, 0)) { if (data.Icon != 0) DestroyIcon(data.Icon); throw new Win32Exception(Marshal.GetLastWin32Error()); }
         if (!Shell_NotifyIcon(0, ref data)) { Dispose(); throw new Win32Exception("Could not create ZikWall's tray icon."); }
     }

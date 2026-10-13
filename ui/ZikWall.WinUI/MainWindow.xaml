@@ -18,7 +18,7 @@
                 <NavigationViewItem Content="Map" Tag="map"><NavigationViewItem.Icon><FontIcon Glyph="&#xE707;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem Content="Firewall policy" Tag="policy"><NavigationViewItem.Icon><FontIcon Glyph="&#xE83D;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem Content="DNS and subscriptions" Tag="privacy"><NavigationViewItem.Icon><FontIcon Glyph="&#xE72E;" /></NavigationViewItem.Icon></NavigationViewItem>
-                <NavigationViewItemHeader Content="Imported / sample rules" />
+                <NavigationViewItemHeader Content="Firewall rules" />
                 <NavigationViewItem Content="All entries" Tag="all"><NavigationViewItem.Icon><FontIcon Glyph="&#xE8FD;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem Content="Allowed" Tag="allowed"><NavigationViewItem.Icon><FontIcon Glyph="&#xE73E;" /></NavigationViewItem.Icon></NavigationViewItem>
                 <NavigationViewItem Content="Blocked" Tag="blocked"><NavigationViewItem.Icon><FontIcon Glyph="&#xE711;" /></NavigationViewItem.Icon></NavigationViewItem>
@@ -39,14 +39,18 @@
                     <StackPanel Spacing="6"><TextBlock x:Name="PageTitle" Text="All entries" Style="{ThemeResource SubtitleTextBlockStyle}" /><TextBlock x:Name="PageSubtitle" Text="Manage which apps can connect to your network." Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel>
                     <AutoSuggestBox x:Name="Search" Grid.Column="1" PlaceholderText="Search apps, rules, or addresses" QueryIcon="Find" VerticalAlignment="Center" TextChanged="SearchChanged" AutomationProperties.Name="Search entries" />
                 </Grid>
-                <InfoBar x:Name="ModeBanner" Grid.Row="1" IsOpen="True" IsClosable="False" Severity="Informational" Title="Preview mode" Message="Sample entries. Changes stay in memory and do not affect your firewall." />
+                <InfoBar x:Name="ModeBanner" Grid.Row="1" IsOpen="True" IsClosable="False" Severity="Informational" Title="Saved firewall rules" Message="Enable filtering to apply the selected profile." />
                 <Grid x:Name="RuleToolbar" Grid.Row="2" ColumnDefinitions="*,Auto">
                     <CommandBar Background="Transparent" DefaultLabelPosition="Right" HorizontalAlignment="Left" IsOpen="False">
                         <AppBarButton x:Name="NewButton" Icon="Add" Label="New rule" Click="NewRuleClicked" />
                         <AppBarSeparator />
                         <AppBarButton Icon="OpenFile" Label="Open profile" Click="OpenProfileClicked" />
                         <AppBarButton x:Name="DetailsButton" Icon="View" Label="Details" Click="DetailsClicked" />
-                        <AppBarButton Icon="Refresh" Label="Reset preview" Click="ResetClicked" />
+                        <AppBarButton x:Name="EditRuleButton" Icon="Edit" Label="Edit" Click="EditRuleClicked" />
+                        <AppBarButton x:Name="RemoveRuleButton" Icon="Delete" Label="Remove" Click="RemoveRuleClicked" />
+                        <AppBarButton x:Name="FilteringRuleButton" Icon="Permissions" Label="Enable filtering…" Click="FilteringRuleClicked" />
+                        <AppBarButton x:Name="ApplyRuleButton" Icon="Save" Label="Apply saved policy" Click="ApplyRuleClicked" />
+                        <AppBarButton x:Name="SavedRulesButton" Icon="Back" Label="Saved rules" Click="SavedRulesClicked" Visibility="Collapsed" />
                     </CommandBar>
                     <TextBlock x:Name="EntryCount" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </Grid>
@@ -73,7 +77,7 @@
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
                             </ListView>
-                            <StackPanel x:Name="EmptyState" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Visibility="Collapsed"><FontIcon Glyph="&#xE721;" FontSize="32" /><TextBlock Text="No matching entries" Style="{ThemeResource SubtitleTextBlockStyle}" /><TextBlock Text="Try another search or category." Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel>
+                            <StackPanel x:Name="EmptyState" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Visibility="Collapsed"><FontIcon Glyph="&#xE721;" FontSize="32" /><TextBlock Text="No matching entries" Style="{ThemeResource SubtitleTextBlockStyle}" /><TextBlock Text="Create a rule, or try another search or category." Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel>
                         </Grid>
                     </Border>
                     <Border x:Name="Inspector" Grid.Column="1" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
@@ -85,7 +89,7 @@
                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="12"><StackPanel Spacing="6"><TextBlock Text="Direction" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><TextBlock x:Name="DetailDirection" /></StackPanel><StackPanel Grid.Column="1" Spacing="6"><TextBlock Text="Protocol" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><TextBlock x:Name="DetailProtocol" /></StackPanel></Grid>
                                 <StackPanel Spacing="6"><TextBlock Text="Path / application scope" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><TextBlock x:Name="DetailPath" TextWrapping="Wrap" IsTextSelectionEnabled="True" /></StackPanel>
                                 <StackPanel Spacing="6"><TextBlock Text="Notes" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><TextBlock x:Name="DetailNotes" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel>
-                                <Button x:Name="EditButton" Content="Edit preview rule" HorizontalAlignment="Stretch" Click="EditRuleClicked" IsEnabled="False" />
+                                <Button x:Name="EditButton" Content="Edit rule" HorizontalAlignment="Stretch" Click="EditRuleClicked" IsEnabled="False" />
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
@@ -96,7 +100,7 @@
                 <local:GeoView x:Name="GeoPanel" Grid.Row="3" Visibility="Collapsed" />
                 <StackPanel x:Name="SettingsPanel" Grid.Row="3" Visibility="Collapsed" Spacing="8">
                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20"><StackPanel Spacing="8"><ToggleSwitch x:Name="StartupToggle" Header="Start ZikWall in the tray when I sign in" Toggled="StartupChanged" /><TextBlock x:Name="StartupStatus" Text="X hides ZikWall. Use Exit in the tray to stop it and remove session rules." TextWrapping="Wrap" /></StackPanel></Border>
-                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20"><Grid ColumnDefinitions="40,*,180" ColumnSpacing="12"><FontIcon Glyph="&#xE790;" /><StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="App theme" /><TextBlock Text="Choose how ZikWall looks." Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel><ComboBox Grid.Column="2" SelectedIndex="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" SelectionChanged="ThemeChanged" AutomationProperties.Name="App theme"><ComboBoxItem Content="Use system setting" /><ComboBoxItem Content="Light" /><ComboBoxItem Content="Dark" /></ComboBox></Grid></Border>
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20"><Grid ColumnDefinitions="40,*,180" ColumnSpacing="12"><FontIcon Glyph="&#xE790;" /><StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="App theme" /><TextBlock Text="Choose how ZikWall looks." Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel><ComboBox x:Name="ThemeChoice" Grid.Column="2" SelectedIndex="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" SelectionChanged="ThemeChanged" AutomationProperties.Name="App theme"><ComboBoxItem Content="Use system setting" /><ComboBoxItem Content="Light" /><ComboBoxItem Content="Dark" /></ComboBox></Grid></Border>
                     <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20"><Grid ColumnDefinitions="40,*" ColumnSpacing="12"><FontIcon Glyph="&#xE946;" /><StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="About ZikWall" /><TextBlock Text="WinUI 3 · Windows App SDK 1.8 · Windows 11 Fluent design" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><TextBlock Text="Live monitor, profile viewer and experimental WFP session filtering. Enable filtering from Firewall policy." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /></StackPanel></Grid></Border>
                 </StackPanel>
             </Grid>

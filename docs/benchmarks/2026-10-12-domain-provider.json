@@ -1,0 +1,13 @@
+{
+  "DirectHintsAcross5Scans": 51,
+  "MeanProviderScanMs": 305.63545999999997,
+  "MaxProviderScanMs": 423.3029,
+  "ActiveRemoteIPs": 50,
+  "MeanActiveScanMs": 280.97666,
+  "MaxActiveScanMs": 303.9432,
+  "ReadMs": 373.296,
+  "Passed": true,
+  "MatchedHints": 13,
+  "FirewallCommandsRejected": true,
+  "InvalidAddressesRejected": true
+}

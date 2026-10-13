@@ -1,10 +1,15 @@
 # ZikWall source identity and history
 
-Updated 12 October 2026.
+Updated 13 October 2026.
 
 Active namespaces, project paths, native product strings, localized messages,
 resource filenames and build references now use ZikWall. Both native main icons
-use the Z shield. The working WinUI build is `ui/ZikWall.WinUI/ZikWall.WinUI.csproj`.
+use the supplied blue shield with orange/red flame. The WinUI tray uses the
+separate white shield/flame supplied for it. Exact source PNGs are retained in
+`tools/branding/ZikWall-source.png` and `ZikWall-tray-source.png`;
+`tools/generate-brand-assets.py` preserves transparency and generates nine Windows
+icon sizes. The app image also appears in the taskbar, titlebar and installer.
+The working WinUI build is `ui/ZikWall.WinUI/ZikWall.WinUI.csproj`.
 The legacy solution is `ZikWall.sln`; its public dependency compatibility blocker
 remains unresolved, so it is not the supported build entry point.
 
@@ -21,6 +26,16 @@ commit and no inherited parent commits. Original history remains recoverable
 from the previous local branch and the verified local bundle
 `temp/zikwall-before-history-rewrite.bundle`. No remote history is changed.
 The checkout directory and its configured startup executable path are unchanged.
+
+The inherited `origin` remote and its remote-tracking refs have been removed,
+along with the old `master` branch's upstream tracking configuration. No Git
+remote is configured. The old local branch and recovery bundle remain local
+archives; the active branch has no inherited parent commits.
+Obsolete submodule declarations and upstream funding configuration have been
+removed. `build.bat` now builds the supported WinUI app and MSI installer instead
+of invoking the external builder checkout. The archived legacy solution still refers to
+the sibling routine sources and remains unsupported. Original license,
+copyright, source links and audit records are retained as provenance.
 
 Validation: the rebranded WinUI app, broker and Windows SDK engine built; all
 160 model/service checks and the dependency/asset integrity checks passed.

@@ -29,7 +29,7 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="8">
         <!-- Toolbar: search, the one filter people change often, live state and row actions. -->
         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-            <AutoSuggestBox x:Name="MonitorSearch" PlaceholderText="Search app, PID, IP address, port or country" QueryIcon="Find" TextChanged="SearchChanged" VerticalAlignment="Center" AutomationProperties.Name="Search connections" />
+            <AutoSuggestBox x:Name="MonitorSearch" PlaceholderText="Search app, domain, IP, port or country" QueryIcon="Find" TextChanged="SearchChanged" VerticalAlignment="Center" AutomationProperties.Name="Search connections" />
             <ComboBox x:Name="ScopeChoice" Grid.Column="1" SelectedIndex="1" MinWidth="160" VerticalAlignment="Center" SelectionChanged="MonitorOptionsChanged" AutomationProperties.Name="Show endpoints">
                 <ComboBoxItem Content="All endpoints" /><ComboBoxItem Content="Internet only" /><ComboBoxItem Content="Local and listening" />
             </ComboBox>
@@ -42,11 +42,27 @@
                 <Button Style="{StaticResource IconButton}" Click="ExportClicked" ToolTipService.ToolTip="Export CSV" AutomationProperties.Name="Export CSV"><FontIcon Glyph="&#xEDE1;" FontSize="16" /></Button>
                 <Button Style="{StaticResource IconButton}" ToolTipService.ToolTip="View options, traffic chart, history and usage" AutomationProperties.Name="Monitor options"><FontIcon Glyph="&#xE713;" FontSize="16" />
                     <Button.Flyout><Flyout x:Name="MonitorOptions" Opened="OptionsOpened" Placement="BottomEdgeAlignedRight">
-                        <ScrollViewer MaxHeight="640" Width="560" Padding="0,0,12,0">
-                            <StackPanel Spacing="20" Padding="2">
+                        <Flyout.FlyoutPresenterStyle><Style TargetType="FlyoutPresenter">
+                            <Setter Property="MaxWidth" Value="600" />
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
+                            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+                            <Setter Property="ScrollViewer.VerticalScrollMode" Value="Disabled" />
+                            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
+                        </Style></Flyout.FlyoutPresenterStyle>
+                        <ScrollViewer MaxHeight="640" MaxWidth="560" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
+                            <StackPanel Spacing="20" Padding="2" SizeChanged="OptionsSizeChanged">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Website names" Style="{StaticResource SectionTitle}" />
+                                    <Button x:Name="DomainButton" Content="Enable domain hints" Click="DomainClicked" />
+                                    <TextBlock x:Name="DomainStatus" Text="Checking the Windows DNS cache…" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                                    <TextBlock Text="Available names appear below each app and on expanded connections. Shared IPs can have several names. Browser-only DNS may be unavailable; HTTPS paths and query strings stay encrypted." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                                </StackPanel>
                                 <StackPanel Spacing="8">
                                     <TextBlock Text="View" Style="{StaticResource SectionTitle}" />
-                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                    <ToggleSwitch x:Name="HideSystemApps" Header="Hide Windows system apps" Toggled="HideSystemAppsChanged" />
+                                    <TextBlock Text="Hide Windows components and built-in system packages from Connections, Activity and the map, and mute their connection alerts. Turn off to show them again. Monitoring and firewall rules continue unchanged." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                                    <Grid x:Name="ViewOptionsGrid" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                                         <ComboBox x:Name="GroupChoice" Header="Group" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="By app" /><ComboBoxItem Content="No grouping" /></ComboBox>
                                         <ComboBox x:Name="DirectionChoice" Grid.Column="1" Header="Direction" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="Both" /><ComboBoxItem Content="Outgoing" /><ComboBoxItem Content="Incoming" /></ComboBox>
                                         <ComboBox x:Name="RefreshChoice" Grid.Column="2" Header="Refresh every" SelectedIndex="1" HorizontalAlignment="Stretch" SelectionChanged="RefreshIntervalChanged"><ComboBoxItem Content="2 seconds" /><ComboBoxItem Content="5 seconds" /><ComboBoxItem Content="10 seconds" /></ComboBox>
@@ -55,38 +71,39 @@
                                 </StackPanel>
                                 <StackPanel Spacing="8">
                                     <TextBlock Text="Adapter traffic" Style="{StaticResource SectionTitle}" />
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                    <Grid x:Name="AdapterOptionsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                                         <ComboBox x:Name="AdapterChoice" Header="Adapter" HorizontalAlignment="Stretch" SelectionChanged="AdapterChanged" DisplayMemberPath="Name" />
                                         <ComboBox x:Name="HistoryWindow" Grid.Column="1" Header="Chart and activity range" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="Last hour" /><ComboBoxItem Content="Last 24 hours" /><ComboBoxItem Content="Last 7 days" /></ComboBox>
                                     </Grid>
                                     <Border Style="{StaticResource StatTile}" Padding="8">
                                         <Canvas x:Name="TrafficChart" Height="110" SizeChanged="ChartSizeChanged" AutomationProperties.Name="Selected adapter traffic chart"><Polyline x:Name="DownloadLine" Stroke="{x:Bind presentation:Ui.Incoming}" StrokeThickness="2" /><Polyline x:Name="UploadLine" Stroke="{x:Bind presentation:Ui.Outgoing}" StrokeThickness="2" /></Canvas>
                                     </Border>
-                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                                    <StackPanel Spacing="4">
                                         <StackPanel Orientation="Horizontal" Spacing="6"><Ellipse Width="8" Height="8" Fill="{x:Bind presentation:Ui.Incoming}" /><TextBlock Text="Download" Style="{StaticResource StatLabel}" /><Ellipse Width="8" Height="8" Margin="10,0,0,0" Fill="{x:Bind presentation:Ui.Outgoing}" /><TextBlock Text="Upload" Style="{StaticResource StatLabel}" /></StackPanel>
-                                        <TextBlock x:Name="ChartScale" Grid.Column="1" Style="{StaticResource StatLabel}" TextAlignment="Right" TextWrapping="Wrap" />
-                                    </Grid>
-                                    <TextBlock Text="Whole-adapter totals, not per-app traffic." Style="{StaticResource StatLabel}" />
+                                        <TextBlock x:Name="ChartScale" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock Text="Whole-adapter totals, not per-app traffic." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Spacing="4">
                                     <TextBlock Text="History and alerts" Style="{StaticResource SectionTitle}" />
-                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto">
+                                    <Grid x:Name="HistoryOptionsGrid" ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
                                         <ToggleSwitch x:Name="RecentAlerts" Header="New connection banner" IsOn="True" Toggled="RecentAlertsChanged" />
                                         <ToggleSwitch x:Name="DesktopAlerts" Grid.Column="1" Header="Windows notifications" Toggled="DesktopAlertsChanged" />
                                         <ToggleSwitch x:Name="SaveHistory" Grid.Row="1" Header="Save activity on this PC" Toggled="SaveHistoryChanged" />
                                         <Button Grid.Row="1" Grid.Column="1" Content="Clear history…" Click="ClearHistoryClicked" VerticalAlignment="Bottom" Margin="0,0,0,6" />
+                                        <ToggleSwitch x:Name="TcpDetails" Grid.Row="2" Header="Show TCP details in history" Toggled="TcpDetailsChanged" ToolTipService.ToolTip="Include TCP state changes, connection teardown and sockets whose app already exited." />
                                     </Grid>
                                 </StackPanel>
                                 <StackPanel Spacing="8">
                                     <TextBlock Text="Per-app usage" Style="{StaticResource SectionTitle}" />
-                                    <StackPanel Orientation="Horizontal" Spacing="8"><Button x:Name="UsageButton" Content="Enable usage" Click="UsageClicked" /><Button Content="All app usage…" Click="AllUsageClicked" /></StackPanel>
-                                    <TextBlock x:Name="UsageStatus" Text="Usage is off. Enabling requires Windows UAC for this session. Daily totals retain 30 days; network traffic includes local connections. Sign-in startup itself stays unelevated." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                                    <Grid x:Name="UsageOptionsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8"><Button x:Name="UsageButton" Content="Enable usage" Click="UsageClicked" /><Button Grid.Column="1" Content="All app usage…" Click="AllUsageClicked" /></Grid>
+                                    <TextBlock x:Name="UsageStatus" Text="Usage is off. Enabled usage resumes after a restart with a Windows permission prompt. Daily totals retain 30 days; network traffic includes local connections." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Spacing="6">
                                     <TextBlock Text="About this data" Style="{StaticResource SectionTitle}" />
                                     <TextBlock Text="Direction comes from Windows TCP SYN options; unavailable results stay Unknown. Flags are approximate offline IP locations. Snapshots can miss short connections; UDP destinations are unavailable." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
                                     <TextBlock x:Name="CountryDataStatus" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <HyperlinkButton Content="Country data: DB-IP · CC BY 4.0" NavigateUri="https://db-ip.com" Padding="0" />
+                                    <HyperlinkButton Content="Country and network data: DB-IP · CC BY 4.0" NavigateUri="https://db-ip.com" Padding="0" />
                                 </StackPanel>
                             </StackPanel>
                         </ScrollViewer>
@@ -124,25 +141,28 @@
 
         <Border Grid.Row="3" Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
             <Grid RowDefinitions="Auto,*">
-                <Grid x:Name="ConnectionHeader" Padding="20,10" ColumnDefinitions="2.4*,120,1.1*,1.3*" ColumnSpacing="12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
-                    <TextBlock Text="App / connection" Style="{StaticResource StatLabel}" />
+                <Grid x:Name="ConnectionHeader" Padding="20,10" ColumnSpacing="12" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="2.4*" /><ColumnDefinition Width="120" /><ColumnDefinition Width="1.1*" /><ColumnDefinition Width="1.3*" /><ColumnDefinition x:Name="UsageHeaderColumn" Width="0" /></Grid.ColumnDefinitions>
+                    <Button Content="App / connection" Click="AppSortClicked" Padding="0" Background="Transparent" BorderThickness="0" MinWidth="0" MinHeight="0" HorizontalAlignment="Left" ToolTipService.ToolTip="Sort apps by name" Style="{StaticResource DefaultButtonStyle}" />
                     <TextBlock Grid.Column="1" Text="Direction" Style="{StaticResource StatLabel}" />
                     <TextBlock Grid.Column="2" Text="Status" Style="{StaticResource StatLabel}" />
                     <TextBlock Grid.Column="3" Text="Location" Style="{StaticResource StatLabel}" />
+                    <Button x:Name="UsageSortButton" Grid.Column="4" Content="Usage today" Click="UsageSortClicked" Visibility="Collapsed" Padding="0" Background="Transparent" BorderThickness="0" MinWidth="0" MinHeight="0" HorizontalAlignment="Left" ToolTipService.ToolTip="Sort by today's downloaded + uploaded bytes. Click again to reverse." AutomationProperties.Name="Sort usage today, highest first" />
                 </Grid>
                 <ListView x:Name="ConnectionList" Grid.Row="1" HorizontalContentAlignment="Stretch" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="ActivityClicked" SelectionChanged="SelectionChanged" ContextRequested="ConnectionsContextRequested" AutomationProperties.Name="Apps, processes and connections">
                     <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
-                    <ListView.ItemTemplate><DataTemplate x:DataType="models:ActivityRow"><Grid Padding="4,6" MinHeight="44" ColumnDefinitions="2.4*,120,1.1*,1.3*" ColumnSpacing="12">
+                    <ListView.ItemTemplate><DataTemplate x:DataType="models:ActivityRow"><Grid Padding="4,6" MinHeight="44" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="2.4*" /><ColumnDefinition Width="120" /><ColumnDefinition Width="1.1*" /><ColumnDefinition Width="1.3*" /><ColumnDefinition Width="{x:Bind presentation:Ui.UsageColumnWidth(UsageVisible), Mode=OneWay}" /></Grid.ColumnDefinitions>
                         <Grid ColumnDefinitions="Auto,20,Auto,*">
                             <Border Width="{x:Bind Indent}" />
                             <FontIcon Grid.Column="1" Glyph="{x:Bind ChevronGlyph}" FontSize="10" HorizontalAlignment="Left" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <presentation:AppIcon Grid.Column="2" Executable="{x:Bind ProcessPath}" />
                             <StackPanel Grid.Column="3" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="6">
-                                    <TextBlock Text="{x:Bind Title}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind ProcessPath}" />
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                                    <TextBlock Text="{x:Bind Title}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind TitleHint}" />
                                     <Ellipse Grid.Column="1" Width="6" Height="6" VerticalAlignment="Center" Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{x:Bind presentation:Ui.Opacity(IsNew)}" ToolTipService.ToolTip="New since the last refresh" />
                                 </Grid>
-                                <TextBlock Text="{x:Bind Details}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" />
+                                <TextBlock Text="{x:Bind Details}" ToolTipService.ToolTip="{x:Bind Details}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" />
                             </StackPanel>
                         </Grid>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
@@ -155,23 +175,26 @@
                                 <TextBlock Text="{x:Bind State}" TextTrimming="CharacterEllipsis" Visibility="{x:Bind presentation:Ui.Show(State)}" />
                                 <TextBlock Text="{x:Bind Endpoint}" TextTrimming="CharacterEllipsis" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind Usage}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" Visibility="{x:Bind presentation:Ui.Show(Usage)}" ToolTipService.ToolTip="Observed app traffic rate" />
                         </StackPanel>
                         <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                             <ItemsControl ItemsSource="{x:Bind CountryFlags}" VerticalAlignment="Center"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="3" /></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate x:DataType="x:String"><Image Source="{x:Bind}" Width="20" Height="15" /></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
                             <TextBlock Text="{x:Bind Country}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTipService.ToolTip="{x:Bind Country}" />
                         </StackPanel>
+                        <StackPanel Grid.Column="4" Visibility="{x:Bind presentation:Ui.ShowIf(UsageVisible), Mode=OneWay}" VerticalAlignment="Center" ToolTipService.ToolTip="{x:Bind UsageHint, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind Total, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind Usage, Mode=OneWay}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" />
+                        </StackPanel>
                     </Grid></DataTemplate></ListView.ItemTemplate>
                 </ListView>
                 <ListView x:Name="HistoryList" ContextRequested="HistoryContextRequested" Grid.Row="1" HorizontalContentAlignment="Stretch" Visibility="Collapsed" SelectionMode="Single" SelectionChanged="SelectionChanged" AutomationProperties.Name="Connection history">
                     <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
-                    <ListView.ItemTemplate><DataTemplate x:DataType="models:ConnectionEvent"><Grid Padding="4,8" ColumnDefinitions="140,32,*,170" ColumnSpacing="12">
-                        <TextBlock Text="{x:Bind TimeLabel}" VerticalAlignment="Center" Style="{StaticResource StatLabel}" />
+                    <ListView.ItemTemplate><DataTemplate x:DataType="models:ConnectionEvent"><Grid Padding="4,8" ColumnDefinitions="96,32,*,170" ColumnSpacing="12">
+                        <TextBlock Text="{x:Bind TimeLabel}" VerticalAlignment="Center" Style="{StaticResource StatLabel}" ToolTipService.ToolTip="{x:Bind FullTime}" />
                         <presentation:AppIcon Grid.Column="1" Executable="{x:Bind Connection.ProcessPath}" />
-                        <StackPanel Grid.Column="2" VerticalAlignment="Center"><TextBlock Text="{x:Bind Summary}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{x:Bind Endpoints}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" /></StackPanel>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center" ToolTipService.ToolTip="{x:Bind Details}"><TextBlock Text="{x:Bind Summary}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{x:Bind Endpoints}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" /></StackPanel>
                         <StackPanel Grid.Column="3" VerticalAlignment="Center" Spacing="2">
-                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="{x:Bind presentation:Ui.DirectionGlyph(Connection.Direction)}" FontSize="12" Foreground="{x:Bind presentation:Ui.DirectionBrush(Connection.Direction)}" /><TextBlock Text="{x:Bind Connection.Direction}" /></StackPanel>
-                            <StackPanel Orientation="Horizontal" Spacing="6"><Image Source="{x:Bind Connection.CountryFlag}" Width="20" Height="15" /><TextBlock Text="{x:Bind Connection.CountryLabel}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" /></StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="{x:Bind presentation:Ui.DirectionGlyph(Connection.Direction)}" FontSize="12" Foreground="{x:Bind presentation:Ui.DirectionBrush(Connection.Direction)}" /><TextBlock Text="{x:Bind presentation:Ui.DirectionText(Connection.Direction)}" /></StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6"><Image Source="{x:Bind Connection.CountryFlag}" Width="20" Height="15" /><TextBlock Text="{x:Bind Connection.NetworkLabel}" ToolTipService.ToolTip="{x:Bind Connection.PlaceDescription}" TextTrimming="CharacterEllipsis" Style="{StaticResource StatLabel}" /></StackPanel>
                         </StackPanel>
                     </Grid></DataTemplate></ListView.ItemTemplate>
                 </ListView>

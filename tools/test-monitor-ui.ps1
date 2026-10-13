@@ -29,3 +29,23 @@ Run-Diagnostic '--test-context-menu'
 $context = Get-Content (Join-Path $directory 'context-menu-selftest.txt') -Raw
 if ($context -notmatch '^PASS: 8 native context-menu' -or $context -notmatch 'PASS: native block-review cancellation') { throw "Context-menu checks failed: $context" }
 Write-Host 'PASS: native context-menu routing, invocation, pinned targets and block-review cancellation.'
+
+Run-Diagnostic '--test-monitor-options'
+$options = Get-Content (Join-Path $directory 'monitor-options-selftest.txt') -Raw
+if ($options -notmatch '^PASS: native options') { throw "Options layout checks failed: $options" }
+Write-Host $options
+
+Run-Diagnostic '--test-usage-view'
+$usage = Get-Content (Join-Path $directory 'usage-view-selftest.txt') -Raw
+if ($usage -notmatch '^PASS: native usage') { throw "Usage column checks failed: $usage" }
+Write-Host $usage
+
+Run-Diagnostic '--test-system-apps'
+$systemApps = Get-Content (Join-Path $directory 'system-apps-selftest.txt') -Raw
+if ($systemApps -notmatch '^PASS: native toggle') { throw "System-app toggle checks failed: $systemApps" }
+Write-Host $systemApps
+
+Run-Diagnostic '--test-preferences'
+$preferences = Get-Content (Join-Path $directory 'preferences-selftest.txt') -Raw
+if ($preferences -notmatch '^PASS:') { throw "Settings restart checks failed: $preferences" }
+Write-Host $preferences

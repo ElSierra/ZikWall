@@ -1,0 +1,250 @@
+{
+  "TimestampUtc": "2026-10-13T08:31:14.5659982+00:00",
+  "Scenario": "Native usage column sorted descending; 1,000 fixture connections, 100 apps, one expanded app; synthetic usage every 5 seconds. ETW collector and live capture off.",
+  "MeasuredSeconds": 61.5524825,
+  "CpuOneCorePercent": 11.16933211445783,
+  "PeakPrivateMiB": 235.2890625,
+  "PeakWorkingMiB": 295.73828125,
+  "Samples": [
+    {
+      "Seconds": 1.0210459,
+      "PrivateMiB": 183.7109375
+    },
+    {
+      "Seconds": 2.0368276,
+      "PrivateMiB": 183.71484375
+    },
+    {
+      "Seconds": 3.04529,
+      "PrivateMiB": 183.71484375
+    },
+    {
+      "Seconds": 4.0696167,
+      "PrivateMiB": 183.71484375
+    },
+    {
+      "Seconds": 5.1382183,
+      "PrivateMiB": 183.7109375
+    },
+    {
+      "Seconds": 6.1466914,
+      "PrivateMiB": 183.78515625
+    },
+    {
+      "Seconds": 7.1564341,
+      "PrivateMiB": 194.140625
+    },
+    {
+      "Seconds": 8.1709153,
+      "PrivateMiB": 194.17578125
+    },
+    {
+      "Seconds": 9.1936623,
+      "PrivateMiB": 204.9296875
+    },
+    {
+      "Seconds": 10.2742058,
+      "PrivateMiB": 205.25
+    },
+    {
+      "Seconds": 11.2848676,
+      "PrivateMiB": 196.55859375
+    },
+    {
+      "Seconds": 12.2964905,
+      "PrivateMiB": 201.83203125
+    },
+    {
+      "Seconds": 13.3064955,
+      "PrivateMiB": 200.8359375
+    },
+    {
+      "Seconds": 14.3265853,
+      "PrivateMiB": 200.828125
+    },
+    {
+      "Seconds": 15.3370791,
+      "PrivateMiB": 211.5546875
+    },
+    {
+      "Seconds": 16.3597654,
+      "PrivateMiB": 216.2890625
+    },
+    {
+      "Seconds": 17.3724125,
+      "PrivateMiB": 216.2890625
+    },
+    {
+      "Seconds": 18.4072113,
+      "PrivateMiB": 219.59375
+    },
+    {
+      "Seconds": 19.4201514,
+      "PrivateMiB": 220.81640625
+    },
+    {
+      "Seconds": 20.4781951,
+      "PrivateMiB": 224.40625
+    },
+    {
+      "Seconds": 21.4981009,
+      "PrivateMiB": 219.92578125
+    },
+    {
+      "Seconds": 22.5092996,
+      "PrivateMiB": 219.9296875
+    },
+    {
+      "Seconds": 23.5335894,
+      "PrivateMiB": 221.609375
+    },
+    {
+      "Seconds": 24.5536612,
+      "PrivateMiB": 223.609375
+    },
+    {
+      "Seconds": 25.6136352,
+      "PrivateMiB": 223.609375
+    },
+    {
+      "Seconds": 26.6272524,
+      "PrivateMiB": 225.26953125
+    },
+    {
+      "Seconds": 27.6373757,
+      "PrivateMiB": 225.26953125
+    },
+    {
+      "Seconds": 28.6602835,
+      "PrivateMiB": 225.3359375
+    },
+    {
+      "Seconds": 29.6839853,
+      "PrivateMiB": 225.33984375
+    },
+    {
+      "Seconds": 30.7437555,
+      "PrivateMiB": 225.46875
+    },
+    {
+      "Seconds": 31.7556652,
+      "PrivateMiB": 226.125
+    },
+    {
+      "Seconds": 32.764837,
+      "PrivateMiB": 226.13671875
+    },
+    {
+      "Seconds": 33.7736806,
+      "PrivateMiB": 226.140625
+    },
+    {
+      "Seconds": 34.7917234,
+      "PrivateMiB": 226.140625
+    },
+    {
+      "Seconds": 35.8484941,
+      "PrivateMiB": 226.14453125
+    },
+    {
+      "Seconds": 36.8607354,
+      "PrivateMiB": 227.1640625
+    },
+    {
+      "Seconds": 37.8697174,
+      "PrivateMiB": 227.1640625
+    },
+    {
+      "Seconds": 38.8928841,
+      "PrivateMiB": 227.1640625
+    },
+    {
+      "Seconds": 39.9040888,
+      "PrivateMiB": 227.09375
+    },
+    {
+      "Seconds": 40.9645856,
+      "PrivateMiB": 227.1328125
+    },
+    {
+      "Seconds": 41.9780532,
+      "PrivateMiB": 227.3515625
+    },
+    {
+      "Seconds": 42.9870786,
+      "PrivateMiB": 227.29296875
+    },
+    {
+      "Seconds": 44.012052,
+      "PrivateMiB": 227.2890625
+    },
+    {
+      "Seconds": 45.029413,
+      "PrivateMiB": 227.28515625
+    },
+    {
+      "Seconds": 46.1205666,
+      "PrivateMiB": 228.3671875
+    },
+    {
+      "Seconds": 47.1337516,
+      "PrivateMiB": 229.078125
+    },
+    {
+      "Seconds": 48.1473554,
+      "PrivateMiB": 229.07421875
+    },
+    {
+      "Seconds": 49.1685643,
+      "PrivateMiB": 228.9765625
+    },
+    {
+      "Seconds": 50.1815606,
+      "PrivateMiB": 229.11328125
+    },
+    {
+      "Seconds": 51.2431905,
+      "PrivateMiB": 229.83203125
+    },
+    {
+      "Seconds": 52.2633522,
+      "PrivateMiB": 231.1484375
+    },
+    {
+      "Seconds": 53.2881128,
+      "PrivateMiB": 231.1484375
+    },
+    {
+      "Seconds": 54.3062819,
+      "PrivateMiB": 231.1640625
+    },
+    {
+      "Seconds": 55.3293632,
+      "PrivateMiB": 231.1640625
+    },
+    {
+      "Seconds": 56.3995191,
+      "PrivateMiB": 232.5078125
+    },
+    {
+      "Seconds": 57.415396,
+      "PrivateMiB": 232.96875
+    },
+    {
+      "Seconds": 58.4386451,
+      "PrivateMiB": 232.96484375
+    },
+    {
+      "Seconds": 59.4515672,
+      "PrivateMiB": 234.69921875
+    },
+    {
+      "Seconds": 60.4661853,
+      "PrivateMiB": 234.703125
+    },
+    {
+      "Seconds": 61.5523638,
+      "PrivateMiB": 235.2890625
+    }
+  ]
+}

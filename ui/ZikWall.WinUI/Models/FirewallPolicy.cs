@@ -5,12 +5,14 @@ namespace ZikWall.WinUI.Models;
 public sealed record FirewallRule(Guid Id, string Name, string Application, string RemoteNetwork, int Protocol,
     int RemotePort, int Direction, bool Block, bool Enabled, DateTimeOffset? Expires)
 {
+    public string Group { get; init; } = "";
     public string Action => Block ? "Block" : "Allow";
     public string Scope => $"{(Application.Length == 0 ? "All applications" : Path.GetFileName(Application))} · {(RemoteNetwork.Length == 0 ? "Any IP" : RemoteNetwork)} · {(Protocol == 6 ? "TCP" : Protocol == 17 ? "UDP" : "Any protocol")}{(RemotePort == 0 ? "" : $":{RemotePort}")}";
     public string Lifetime => !Enabled ? "Disabled" : Expires is { } expiry ? expiry <= DateTimeOffset.UtcNow ? "Expired" : $"Expires {expiry.ToLocalTime():g}" : "While filtering is enabled";
     public bool IsActive(DateTimeOffset now) => Enabled && (Expires is null || Expires > now);
     public void Validate()
     {
+        if (Group is not ("" or "Applications" or "Custom rules" or "System rules" or "Blocklists")) throw new InvalidDataException("Invalid rule group.");
         if (Id == Guid.Empty || string.IsNullOrWhiteSpace(Name) || Name.Length > 128 || Name.Any(char.IsControl)) throw new InvalidDataException("Give the rule a name of 1–128 characters.");
         if (Application is null || RemoteNetwork is null) throw new InvalidDataException("Missing rule scope.");
         if (Application.Length == 0 && RemoteNetwork.Length == 0) throw new InvalidDataException("Choose an application or a remote IP/network; unscoped global rules are not supported.");
@@ -50,5 +52,5 @@ public sealed record PolicyDocument(int Version, Guid SelectedProfile, bool Auto
     }
 }
 
-public sealed record BrokerRequest(string Command, List<FirewallRule>? Rules = null);
-public sealed record BrokerResponse(bool Success, string Message, int ActiveRules = 0, UsageSnapshot? Usage = null);
+public sealed record BrokerRequest(string Command, List<FirewallRule>? Rules = null, List<string>? RemoteAddresses = null);
+public sealed record BrokerResponse(bool Success, string Message, int ActiveRules = 0, UsageSnapshot? Usage = null, List<CachedDomainAnswer>? Domains = null);

@@ -1,0 +1,5 @@
+<WixLocalization xmlns="http://wixtoolset.org/schemas/v4/wxl" Culture="en-US">
+  <String Id="InstallDirDlgDescription" Value="Choose where ZikWall lives, then click Next." />
+  <String Id="MaintenanceWelcomeDlgTitle" Value="{\WixUI_Font_Bigger}Manage ZikWall" />
+  <String Id="MaintenanceWelcomeDlgDescription" Value="Repair your installation or remove ZikWall. Your saved settings and history are kept." />
+</WixLocalization>

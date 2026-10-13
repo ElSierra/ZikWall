@@ -10,6 +10,8 @@ namespace ZikWall.WinUI;
 public sealed partial class PrivacyView : UserControl
 {
     private readonly PrivacyStore store = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZikWall"));
+    private readonly AppearancePreferencesStore preferencesStore = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZikWall"));
+    private readonly bool diagnostic = Environment.GetCommandLineArgs().Skip(1).Any(x => x.StartsWith("--test-", StringComparison.Ordinal) || x == "--benchmark");
     private readonly DispatcherTimer timer = new() { Interval = TimeSpan.FromSeconds(5) };
     private PrivacySettings settings = PrivacySettings.Empty();
     private DnsProxy? proxy;
@@ -17,14 +19,30 @@ public sealed partial class PrivacyView : UserControl
     private DateTimeOffset nextUpdate = DateTimeOffset.MinValue;
     public event Action<IReadOnlyList<string>>? CopyNetworks;
     public bool DnsRunning => proxy is not null;
-    public PrivacyView() { InitializeComponent(); timer.Tick += async (_, _) => { UpdateCounts(); if (settings.AutomaticUpdates && DateTimeOffset.UtcNow >= nextUpdate && !downloading) await RefreshListsAsync(); }; }
+    public PrivacyView() : this(null) { }
+    internal PrivacyView(string? preferencesDirectory)
+    {
+        if (preferencesDirectory is not null) { store = new(preferencesDirectory); preferencesStore = new(preferencesDirectory); diagnostic = false; }
+        InitializeComponent();
+        timer.Tick += async (_, _) => { UpdateCounts(); if (settings.AutomaticUpdates && DateTimeOffset.UtcNow >= nextUpdate && !downloading) await RefreshListsAsync(); };
+    }
     public void Show()
     {
         if (loaded) return; loaded = true;
         try { settings = store.Load(); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status(ex.Message, true); }
+        if (!diagnostic)
+            try { var saved = preferencesStore.Load(); DnsEndpoint.Text = saved.DnsEndpoint; BootstrapAddress.Text = saved.BootstrapAddress; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status($"Could not load DNS preferences: {ex.Message}", true); }
         Refresh(); timer.Start();
     }
-    public void Stop() { closed = true; timer.Stop(); proxy?.Dispose(); proxy = null; }
+    public void Stop() { SaveDnsPreferences(); closed = true; timer.Stop(); proxy?.Dispose(); proxy = null; }
+    private void DnsSettingsChanged(object sender, RoutedEventArgs args) => SaveDnsPreferences();
+    private void SaveDnsPreferences()
+    {
+        if (!loaded || diagnostic) return;
+        try { preferencesStore.Update(value => value with { DnsEndpoint = DnsEndpoint.Text.Trim(), BootstrapAddress = BootstrapAddress.Text.Trim() }); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { Status($"DNS choices could not be saved: {ex.Message}", true); }
+    }
     private void Refresh()
     {
         refreshing = true; Subscriptions.ItemsSource = settings.Subscriptions.ToList(); AutomaticUpdates.IsChecked = settings.AutomaticUpdates; Exceptions.Text = string.Join(Environment.NewLine, settings.AllowedDomains); refreshing = false;
@@ -45,6 +63,7 @@ public sealed partial class PrivacyView : UserControl
             else
             {
                 if (!Uri.TryCreate(DnsEndpoint.Text.Trim(), UriKind.Absolute, out var endpoint) || !IPAddress.TryParse(BootstrapAddress.Text.Trim(), out var bootstrap)) throw new ArgumentException("Enter an HTTPS endpoint and its bootstrap IP address.");
+                SaveDnsPreferences();
                 proxy = new DnsProxy(endpoint, bootstrap); Refresh(); Status("Listening on 127.0.0.1:53. Adapter DNS settings have not been changed.");
             }
             DnsEndpoint.IsEnabled = BootstrapAddress.IsEnabled = proxy is null; DnsButton.Content = proxy is null ? "Start local DNS proxy" : "Stop local DNS proxy";

@@ -6,6 +6,39 @@ The native WinUI list shows executable icons, application/PID, incoming/outgoing
 
 Secondary controls and adapter charts are collapsed under **Monitor options and adapter traffic**, leaving space for the list. Refresh defaults to five seconds, with two-/ten-second choices and 15-second hidden/minimized sampling. Sampling can miss short connections. The Internet filter classifies remote address space; it does not prove which physical route carried traffic.
 
+## Website names
+
+Connection rows show **DNS cache hints** beside the original IP and port. Search
+accepts these names; Details explains their origin, and CSV includes a
+`DomainCacheHint` column. Expand an app and process, or select the flat view, to
+see individual destinations. Full HTTPS URLs, paths and query strings are not
+visible. Shared IPs may have several names, and browser-private encrypted DNS
+can leave names unknown. These hints do not identify which hostname an app
+requested and never become firewall rule targets.
+
+The implementation reads the documented local
+[MSFT_DNSClientCache provider](https://learn.microsoft.com/en-us/windows/win32/fwp/wmi/dnsclientcimprov/msft-dnsclientcache).
+It sends no DNS requests and captures no packets. On Windows versions that
+restrict cache access, use **Monitor options → Website names → Enable domain
+hints** and accept Windows UAC. This starts a separate read-only helper for the
+session; it cannot apply firewall rules or enable traffic collection. The main
+app and sign-in startup stay unelevated. Closing the app releases the helper;
+a long monitoring pause can require enabling it again.
+
+One background worker reads the cache immediately, then at most once per
+60 seconds while visible or 120 seconds while hidden/minimized. Hints may take
+another normal connection refresh to appear. Reads stream through at most
+16,384 successful A/AAAA answer records, retain at most 2,048 active remote IPs
+and three names per IP, and expire hints at the record TTL or two minutes,
+whichever is sooner. Names are address-record owner names; CNAME aliases are
+not inferred. Unsupported/unavailable provider access leaves the IP list usable.
+Repeated access-denied calls are suppressed until a new reader session.
+
+Only in-memory hints and explicit CSV exports contain these names. Saved activity
+JSON omits them. The separate, explicitly clicked reverse-DNS action still makes
+a network lookup and remains labeled as a hint. See [domain performance and
+validation](DOMAIN-HINTS.md).
+
 ## Direction and observation limits
 
 TCP direction uses the read-only `ActiveOpen` field in Windows `TCP_ESTATS_SYN_OPTS_ROS_v0`: initiating sockets are Outgoing and accepted sockets Incoming. IPv4 and IPv6 have separate SDK structures and live loopback tests. A listening socket is labeled Listening; unavailable EStats results remain Unknown. Reading SYN options does not require enabling traffic statistics, elevation or firewall changes.
@@ -17,6 +50,8 @@ Microsoft references: [SYN options](https://learn.microsoft.com/en-us/windows/wi
 ## Countries and provenance
 
 Country lookups are offline: observed IP addresses are never submitted to a location service. Bundled DB-IP IP to Country Lite, October 2026, is [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), with attribution in the UI and [asset notice](../ui/ZikWall.WinUI/Assets/Countries/NOTICE.md). The dataset contains 362,122 IPv4 and 348,712 IPv6 ranges, stored as two memory-mapped binary tables totaling 15,477,444 bytes. Binary search uses a bounded 4,096-address result cache. Missing/corrupt data leaves monitoring functional with countries unknown.
+
+Network owners are offline too. Bundled DB-IP IP to ASN Lite, October 2026 ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), [asset notice](../ui/ZikWall.WinUI/Assets/Networks/NOTICE.md)), maps 402,389 IPv4 and 74,973 IPv6 ranges to 82,135 autonomous systems, stored in three memory-mapped tables totaling 9,989,645 bytes. Names drop legal suffixes so rows read "Microsoft · GB" rather than "Microsoft Corporation"; details and the CSV export keep the ASN. The owner is whoever announces the address. Cloud and CDN networks (Amazon, Microsoft, Cloudflare, Akamai) host many unrelated services, so an owner says where traffic went, not which site it was. Rebuild with `make network-data INPUT=<pinned CSV.gz>`.
 
 Country is an approximate database assignment, not proof of a server's actual location. VPNs, proxies, CDNs and anycast can make it misleading. For example, this pinned dataset places Google's IPv6 DNS range in Canada and its IPv4 8.8.8.8 range in the US. Do not treat either as a measurement of the responding anycast node. The map still needs imported latitude/longitude data; a country table does not supply coordinates.
 

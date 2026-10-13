@@ -8,6 +8,9 @@ namespace ZikWall.WinUI;
 public sealed partial class MainWindow : Window
 {
     internal Task ExerciseMonitorAsync() => MonitorPanel.ExerciseRowsAsync();
+    internal Task ExerciseMonitorOptionsAsync() => MonitorPanel.ExerciseOptionsAsync();
+    internal Task ExerciseUsageViewAsync(bool benchmark) => MonitorPanel.ExerciseUsageViewAsync(benchmark);
+    internal Task ExerciseSystemAppsAsync() => MonitorPanel.ExerciseSystemAppsAsync();
     internal async Task ExerciseContextMenuAsync() { await MonitorPanel.ExerciseContextMenuAsync(); await PolicyPanel.ExerciseMonitorCancelAsync(); }
     internal async Task ExerciseLifecycleAsync()
     {
@@ -29,14 +32,16 @@ public sealed partial class MainWindow : Window
         GeoPanel.UpdateConnections([new("TCPv4", "192.168.1.2", 12345, "8.8.8.8", 443, Environment.ProcessId, "Established", "ZikWall map fixture", Environment.ProcessPath!, "Outgoing", "US", "United States", "Internet"), new("TCPv4", "192.168.1.2", 12346, "1.1.1.1", 443, Environment.ProcessId, "Established", "ZikWall map fixture", Environment.ProcessPath!, "Incoming", "AU", "Australia", "Internet")]);
         await GeoPanel.ExerciseSelectionAsync();
     }
-    private List<RuleEntry> entries = PreviewData.Create();
+    private List<RuleEntry> entries = [];
     private string view = "all";
     private bool ready;
-    private bool preview = true;
+    private bool imported;
     private readonly DispatcherTimer timer;
     private DateTimeOffset lastTimerCheck = DateTimeOffset.UtcNow;
     private bool confirmedClose, closeDialogOpen;
     private readonly bool diagnostic;
+    private readonly Services.AppearancePreferencesStore appearanceStore = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZikWall"));
+    private readonly bool isolatedPreferences;
     private Presentation.TrayIcon? tray;
     public void ShowFromTray() { AppWindow.Show(); Activate(); MonitorPanel.SetBackground(false); GeoPanel.SetBackground(false); }
     public void HideToTray() { if (tray is null) return; AppWindow.Hide(); MonitorPanel.SetBackground(true); GeoPanel.SetBackground(true); }
@@ -59,9 +64,11 @@ public sealed partial class MainWindow : Window
         Close();
     }
 
-    public MainWindow(bool diagnostic = false)
+    public MainWindow(bool diagnostic = false, string? preferencesDirectory = null)
     {
         this.diagnostic = diagnostic;
+        isolatedPreferences = preferencesDirectory is not null;
+        if (preferencesDirectory is not null) appearanceStore = new(preferencesDirectory);
         InitializeComponent();
         MonitorPanel.Owner = this;
         GeoPanel.Owner = this;
@@ -69,6 +76,9 @@ public sealed partial class MainWindow : Window
         MonitorPanel.BlockRequested = plan => PolicyPanel.BlockFromMonitorAsync(plan);
         MonitorPanel.ManageRulesRequested += () => Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "policy");
         PolicyPanel.Owner = this;
+        if (diagnostic && Environment.GetCommandLineArgs().Contains("--test-rules"))
+            PolicyPanel.UseDiagnosticStore(Path.Combine(AppContext.BaseDirectory, "rules-diagnostic", Guid.NewGuid().ToString("N")));
+        PolicyPanel.RulesChanged += Refresh;
         PrivacyPanel.CopyNetworks += networks => { PolicyPanel.Show(); PolicyPanel.ImportNetworks(networks); Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "policy"); };
         PolicyPanel.FilteringChanged += connected => { EngineState.Text = connected ? "WFP broker connected" : "Filtering off · monitoring on"; EngineHint.Text = connected ? "Session rules apply" : "Enable rules in Firewall policy"; };
         AppWindow.SetIcon(System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "ZikWall.ico"));
@@ -84,7 +94,11 @@ public sealed partial class MainWindow : Window
             catch (System.ComponentModel.Win32Exception ex) { EngineHint.Text = ex.Message; }
         }
         StartupToggle.IsOn = Services.StartupSettings.Enabled;
+        if (!diagnostic || isolatedPreferences)
+            try { ThemeChoice.SelectedIndex = appearanceStore.Load().Theme; }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { StartupStatus.Text = $"Could not load preferences: {ex.Message}"; }
         ready = true;
+        PolicyPanel.Show();
         Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "connections");
         Refresh();
         timer = new() { Interval = TimeSpan.FromSeconds(30) };
@@ -112,12 +126,23 @@ public sealed partial class MainWindow : Window
     {
         if (!ready) return;
         var selection = RuleList.SelectedItem as RuleEntry;
+        if (!imported)
+        {
+            entries = PolicyPanel.SavedRules.Select(PolicyRuleEntries.FromRule).ToList();
+            ModeBanner.Title = $"{PolicyPanel.ProfileName} · {PolicyPanel.StatusTitle}";
+            ModeBanner.Message = PolicyPanel.StatusMessage;
+            ModeBanner.Severity = PolicyPanel.StatusSeverity;
+        }
+        FilteringRuleButton.Label = PolicyPanel.IsFiltering ? "Disable filtering" : "Enable filtering…";
+        FilteringRuleButton.Visibility = ApplyRuleButton.Visibility = imported ? Visibility.Collapsed : Visibility.Visible;
+        ApplyRuleButton.IsEnabled = PolicyPanel.IsFiltering;
+        SavedRulesButton.Visibility = imported ? Visibility.Visible : Visibility.Collapsed;
         var visible = RuleQuery.Filter(entries, view, Search.Text).ToList();
         RuleList.ItemsSource = visible;
-        RuleList.SelectedItem = selection is not null && visible.Contains(selection) ? selection : visible.FirstOrDefault();
+        RuleList.SelectedItem = visible.FirstOrDefault(x => selection?.PolicyRuleId is { } id ? x.PolicyRuleId == id : x == selection) ?? visible.FirstOrDefault();
         EntryCount.Text = $"{visible.Count} {(visible.Count == 1 ? "entry" : "entries")}";
         EmptyState.Visibility = visible.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        NewButton.IsEnabled = preview;
+        NewButton.IsEnabled = !imported;
         ShowSelection();
     }
 
@@ -150,7 +175,11 @@ public sealed partial class MainWindow : Window
         Refresh();
     }
 
-    private void SearchChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args) => Refresh();
+    private void SearchChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
+    {
+        // Read the current text after AutoSuggestBox finishes its property update.
+        DispatcherQueue.TryEnqueue(Refresh);
+    }
     private void RuleSelectionChanged(object sender, SelectionChangedEventArgs args) => ShowSelection();
 
     private void ShowSelection()
@@ -159,14 +188,14 @@ public sealed partial class MainWindow : Window
         var rule = RuleList.SelectedItem as RuleEntry;
         DetailName.Text = rule?.Name ?? "Select an entry";
         DetailCategory.Text = rule?.Category ?? "";
-        DetailSummary.Text = rule is null ? "Choose an entry to inspect its details." : $"{rule.State} · {rule.Duration}\nThis entry does not establish the effective firewall decision.";
+        DetailSummary.Text = rule is null ? "Choose an entry to inspect its details." : $"{rule.State} · {rule.Duration}\n{(rule.PolicyRuleId is { } id ? PolicyPanel.RuleStatus(id) : "Imported entry only. Not applied to the firewall.")}";
         DetailDestination.Text = rule is null ? "—" : $"Remote: {rule.Destination}\nLocal: {rule.LocalEndpoint}";
         DetailDirection.Text = rule?.Direction ?? "—";
         DetailProtocol.Text = rule?.Protocol ?? "—";
         DetailPath.Text = rule is null ? "—" : !string.IsNullOrEmpty(rule.Path) ? rule.Path : !string.IsNullOrEmpty(rule.Applications) ? rule.Applications : "Not restricted to a listed application";
         DetailNotes.Text = string.IsNullOrEmpty(rule?.Notes) ? "No notes for this entry." : rule.Notes;
-        EditButton.Content = preview ? "Edit preview rule" : "Read-only profile";
-        EditButton.IsEnabled = preview && rule is not null;
+        EditButton.Content = imported ? "Read-only profile" : "Edit rule";
+        EditButton.IsEnabled = EditRuleButton.IsEnabled = RemoveRuleButton.IsEnabled = !imported && rule is not null;
         DetailsButton.IsEnabled = rule is not null;
     }
 
@@ -174,7 +203,7 @@ public sealed partial class MainWindow : Window
     {
         if (RuleList.SelectedItem is not RuleEntry rule) return;
         var text = new TextBlock { Text = $"{rule.State} · {rule.Duration}\n\nRemote: {rule.Destination}\nLocal: {rule.LocalEndpoint}\n\n{rule.Direction} · {rule.Protocol}\n\n{rule.Path}\n{rule.Applications}\n\n{rule.Notes}", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxWidth = 460 };
-        var dialog = new ContentDialog { XamlRoot = Root.XamlRoot, RequestedTheme = Root.ActualTheme, Title = rule.Name, Content = text, CloseButtonText = "Close", PrimaryButtonText = preview ? "Edit preview" : "", IsPrimaryButtonEnabled = preview };
+        var dialog = new ContentDialog { XamlRoot = Root.XamlRoot, RequestedTheme = Root.ActualTheme, Title = rule.Name, Content = text, CloseButtonText = "Close", PrimaryButtonText = imported ? "" : "Edit rule", IsPrimaryButtonEnabled = !imported };
         if (await dialog.ShowAsync() == ContentDialogResult.Primary) await EditRule(rule);
     }
 
@@ -190,7 +219,8 @@ public sealed partial class MainWindow : Window
             using var stream = await file.OpenStreamForReadAsync();
             var parsed = ProfileReader.Read(stream);
             entries = parsed.ToList();
-            preview = false;
+            imported = true;
+            ModeBanner.Severity = InfoBarSeverity.Informational;
             ModeBanner.Title = "Read-only profile";
             ModeBanner.Message = $"{file.Name} · Stored entries only. Internal overrides and effective WFP decisions are not evaluated.";
             Refresh();
@@ -201,45 +231,24 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void ResetClicked(object sender, RoutedEventArgs args)
+    private void SavedRulesClicked(object sender, RoutedEventArgs args)
     {
-        entries = PreviewData.Create();
-        preview = true;
-        ModeBanner.Title = "Preview mode";
-        ModeBanner.Message = "Sample entries. Changes stay in memory and do not affect your firewall.";
+        imported = false;
         Search.Text = "";
         Refresh();
     }
 
+    private void FilteringRuleClicked(object sender, RoutedEventArgs args) => PolicyPanel.ToggleFiltering();
+    private void ApplyRuleClicked(object sender, RoutedEventArgs args) => PolicyPanel.ApplySavedPolicy();
+    private void RemoveRuleClicked(object sender, RoutedEventArgs args)
+    {
+        if (!imported && RuleList.SelectedItem is RuleEntry { PolicyRuleId: { } id }) PolicyPanel.RemoveRule(id);
+    }
     private async void NewRuleClicked(object sender, RoutedEventArgs args) => await EditRule(null);
     private async void EditRuleClicked(object sender, RoutedEventArgs args) => await EditRule(RuleList.SelectedItem as RuleEntry);
-
     private async Task EditRule(RuleEntry? original)
     {
-        if (!preview) return;
-        var name = new TextBox { Header = "Rule name", Text = original?.Name ?? "", MaxLength = 64 };
-        var destination = new TextBox { Header = "Remote address or port", Text = original?.Destination ?? "Any destination", MaxLength = 1024 };
-        var action = new ComboBox { Header = "Action", HorizontalAlignment = HorizontalAlignment.Stretch };
-        action.Items.Add("Allow"); action.Items.Add("Block"); action.SelectedIndex = original?.Action == "Block" ? 1 : 0;
-        var direction = new ComboBox { Header = "Direction", HorizontalAlignment = HorizontalAlignment.Stretch };
-        foreach (var value in new[] { "Outbound", "Inbound", "Both" }) direction.Items.Add(value);
-        direction.SelectedItem = original?.Direction ?? "Outbound";
-        var duration = new ComboBox { Header = "Duration", HorizontalAlignment = HorizontalAlignment.Stretch };
-        foreach (var value in new[] { "Until changed", "5 minutes", "30 minutes", "1 hour" }) duration.Items.Add(value);
-        duration.SelectedIndex = 0;
-        var enabled = new CheckBox { Content = "Enable this preview entry", IsChecked = original?.Enabled ?? true };
-        var form = new StackPanel { Spacing = 14, MinWidth = 340 };
-        form.Children.Add(new TextBlock { Text = "Preview only. No rule is sent to the firewall.", TextWrapping = TextWrapping.Wrap });
-        foreach (var control in new UIElement[] { name, destination, action, direction, duration, enabled }) form.Children.Add(control);
-        var dialog = new ContentDialog { XamlRoot = Root.XamlRoot, RequestedTheme = Root.ActualTheme, Title = original is null ? "New preview rule" : "Edit preview rule", Content = form, PrimaryButtonText = "Save preview", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary, IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(name.Text) };
-        name.TextChanged += (_, _) => dialog.IsPrimaryButtonEnabled = !string.IsNullOrWhiteSpace(name.Text);
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
-        DateTimeOffset? expires = duration.SelectedIndex switch { 1 => DateTimeOffset.UtcNow.AddMinutes(5), 2 => DateTimeOffset.UtcNow.AddMinutes(30), 3 => DateTimeOffset.UtcNow.AddHours(1), _ => null };
-        var updated = new RuleEntry(name.Text.Trim(), original?.Path ?? "", original?.Category ?? "Custom rules", action.SelectedItem.ToString()!, destination.Text.Trim(), original?.Protocol ?? "Any", direction.SelectedItem.ToString()!, enabled.IsChecked == true, expires, original?.Notes ?? "Preview entry");
-        if (original is not null) entries.Remove(original);
-        entries.Add(updated);
-        Refresh();
-        if (((IEnumerable<RuleEntry>)RuleList.ItemsSource).Contains(updated)) RuleList.SelectedItem = updated;
+        if (!imported) await PolicyPanel.EditRuleAsync(original?.PolicyRuleId);
     }
 
     private void StartupChanged(object sender, RoutedEventArgs args)
@@ -252,6 +261,9 @@ public sealed partial class MainWindow : Window
     {
         if (Root is null) return;
         Root.RequestedTheme = ((ComboBox)sender).SelectedIndex switch { 1 => ElementTheme.Light, 2 => ElementTheme.Dark, _ => ElementTheme.Default };
+        if (!ready || (diagnostic && !isolatedPreferences)) return;
+        try { appearanceStore.Update(value => value with { Theme = ThemeChoice.SelectedIndex }); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { StartupStatus.Text = $"Theme applies for now but could not be saved: {ex.Message}"; }
     }
 
     private void UpdateCaptionTheme()

@@ -41,6 +41,40 @@ static class ActivityUsageTests
         var casing = new UsageLedger();
         casing.Observe(new(Guid.NewGuid(), now, [app, app with { Path = app.Path.ToUpperInvariant() }], 1, 0, 0, 0, 1024));
         Check(casing.Days.Count == 1 && casing.Days[0].Received == 200, "Differently cased Windows paths must combine without dropping counters or duplicate-key failures.");
+        var sortLedger = new UsageLedger();
+        var small = entry with { ProcessName = "Small", ProcessPath = @"C:\Apps\small.exe" };
+        var large = entry with { ProcessName = "Large", ProcessPath = @"C:\Apps\large.exe", ProcessId = 12 };
+        var unknown = entry with { ProcessName = "Unknown", ProcessPath = @"C:\Apps\unknown.exe", ProcessId = 13 };
+        var zero = entry with { ProcessName = "Zero", ProcessPath = @"C:\Apps\zero.exe", ProcessId = 14 };
+        sortLedger.Load([new(day, small.AppKey, small.ProcessPath, 900 * 1024, 0), new(day, large.AppKey, large.ProcessPath, 0, 2 * 1024 * 1024), new(day, zero.AppKey, zero.ProcessPath, 0, 0)], day);
+        AppUsageDisplay Display(string key) => sortLedger.Display(key, day);
+        Check(Display(large.AppKey).Bytes == 2 * 1024 * 1024 && Display(unknown.AppKey).Bytes is null && Display(zero.AppKey).Bytes == 0,
+            "Usage must combine upload and download without confusing unobserved apps with zero traffic.");
+        tree = new();
+        tree.Update([small, large, unknown, zero], showUsage: true, sort: UsageSort.Descending, usageDisplay: Display);
+        Check(tree.Rows.Select(x => x.Entry.AppKey).SequenceEqual(new[] { large.AppKey, small.AppKey, zero.AppKey, unknown.AppKey }), "Usage sort must compare bytes numerically and put unknowns last.");
+        tree.Toggle(tree.Rows[0]); tree.Update([small, large, unknown, zero], showUsage: true, sort: UsageSort.Descending, usageDisplay: Display);
+        var processRow = tree.Rows[1]; tree.Toggle(processRow);
+        tree.Update([small, large, unknown, zero], showUsage: true, sort: UsageSort.Descending, usageDisplay: Display);
+        Check(tree.Rows[1].Total == "" && tree.Rows[2].Total == "" && tree.Rows.All(x => x.UsageVisible), "Process/socket rows must align without inventing per-connection usage.");
+        tree.ApplyUsage(true, UsageSort.Ascending, Display);
+        Check(tree.Rows[0].Entry.AppKey == zero.AppKey && tree.Rows[1].Entry.AppKey == small.AppKey && tree.Rows.Skip(2).Take(3).All(x => x.Entry.AppKey == large.AppKey) && tree.Rows[^1].Entry.AppKey == unknown.AppKey,
+            "Reversing usage sort must preserve expanded app blocks and keep unknowns last.");
+        int changes = 0; tree.Rows.CollectionChanged += (_, _) => changes++;
+        tree.ApplyUsage(true, UsageSort.Ascending, Display);
+        Check(changes == 0, "An unchanged usage sample must not replace native list rows.");
+        var retained = tree.Rows.Single(x => x.Key == small.AppKey);
+        int notifications = 0; retained.PropertyChanged += (_, _) => notifications++;
+        sortLedger.Load([new(day, small.AppKey, small.ProcessPath, 950 * 1024, 0), new(day, large.AppKey, large.ProcessPath, 0, 2 * 1024 * 1024), new(day, zero.AppKey, zero.ProcessPath, 0, 0)], day);
+        tree.ApplyUsage(true, UsageSort.Ascending, Display);
+        Check(changes == 0 && ReferenceEquals(retained, tree.Rows.Single(x => x.Key == small.AppKey)) && retained.Total == "950.0 KB" && notifications > 0,
+            "Changing usage values must notify cells in place without replacing connection rows.");
+        tree.ApplyUsage(false, UsageSort.AppName, Display);
+        Check(tree.Rows.All(x => !x.UsageVisible && x.Total.Length == 0) && tree.Rows[0].Entry.AppKey == large.AppKey, "Disabling usage must remove its column and restore name order.");
+        tree.Update([small, large], flat: true, showUsage: true, sort: UsageSort.Descending, usageDisplay: Display);
+        Check(tree.Rows[0].Total == "2.0 MB" && tree.Rows[0].UsageHint.Contains("Whole-app"), "Flat connections must label displayed usage as whole-app totals.");
+        sortLedger.Load([new(day, small.AppKey, small.ProcessPath, ulong.MaxValue, ulong.MaxValue)], day);
+        Check(Display(small.AppKey).Bytes == (decimal)ulong.MaxValue * 2 && sortLedger.Display(small.AppKey, day.AddDays(1)).Bytes is null, "Combined counters must not overflow, and yesterday's totals must not appear as today's.");
         var locations = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, ZikWall.WinUI.Services.GeoLocation>>(File.ReadAllText("ui/ZikWall.WinUI/Assets/Countries/centroids.json"))!;
         Check(locations.Count > 230 && locations["AU"].Label == "Australia" && locations["AU"].Latitude < -20, "Shared country codes must select mainland Australia rather than an outlying territory.");
         Check(locations.Values.All(x => double.IsFinite(x.Latitude) && double.IsFinite(x.Longitude) && x.Latitude is >= -90 and <= 90 && x.Longitude is >= -180 and <= 180), "Bundled country positions must fit the map projection.");

@@ -1,6 +1,6 @@
 """Convert the user-supplied ZikWall logo to Windows assets (requires Pillow).
 
-The source PNG is preserved verbatim in tools/branding/ZikWall-source.png.
+The app and tray source PNGs are preserved verbatim in tools/branding/.
 Keep its colors, proportions, transparency and padding; only resample it.
 Pillow is a development dependency, never a build or runtime dependency.
 """
@@ -22,9 +22,14 @@ def main():
     art.resize((256, 256), Image.Resampling.LANCZOS).save(
         ASSETS / "ZikWall.png", optimize=True)
     art.save(ASSETS / "ZikWall.ico", sizes=[(n, n) for n in SIZES])
+    with Image.open(ROOT / "tools" / "branding" / "ZikWall-tray-source.png") as source:
+        tray = source.convert("RGBA")
+    if tray.width != tray.height:
+        raise ValueError("The tray logo must be square to preserve its proportions.")
+    tray.save(ASSETS / "ZikWall-tray.ico", sizes=[(n, n) for n in SIZES])
     for name in ("100.ico", "101.ico"):
         copyfile(ASSETS / "ZikWall.ico", ROOT / "src" / "res" / name)
-    print("Generated ZikWall.png and nine-size Windows icons for WinUI and native resources.")
+    print("Generated the app PNG, distinct nine-size app/tray icons, and native app resources.")
 
 
 if __name__ == "__main__":

@@ -4,6 +4,29 @@ The Connections page defaults to one collapsed row per package family or executa
 
 The toolbar and Options flyout replace the large stacked controls. Activity receives the remaining window height. The native ListView stays virtualized, preserves unchanged rows, and disables row transitions. Icons are bounded cached pixels, loaded off the UI thread. Country summaries show up to three flags; expanded connections show their own country and IP endpoint. Details and CSV retain the full IPv6 address.
 
+## Hide Windows system apps
+
+**Monitor options → View → Hide Windows system apps** hides recognized Windows
+components and built-in packages from Connections, Activity, map snapshots and
+filtered CSV exports, and suppresses their new-connection banners and Windows
+notifications. Changing it clears queued batches and the current banner; enabling
+it also dismisses the registered monitor notification. Turning it off immediately
+restores captured rows and allows future system alerts without replaying a backlog.
+
+The toggle defaults off and is saved in
+`%LOCALAPPDATA%\ZikWall\monitor-preferences.json`. Collection, saved history,
+usage accounting and firewall policy are unaffected. Classification uses the
+actual Windows system folders, Defender locations, Windows System PID 4 and
+known Windows package names with Microsoft package publisher IDs. It does not
+hide every Microsoft-published app: Edge and Office outside system locations,
+third-party apps and ambiguous process identities remain visible. This is a
+display filter, not a signature/trust check. It requires no elevation, package
+enumeration, file inspection or extra polling.
+
+`--test-system-apps` exercises the native toggle, row/count restoration, history,
+map filtering and banner dismissal with in-memory fixtures. Diagnostic modes
+neither load nor save the user's monitor preference.
+
 ## Tray and sign-in
 
 Start at sign-in is a current-user Windows Run entry named **ZikWall**, pointing to the current executable with `--tray`. Toggle it in Settings. Keep the whole output folder at the registered path. Windows Task Manager can also disable startup.
@@ -12,13 +35,28 @@ Closing with X hides the app in the notification area. Open restores it; Pause /
 
 ## Per-app usage
 
+Enabling collection adds **Usage today** to Connections. The main number is
+today's combined download and upload total; the smaller line shows current
+download/upload rates. Hover for the separate totals. Click **Usage today** for
+highest-first sorting and click again for lowest-first; **App / connection**
+restores name order. Unknown totals stay last in either direction. Expanded
+processes remain with their app and do not claim separate traffic totals. In
+ungrouped mode, the tooltip identifies repeated figures as whole-app usage.
+Pausing or losing the collector hides the column; recorded totals remain in
+Details and All app usage.
+
+Usage-only refreshes reuse the connection groups and update observable cells
+in place. They do not rebuild app icons, connection rows or DNS summaries.
+Native checks cover actual heading invocation, both sort directions, preserving
+selection, enabling/disabling the column and visible number updates.
+
 **Enable usage** requests Windows UAC for a session-owned collector. It does not enable filtering. The UI remains unelevated. The collector uses the installed Windows SDK ETW APIs and Microsoft-Windows-Kernel-Network metadata; it records no packet payload or ETL file and contacts no external service. It aggregates packet-size events before returning counters through the existing authenticated parent/child pipe. A separate collector process does not open a WFP session unless a policy is applied.
 
 The first snapshot establishes rates; subsequent samples calculate upload and download per second. Daily totals are saved under `%LOCALAPPDATA%\ZikWall\daily-usage.json`, retaining today and 29 previous local calendar days. Details shows an app's retained days; Options → All app usage includes apps without current connections. A cumulative-counter session ID prevents duplicate samples and restarts from double-counting. A sample spanning midnight is assigned to the local day at its end, so boundary totals can shift by one polling interval.
 
 These are **partial observed network bytes**, including local/loopback traffic, not ISP-billed bytes or guaranteed application payload counts. Collection gaps, denied/exited process identity, ETW losses, offloading, proxies and VPNs affect coverage and attribution. The status reports lost events, unsupported events, unattributed bytes and actual allocated trace buffers. Unknown identity never gets silently charged to the next process reusing that PID. No event coverage is claimed merely because a provider starts successfully.
 
-Sign-in starts connection monitoring quietly. **Elevated usage collection still needs Enable usage/UAC in each app session**; no permanent privileged service or elevated scheduled task is installed. Historical traffic from before collection cannot be recovered. Usage is polled independently of paused connection snapshots so an enabled collector retains a heartbeat.
+Enabled usage collection and domain-cache access are remembered across restarts. Each requests Windows permission again when the app starts; cancelling leaves that feature off until it is enabled again. No permanent privileged service or elevated scheduled task is installed. Historical traffic from before collection cannot be recovered. Usage is polled independently of paused connection snapshots so an enabled collector retains a heartbeat.
 
 Bounds: 512 app aggregates, 2,048 retained process handles, 64 KiB ETW buffers with requested 16–64 buffer count (Windows can adjust this), 2 MiB IPC limit, 15,360 daily rows and a 16 MiB load limit. New identities past the aggregate bound are reported as unattributed bytes. Unexpected trace-consumer exit is reported as collection failure.
 

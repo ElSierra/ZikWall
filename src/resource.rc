@@ -560,7 +560,7 @@ BEGIN
 	IDS_FONT "Font"
 	IDS_HELP "Help"
 	IDS_WEBSITE "Website"
-	IDS_CHECKUPDATES "Open upstream releases"
+	IDS_CHECKUPDATES "Updates unavailable in this build"
 	IDS_DONATE "Give thanks!"
 	IDS_ABOUT "About"
 

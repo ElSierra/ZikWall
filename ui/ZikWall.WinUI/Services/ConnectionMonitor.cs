@@ -52,7 +52,7 @@ public static class ConnectionMonitor
         var pathBuffer = new char[32768];
         foreach (int pid in rows.Select(x => x.ProcessId).Distinct())
         {
-            string name = pid == 0 ? "System / unowned" : $"PID {pid}", path = "";
+            string name = pid == 0 ? ConnectionContinuity.Unowned : $"PID {pid}", path = "";
             // Limited-information query avoids expensive MainModule enumeration. Do not
             // cache identity by PID: Windows can reuse a PID for a different executable.
             using var handle = OpenProcess(0x1000, false, pid);

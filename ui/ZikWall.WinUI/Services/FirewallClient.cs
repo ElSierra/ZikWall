@@ -14,7 +14,7 @@ public sealed class FirewallClient : IDisposable
     private NamedPipeClientStream? pipe;
     private readonly SemaphoreSlim gate = new(1);
     public bool Connected => pipe?.IsConnected == true;
-    public async Task StartAsync()
+    public async Task StartAsync(bool domainsOnly = false)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
         if (pipe is not null) throw new InvalidOperationException("A filtering session already exists.");
@@ -22,7 +22,7 @@ public sealed class FirewallClient : IDisposable
         if (!File.Exists(broker)) throw new FileNotFoundException("Build the ZikWall broker before enabling filtering.", broker);
         using var parent = Process.GetCurrentProcess();
         string id = Guid.NewGuid().ToString("N");
-        var start = new ProcessStartInfo(broker) { UseShellExecute = true, Verb = "runas", WorkingDirectory = AppContext.BaseDirectory, Arguments = $"{id} {parent.Id} {parent.StartTime.ToUniversalTime().Ticks}", WindowStyle = ProcessWindowStyle.Hidden };
+        var start = new ProcessStartInfo(broker) { UseShellExecute = true, Verb = "runas", WorkingDirectory = AppContext.BaseDirectory, Arguments = $"{id} {parent.Id} {parent.StartTime.ToUniversalTime().Ticks}" + (domainsOnly ? " domains" : ""), WindowStyle = ProcessWindowStyle.Hidden };
         using var process = Process.Start(start) ?? throw new IOException("Windows did not start the broker.");
         var connection = new NamedPipeClientStream(".", "ZikWall." + id, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Identification);
         try

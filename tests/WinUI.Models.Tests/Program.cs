@@ -56,6 +56,9 @@ if (args.Length > 0)
 Console.WriteLine($"PASS: {checks} model and profile-reader checks.");
 MonitorTests.Run();
 MonitorEnrichmentTests.Run();
+SystemAppTests.Run();
+PreferencesTests.Run();
+await CachedDomainTests.RunAsync(args.Contains("--dns-cache"));
 PolicyTests.Run();
 PolicyAnalysisTests.Run();
 PrivacyTests.RunAsync().GetAwaiter().GetResult();

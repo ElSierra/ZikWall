@@ -12,9 +12,10 @@
 - Right-click apps, subprocesses and connections to review and apply app/endpoint blocks, with optional expiry; inspect executables, open file locations, and copy addresses/PIDs/paths. Path rules affect every matching process. See [scope and validation](MONITOR-AND-USAGE.md#right-click-actions).
 - Read-only saved-policy diagnostics for redundant/overridden scopes, temporary coverage, inactive rules and unavailable executables. Checks are bounded and partial results labeled; no automatic deletion or claim of observed connection decisions.
 - Optional reverse DNS lookup, labeled as a hint rather than an app-requested domain.
+- Passive Windows DNS cache hints in connection rows, search, Details and CSV; bounded background reads with a separate read-only helper where elevation is required. No full URLs or reliable app-requested-domain attribution. See [domain hints](DOMAIN-HINTS.md).
 - Selected network adapter download/upload rates and a rolling native chart. These are adapter totals, not per-process traffic accounting.
 - Connection observation/state/disappearance history. Optional local JSON persistence, atomic replacement, seven-day retention and bounded counts (10,000 events / 15,000 traffic samples). Saving defaults off each launch; Clear removes the saved file.
-- Sample rule editor and read-only simplewall XML profile import.
+- Working rule browser over the selected saved firewall profile: create/edit/remove rules, persisted groups, search, allow/block/temporary views, and shared WFP enable/apply controls. Pending and applied states are labeled separately. Legacy simplewall XML inspection remains read-only.
 - HTTPS blocklist subscriptions with optional SHA-256 pins, bounded parsing, opt-in refresh and domain exceptions. IP entries can be copied into a policy for explicit application.
 - Loopback UDP/TCP DNS-over-HTTPS proxy with resolver-level domain blocking. Adapter DNS changes are manual; DoT/DoQ and per-app DNS attribution are not implemented.
 - Offline geographic view with a public-domain world outline and imported IPv4/IPv6 geolocation CSV. Bundled country data supports monitor flags; map coordinates still require an import. No external IP lookup service.

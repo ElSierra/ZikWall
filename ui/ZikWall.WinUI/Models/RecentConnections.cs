@@ -9,12 +9,12 @@ public sealed class RecentConnections
     private readonly Dictionary<(string App, string Ip, int? Port, string Direction), DateTimeOffset> seen = new();
     private readonly List<ConnectionEntry> pending = [];
     private int pendingCount;
-    public RecentConnectionBatch? Observe(IReadOnlyList<ConnectionEvent> events, DateTimeOffset now, bool enabled)
+    public RecentConnectionBatch? Observe(IReadOnlyList<ConnectionEvent> events, DateTimeOffset now, bool enabled, Func<ConnectionEntry, bool>? include = null)
     {
         if (!baseline || !enabled) { baseline = true; pending.Clear(); pendingCount = 0; return null; }
         foreach (var entry in events.Where(x => x.Event == "First seen").Select(x => x.Connection))
         {
-            if (entry.NetworkScope != "Internet" || entry.RemotePort is not > 0) continue;
+            if (entry.NetworkScope != "Internet" || entry.RemotePort is not > 0 || include?.Invoke(entry) == false) continue;
             var key = (entry.ProcessPath.Length > 0 ? entry.ProcessPath : entry.Application, entry.RemoteAddress, entry.RemotePort, entry.Direction);
             if (seen.TryGetValue(key, out var previous) && now - previous < TimeSpan.FromMinutes(5)) continue;
             if (seen.Count >= 4096) seen.Clear();
@@ -27,5 +27,6 @@ public sealed class RecentConnections
         pending.Clear(); pendingCount = 0; lastAlert = now;
         return batch;
     }
-    public void ResetBaseline() { baseline = false; pending.Clear(); pendingCount = 0; }
+    public void ClearPending() { pending.Clear(); pendingCount = 0; }
+    public void ResetBaseline() { baseline = false; ClearPending(); }
 }

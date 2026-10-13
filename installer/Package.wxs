@@ -1,0 +1,32 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="ZikWall" Manufacturer="isaacojo.me" Version="$(var.Version)" Language="1033"
+           UpgradeCode="A73F13E3-53D4-4D63-96AD-85460794860F" Scope="perMachine"
+           InstallerVersion="500" Compressed="yes">
+    <SummaryInformation Description="ZikWall setup" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of ZikWall is already installed."
+                  AllowSameVersionUpgrades="yes" IgnoreLanguage="yes" Schedule="afterInstallInitialize" />
+    <Property Id="WINDOWSBUILD">
+      <RegistrySearch Id="WindowsBuildSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+                      Name="CurrentBuildNumber" Type="raw" Bitness="always64" />
+    </Property>
+    <Launch Condition="Installed OR (VersionNT64 AND WINDOWSBUILD &gt;= 19041)"
+            Message="ZikWall requires 64-bit Windows 10 build 19041 or newer." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+    <Icon Id="ZikWallIcon" SourceFile="$(var.Payload)\Assets\ZikWall.ico" />
+    <Property Id="ARPPRODUCTICON" Value="ZikWallIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://isaacojo.me" />
+    <Property Id="ARPHELPLINK" Value="https://isaacojo.me" />
+    <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" Sequence="both" />
+    <UIRef Id="ZikWallUI" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.InstallerAssets)\Dialog.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.InstallerAssets)\Banner.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.InstallerAssets)\License.rtf" />
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="ZikWall" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder" />
+    <Feature Id="Main" Title="ZikWall" Level="1">
+      <ComponentGroupRef Id="PayloadComponents" />
+    </Feature>
+  </Package>
+</Wix>

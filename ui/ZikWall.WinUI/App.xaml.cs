@@ -35,12 +35,46 @@ public partial class App : Application
         }
         var main = new MainWindow(diagnostic && !arguments.Contains("--test-lifecycle"));
         window = main;
+        if (arguments.Contains("--test-domain-cache"))
+        {
+            await Services.DomainCacheSelfTest.RunAsync(); main.Close(); return;
+        }
         if (arguments.Contains("--test-usage"))
         {
             await Services.UsageSelfTest.RunAsync(); main.Close(); return;
         }
         if (wake is not null) wakeRegistration = ThreadPool.RegisterWaitForSingleObject(wake, (_, _) => main.DispatcherQueue.TryEnqueue(main.ShowFromTray), null, -1, false);
         window.Activate();
+        if (arguments.SequenceEqual(new[] { "--test-preferences" }))
+        {
+            try { await main.ExercisePreferencesAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "preferences-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
+        if (arguments.SequenceEqual(new[] { "--test-system-apps" }))
+        {
+            try { await Task.Delay(500); await main.ExerciseSystemAppsAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "system-apps-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
+        if (arguments.SequenceEqual(new[] { "--test-usage-view" }) || arguments.SequenceEqual(new[] { "--test-usage-view-benchmark" }))
+        {
+            try { await Task.Delay(500); await main.ExerciseUsageViewAsync(arguments[0].EndsWith("-benchmark")); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "usage-view-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
+        if (arguments.SequenceEqual(new[] { "--test-monitor-options" }))
+        {
+            try { await Task.Delay(500); await main.ExerciseMonitorOptionsAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "monitor-options-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
+        if (arguments.SequenceEqual(new[] { "--test-rules" }))
+        {
+            try { await Task.Delay(1000); await main.ExerciseRulesAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "rules-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
         if (arguments.Contains("--tray")) main.HideToTray();
         if (arguments.Contains("--test-lifecycle"))
         {

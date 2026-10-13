@@ -25,9 +25,14 @@ $provenance = Get-Content (Join-Path $countries 'provenance.json') -Raw | Conver
 foreach ($entry in $provenance.files.PSObject.Properties) {
     if ((Get-FileHash -LiteralPath (Join-Path $countries $entry.Name) -Algorithm SHA256).Hash -ne $entry.Value.sha256) { throw "Country asset changed: $($entry.Name)" }
 }
+$networks = Join-Path $root 'ui\ZikWall.WinUI\Assets\Networks'
+$provenance = Get-Content (Join-Path $networks 'provenance.json') -Raw | ConvertFrom-Json
+foreach ($entry in $provenance.files.PSObject.Properties) {
+    if ((Get-FileHash -LiteralPath (Join-Path $networks $entry.Name) -Algorithm SHA256).Hash -ne $entry.Value.sha256) { throw "Network asset changed: $($entry.Name)" }
+}
 $flags = Join-Path $root 'ui\ZikWall.WinUI\Assets\Flags'
 $hashes = Get-Content (Join-Path $flags 'hashes.json') -Raw | ConvertFrom-Json
 foreach ($entry in $hashes.PSObject.Properties) {
     if ((Get-FileHash -LiteralPath (Join-Path $flags $entry.Name) -Algorithm SHA256).Hash -ne $entry.Value) { throw "Flag asset changed: $($entry.Name)" }
 }
-Write-Host 'PASS: bundled country tables and flag artwork match recorded content hashes.'
+Write-Host 'PASS: bundled country tables, network owner tables and flag artwork match recorded content hashes.'

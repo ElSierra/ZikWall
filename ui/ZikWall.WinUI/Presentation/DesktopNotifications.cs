@@ -21,5 +21,9 @@ public sealed class DesktopNotifications : IDisposable
         var toast = new AppNotification($"<toast duration=\"short\"><visual><binding template=\"ToastGeneric\"><text>ZikWall · Recent connections</text><text>{SecurityElement.Escape(message)}</text></binding></visual><audio silent=\"true\"/></toast>") { Tag = "recent-connections", Group = "monitor" };
         AppNotificationManager.Default.Show(toast);
     }
+    public async Task ClearRecentAsync()
+    {
+        if (registered) await AppNotificationManager.Default.RemoveByTagAndGroupAsync("recent-connections", "monitor");
+    }
     public void Dispose() { if (registered) { AppNotificationManager.Default.Unregister(); AppNotificationManager.Default.NotificationInvoked -= OnInvoked; registered = false; } }
 }

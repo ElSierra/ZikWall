@@ -11,6 +11,17 @@ static class PolicyTests
         void Reject(FirewallRule rule) { try { rule.Validate(); throw new Exception("Unsafe rule accepted."); } catch (InvalidDataException) { checks++; } }
         var rule = new FirewallRule(Guid.NewGuid(), "Loopback test", @"C:\Tests\fixture.exe", "127.0.0.1/32", 6, 443, 1, true, true, null);
         rule.Validate(); checks++;
+        var row = PolicyRuleEntries.FromRule(rule);
+        Check(row.PolicyRuleId == rule.Id && row.Path == rule.Application && row.Destination == "127.0.0.1/32 · Port 443" && row.Protocol == "TCP" && row.Direction == "Outbound", "The rule browser must preserve identity and enforcement scope.");
+        Check(row.Category == "Applications" && row.Duration == "While filtering is enabled", "Saved application rules must show their session lifetime.");
+        var network = rule with { Application = "", Group = "System rules" };
+        Check(RuleQuery.Filter([PolicyRuleEntries.FromRule(network)], "system", "443").Count() == 1, "System rules must filter and search the saved policy.");
+        var blocklist = rule with { Application = "", Group = "Blocklists" };
+        Check(RuleQuery.Filter([PolicyRuleEntries.FromRule(blocklist)], "blocklists", "").Count() == 1, "Blocklist membership must survive projection.");
+        Check(!RuleQuery.Filter([PolicyRuleEntries.FromRule(rule with { Enabled = false })], "blocked", "").Any(), "Disabled saved rules must not appear in the enabled blocked view.");
+        Check(!RuleQuery.Filter([PolicyRuleEntries.FromRule(rule with { Expires = DateTimeOffset.UtcNow.AddMinutes(-1) })], "temporary", "").Any(), "Expired saved rules must leave the temporary view.");
+        Reject(rule with { Group = "Unknown" });
+        Reject(rule with { Group = null! });
         Check(FirewallRule.ParseNetwork("2001:db8::/32") == ("2001:db8::", 32u), "IPv6 CIDR parsing failed.");
         Reject(rule with { Application = "", RemoteNetwork = "" });
         Reject(rule with { Application = "relative.exe" });
@@ -29,6 +40,11 @@ static class PolicyTests
             var store = new PolicyStore(directory);
             var policy = PolicyDocument.Empty(); policy.Profiles[0].Rules.Add(rule); store.Save(policy);
             Check(store.Load().Profiles[0].Rules.Single() == rule, "Policy must survive a restart.");
+            policy.Profiles[0].Rules[0] = blocklist;
+            store.Save(policy);
+            Check(store.Load().Profiles[0].Rules.Single().Group == "Blocklists", "Rule groups must persist across restart.");
+            policy.Profiles[0].Rules[0] = rule;
+            store.Save(policy);
             var invalid = policy with { SelectedProfile = Guid.NewGuid() };
             try { store.Save(invalid); throw new Exception("Invalid policy persisted."); } catch (InvalidDataException) { checks++; }
             Check(store.Load().SelectedProfile == policy.SelectedProfile, "A failed save must preserve the previous policy.");

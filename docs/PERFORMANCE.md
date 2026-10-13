@@ -1,5 +1,57 @@
 # ZikWall performance and resource budgets
 
+## Sortable usage column, 13 October 2026
+
+Connections now shows a sortable **Usage today** column while collection is
+enabled. Totals are indexed by day and app. Usage-only refreshes reuse connection
+groups and update observable cells without replacing native rows. Connection
+regrouping reuses already-computed app/process keys for expansion bookkeeping.
+
+The first native candidate replaced rows when numbers changed. The same native
+fixture after in-place cell updates measured:
+
+| Native fixture | Initial candidate | In-place cells |
+| --- | ---: | ---: |
+| Measurement after 10-second warmup | 61.55 s | 61.09 s |
+| Average CPU (one logical core = 100%) | 11.17% | 2.20% |
+| Peak private memory | 235.29 MiB | 186.57 MiB |
+| Peak working set | 295.74 MiB | 243.82 MiB |
+
+This is about 80% less CPU and 21% less peak private memory in this scenario.
+The fixture has 1,000 connections, 100 apps, one expanded app, a descending usage
+sort and synthetic usage samples every five seconds. It exercises the real WinUI
+controls and bindings, but excludes ETW collection and live connection capture.
+The 2.20% result exceeds the older 2% target for the different, default monitor
+scenario; this is not a claim that every usage-enabled workload meets that target.
+No builds or other benchmarks ran alongside either measurement. Short runs do
+not establish long-term memory behavior or collector overhead.
+
+| Core workload | Before median / p95 | Final median / p95 | Before / final allocated bytes |
+| --- | ---: | ---: | ---: |
+| 512 usage-label reads, 30 retained days | 2.402 / 2.706 ms | 0.254 / 0.265 ms | 159,684 / 106,416 |
+| Rebuild 10,000 connections, 512 apps | 6.024 / 13.347 ms | 6.118 / 8.260 ms | 10,467,018 / 6,301,758 |
+| Usage-only refresh of those 512 apps | Previously full rebuild above | 1.184 / 1.495 ms | Previously full rebuild / 330,680 |
+| Observe 512 apps with 30 daily buckets each | 2.909 / 4.103 ms | 3.258 / 4.017 ms | 2,136,692 / 2,137,243 |
+
+The final full rebuild includes the new combined-total display and numeric sort.
+The new usage-only path reduces median refresh work by about 80% and allocations
+by about 97% against the previous rebuild-on-every-usage-tick workflow. Full
+regrouping and ledger observation are not claimed to be faster. The harness uses
+100 measured iterations after ten warmups, with ordinary Release tiered JIT;
+small timing changes and run-to-run variation should not be overinterpreted.
+
+[Core before](benchmarks/2026-10-13-usage-core-before.json) ·
+[Core after](benchmarks/2026-10-13-usage-core-after.json) ·
+[Native initial candidate](benchmarks/2026-10-13-usage-ui-before.json) ·
+[Native in-place cells](benchmarks/2026-10-13-usage-ui-after.json)
+
+Reproduce core measurements with
+`dotnet run --project tests/ZikWall.Benchmarks -c Release -- artifacts/benchmarks/usage.json --usage-only`.
+After building, run `ZikWall.exe --test-usage-view` for native visibility, heading,
+selection and live cell-binding checks, or `--test-usage-view-benchmark` for the
+60-second fixture benchmark. Both use isolated in-memory usage and do not start
+the collector or save usage. `tools/test-monitor-ui.ps1` includes the new checks.
+
 Measured on 12 October 2026 using Release x64 builds on Windows 11 build 28120, Intel Core i7-14700HX (28 logical processors), with 47.8 GiB usable physical RAM. This is a local workstation benchmark, not a hardware-independent resource guarantee.
 
 ## Monitor with icons, direction, country flags and recent alerts

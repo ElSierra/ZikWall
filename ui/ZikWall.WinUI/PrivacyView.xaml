@@ -3,12 +3,13 @@
         <InfoBar x:Name="PrivacyStatus" IsOpen="True" IsClosable="False" Title="DNS proxy is off" Message="Subscriptions contain data only. Domain lists are used by the local DNS proxy; IP lists can be copied into a saved firewall profile." />
         <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20"><StackPanel Spacing="12">
             <TextBlock Text="Encrypted DNS" Style="{ThemeResource SubtitleTextBlockStyle}" />
-            <TextBox x:Name="DnsEndpoint" Header="DNS-over-HTTPS endpoint" Text="https://cloudflare-dns.com/dns-query" />
-            <TextBox x:Name="BootstrapAddress" Header="Provider bootstrap IP (avoids a DNS lookup loop)" Text="1.1.1.1" />
+            <TextBox x:Name="DnsEndpoint" Header="DNS-over-HTTPS endpoint" Text="https://cloudflare-dns.com/dns-query" MaxLength="2048" LostFocus="DnsSettingsChanged" />
+            <TextBox x:Name="BootstrapAddress" Header="Provider bootstrap IP (avoids a DNS lookup loop)" Text="1.1.1.1" MaxLength="64" LostFocus="DnsSettingsChanged" />
             <Button x:Name="DnsButton" Content="Start local DNS proxy" Click="DnsClicked" />
             <TextBlock x:Name="DnsCounts" Text="No DNS queries handled this session." />
             <TextBlock Text="Listens on 127.0.0.1:53 (UDP and TCP). To use it system-wide, configure your network adapter's DNS server to 127.0.0.1 yourself. This app does not change adapter settings. Restore your adapter's normal DNS before closing ZikWall or stopping the proxy." TextWrapping="Wrap" />
             <TextBlock Text="Your chosen provider receives forwarded DNS questions over HTTPS. Apps using their own encrypted DNS, cached addresses or direct IPs can bypass domain blocking. The proxy cannot attribute questions to individual apps." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock Text="To show website names in Connections, open Monitor options → Website names → Enable domain hints. The DNS proxy does not enable name display. DNS can supply domain hints; full HTTPS paths and query strings remain encrypted." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel></Border>
         <TextBlock Text="Blocklist subscriptions" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <StackPanel Orientation="Horizontal" Spacing="8"><Button Content="Add HTTPS list" Click="AddClicked" /><Button Content="Refresh lists" Click="RefreshClicked" /><Button Content="Remove selected" Click="RemoveClicked" /><Button Content="Copy IPs to policy" Click="CopyIpsClicked" /><CheckBox x:Name="AutomaticUpdates" Content="Refresh every 24 hours" Checked="AutomaticChanged" Unchecked="AutomaticChanged" /></StackPanel>

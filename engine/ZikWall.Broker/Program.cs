@@ -8,7 +8,7 @@ using ZikWall.WinUI.Models;
 using ZikWall.WinUI.Services;
 
 // No service installation or arbitrary command/file execution endpoint. One UI owns one session.
-if (args.Length != 3 || !Guid.TryParseExact(args[0], "N", out var pipeId) || !int.TryParse(args[1], out int parentId) || !long.TryParse(args[2], out long startTicks)) return;
+if (args.Length is not (3 or 4) || (args.Length == 4 && args[3] != "domains") || !Guid.TryParseExact(args[0], "N", out var pipeId) || !int.TryParse(args[1], out int parentId) || !long.TryParse(args[2], out long startTicks)) return;
 try
 {
     using var identity = WindowsIdentity.GetCurrent();
@@ -20,6 +20,12 @@ try
     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
     await pipe.WaitForConnectionAsync(timeout.Token);
     if (!PipeSecurityNative.GetNamedPipeClientProcessId(pipe.SafePipeHandle, out uint clientId) || clientId != parentId) return;
+    if (args.Length == 4)
+    {
+        // A separate read-only session: never creates a WFP engine or ETW trace.
+        await DomainCacheSession.RunAsync(pipe, parent);
+        return;
+    }
     using var engine = new NativeEngine();
     using var usage = new UsageCollector();
     List<FirewallRule> rules = [];

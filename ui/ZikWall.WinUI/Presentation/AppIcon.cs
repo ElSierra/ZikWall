@@ -40,6 +40,8 @@ public sealed class AppIcon : Grid
         if (target.Executable != path) return;
         target.image.Source = null;
         target.fallback.Visibility = Visibility.Visible;
+        // No executable means Windows-owned or an exited owner; a page icon reads as a file.
+        target.fallback.Glyph = path.Length == 0 ? "" : "";
         if (path.Length == 0 || !Path.IsPathFullyQualified(path) || path.StartsWith(@"\\")) return;
         if (!cache.TryGetValue(path, out var task))
         {

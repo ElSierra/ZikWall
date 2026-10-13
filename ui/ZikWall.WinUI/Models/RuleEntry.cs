@@ -3,13 +3,13 @@ namespace ZikWall.WinUI.Models;
 public sealed record RuleEntry(
     string Name, string Path, string Category, string Action, string Destination,
     string Protocol = "Any", string Direction = "Outbound", bool Enabled = true,
-    DateTimeOffset? Expires = null, string Notes = "", string LocalEndpoint = "Any", string Applications = "")
+    DateTimeOffset? Expires = null, string Notes = "", string LocalEndpoint = "Any", string Applications = "", Guid? PolicyRuleId = null)
 {
     public string Initial => string.IsNullOrWhiteSpace(Name) ? "?" : Name[..1].ToUpperInvariant();
     public bool IsActive => Enabled && (Expires is null || Expires > DateTimeOffset.UtcNow);
     public string State => Expires <= DateTimeOffset.UtcNow ? "Expired" : !Enabled ? "Disabled" : Action;
     public string Scope => Category == "Applications" ? "Application" : Category;
-    public string Duration => Expires is null ? "Until changed" : Expires <= DateTimeOffset.UtcNow ? "Expired" : "Temporary";
+    public string Duration => Expires is null ? PolicyRuleId is null ? "Until changed" : "While filtering is enabled" : Expires <= DateTimeOffset.UtcNow ? "Expired" : $"Until {Expires.Value.ToLocalTime():g}";
     public bool IsTemporary => IsActive && Expires > DateTimeOffset.UtcNow;
     public string SearchText => $"{Name} {Path} {Destination} {Protocol} {Notes} {Applications} {LocalEndpoint}";
     public override string ToString() => $"{Name}, {State}, {Destination}";

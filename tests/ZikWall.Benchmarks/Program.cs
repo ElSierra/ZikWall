@@ -9,6 +9,7 @@ using ZikWall.WinUI.Services;
 
 // No test framework/package, real firewall changes, public requests or user-data writes.
 string output = args.FirstOrDefault() ?? "artifacts/benchmarks/core.json";
+if (args.Contains("--usage-only")) { UsageBenchmarks.Run(output); return; }
 var results = new List<object>();
 using var benchmarkProcess = Process.GetCurrentProcess();
 object? keepAlive = null;
@@ -35,6 +36,19 @@ void Measure(string name, int iterations, Func<object?> operation)
 var now = DateTimeOffset.UtcNow;
 var rows = Enumerable.Range(0, 10000).Select(i => new ConnectionEntry("TCPv4", "127.0.0.1", i + 1000, "192.0.2.1", 443, i % 100, "Established", "fixture", @"C:\Tests\fixture.exe")).ToArray();
 var groupedRows = rows.Select((x, i) => x with { ProcessPath = $@"C:\Tests\app{i % 100}.exe", ProcessName = $"App {i % 100}" }).ToArray();
+using var domainHints = new CachedDomainHints(_ => [new("192.0.2.1", "www.example.com", 60)], () => 0);
+domainHints.RequestRefresh(rows, false); await domainHints.Pending;
+Measure("Find 10,000 cached domain hints", 100, () =>
+{
+    string result = "";
+    foreach (var row in rows) result = domainHints.Find(row.RemoteAddress);
+    return result;
+});
+Measure("10,000 domain refresh requests before next scan", 100, () =>
+{
+    for (int i = 0; i < 10000; i++) domainHints.RequestRefresh(rows, false);
+    return null;
+});
 var tree = new ActivityTree(); tree.Update(groupedRows);
 Measure("Group 10,000 connections into 100 collapsed apps", 100, () => { tree.Update(groupedRows); return tree.Rows; });
 var ledger = new UsageLedger();
@@ -82,6 +96,12 @@ if (OperatingSystem.IsWindows())
     Measure("Capture live adapter counters", 30, () => ConnectionMonitor.CaptureTraffic());
     using var enrichment = new MonitorEnrichment("ui/ZikWall.WinUI/Assets/Countries");
     var captured = ConnectionMonitor.Capture();
+    var wanted = captured.Where(x => x.RemotePort > 0).Select(x => x.RemoteAddress).ToHashSet();
+    var dnsCache = new WindowsDnsCache();
+    using var identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+    if (new System.Security.Principal.WindowsPrincipal(identity).IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator))
+        Measure("Read live Windows DNS cache provider", 20, () => dnsCache.Read(wanted));
+    else Console.WriteLine("Cache-provider scan benchmark skipped: run the read-only domain diagnostic with UAC for this measurement.");
     Measure("Enrich live endpoints with direction and country", 30, () => enrichment.Enrich(captured));
 }
 using (var countries = new CountryDatabase("ui/ZikWall.WinUI/Assets/Countries"))

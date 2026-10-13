@@ -1,0 +1,32 @@
+{
+  "TimestampUtc": "2026-10-12T18:17:30.7522797+01:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "LogicalProcessors": 28,
+  "Notes": "Measured while a release build was running. Results are local samples, not throughput guarantees.",
+  "Results": [
+    {
+      "Name": "Find 10,000 cached domain hints",
+      "Iterations": 100,
+      "MedianMs": 0.2905,
+      "P95Ms": 0.4031,
+      "MeanCpuMs": 0.3125,
+      "AllocatedBytesPerOperation": 18
+    },
+    {
+      "Name": "10,000 domain refresh requests before next scan",
+      "Iterations": 100,
+      "MedianMs": 0.7378,
+      "P95Ms": 0.902,
+      "MeanCpuMs": 0.625,
+      "AllocatedBytesPerOperation": 11
+    },
+    {
+      "Name": "Parse 100,000 blocklist domains",
+      "Iterations": 10,
+      "MedianMs": 523.9897,
+      "P95Ms": 884.2034,
+      "MeanCpuMs": 371.875,
+      "AllocatedBytesPerOperation": 45479018
+    }
+  ]
+}

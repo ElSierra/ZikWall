@@ -19,6 +19,7 @@ public static class Ui
 
     public static Visibility Show(string value) => string.IsNullOrEmpty(value) ? Visibility.Collapsed : Visibility.Visible;
     public static Visibility ShowIf(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
+    public static GridLength UsageColumnWidth(bool enabled) => new(enabled ? 160 : 0);
     public static double Opacity(bool value) => value ? 1 : 0;
 
     // Direction strings arrive as "Outgoing", "↑ Outgoing" or a group's "Outgoing / Incoming".
@@ -35,6 +36,7 @@ public static class Ui
     public static string DirectionText(string direction)
     {
         string text = direction.Replace("↑ ", "").Replace("↓ ", "");
+        if (text == "Unknown") return ""; // UDP has no direction; a blank reads better than a warning.
         return text.Contains("Outgoing") && text.Contains("Incoming") ? "Both" : text;
     }
     public static SolidColorBrush StateBrush(string state) => state switch
