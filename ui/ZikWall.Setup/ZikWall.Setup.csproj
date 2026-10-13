@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <AssemblyName>ZikWall.Setup</AssemblyName>
+    <RootNamespace>ZikWall.Setup</RootNamespace>
+    <ApplicationIcon>..\ZikWall.WinUI\Assets\ZikWall.ico</ApplicationIcon>
+    <ApplicationManifest>..\ZikWall.WinUI\app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
+    <Content Include="..\ZikWall.WinUI\Assets\ZikWall.png" Link="Assets\ZikWall.png" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\ZikWall.WinUI\Assets\ZikWall.ico" Link="Assets\ZikWall.ico" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\LICENSE" Link="LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(SetupMsiPath)" Link="Payload\setup.msi" CopyToOutputDirectory="PreserveNewest" Condition="'$(SetupMsiPath)' != ''" />
+    <AssemblyMetadata Include="PackageSha256" Value="$(PackageSha256)" />
+    <AssemblyMetadata Include="PackageVersion" Value="$(PackageVersion)" />
+  </ItemGroup>
+</Project>

@@ -74,7 +74,7 @@ public sealed partial class MainWindow
     internal async Task ExerciseLogAnalysisAsync()
     {
         await MonitorPanel.PauseForDiagnosticAsync();
-        Root.RequestedTheme = ElementTheme.Light;
+        Root.RequestedTheme = Environment.GetCommandLineArgs().Contains("--test-dark") ? ElementTheme.Dark : ElementTheme.Light;
         MonitorPanel.SetLogFixture();
         Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "logs");
         await (LogPanel ?? throw new InvalidOperationException("Log analysis page did not load on navigation.")).ExerciseAsync();

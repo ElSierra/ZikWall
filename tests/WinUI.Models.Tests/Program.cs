@@ -3,6 +3,7 @@ using System.Xml;
 using ZikWall.WinUI.Models;
 
 if (args.Contains("--activity-overview-only")) { ActivityOverviewTests.Run(); return; }
+if (args.Contains("--notifications-only")) { NotificationTests.Run(); return; }
 if (args.Contains("--passive-dns-only")) { await PassiveDnsTests.RunAsync(); return; }
 
 if (args.SequenceEqual(new[] { "--log-analysis" })) { LogAnalysisTests.Run(); return; }

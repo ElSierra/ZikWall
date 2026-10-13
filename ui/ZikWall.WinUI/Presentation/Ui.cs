@@ -37,6 +37,7 @@ public static class Ui
     {
         string text = direction.Replace("↑ ", "").Replace("↓ ", "");
         if (text == "Unknown") return ""; // UDP has no direction; a blank reads better than a warning.
+        text = string.Join(" / ", text.Split(" / ").Where(x => x != "Unknown"));
         return text.Contains("Outgoing") && text.Contains("Incoming") ? "Both" : text;
     }
     public static SolidColorBrush StateBrush(string state) => state switch

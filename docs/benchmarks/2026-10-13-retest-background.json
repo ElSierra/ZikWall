@@ -1,0 +1,264 @@
+﻿{
+    "Label":  "msi-0.10.18411-background",
+    "TimestampUtc":  "2026-10-13T18:58:54.2440344+00:00",
+    "AssemblySha256":  "58092F1D388E29615C0FB4EDD94F9364E0D28C5A51C3E1D046A620E1D2AF217B",
+    "OS":  "Microsoft Windows NT 10.0.28120.0",
+    "LogicalProcessors":  28,
+    "CpuModel":  "Intel(R) Core(TM) i7-14700HX",
+    "PhysicalMemoryGiB":  47.8,
+    "Scenario":  "Hidden window; 15-second background monitoring; collector/filtering/DNS off",
+    "WarmupSeconds":  15,
+    "MeasuredSeconds":  60.57,
+    "WindowReadyMs":  784.3124,
+    "CpuOneCorePercent":  0.671,
+    "CpuMachinePercent":  0.024,
+    "PeakPrivateMiB":  138.11,
+    "PeakWorkingSetMiB":  198.43,
+    "PrivateGrowthMiB":  -0.91,
+    "PeakHandles":  1219,
+    "CpuBudgetOneCorePercent":  2,
+    "PrivateMemoryBudgetMiB":  200,
+    "BudgetsPassed":  true,
+    "Samples":  [
+                    {
+                        "Seconds":  2.01,
+                        "CpuOneCorePercent":  6.21,
+                        "PrivateMiB":  138.11,
+                        "WorkingSetMiB":  198.43,
+                        "Handles":  1215,
+                        "Threads":  70
+                    },
+                    {
+                        "Seconds":  4.04,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  138.11,
+                        "WorkingSetMiB":  198.39,
+                        "Handles":  1215,
+                        "Threads":  70
+                    },
+                    {
+                        "Seconds":  6.05,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  138.06,
+                        "WorkingSetMiB":  198.39,
+                        "Handles":  1213,
+                        "Threads":  69
+                    },
+                    {
+                        "Seconds":  8.07,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  138.06,
+                        "WorkingSetMiB":  198.39,
+                        "Handles":  1213,
+                        "Threads":  69
+                    },
+                    {
+                        "Seconds":  10.09,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  138.01,
+                        "WorkingSetMiB":  198.35,
+                        "Handles":  1208,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  12.11,
+                        "CpuOneCorePercent":  0.772,
+                        "PrivateMiB":  138.06,
+                        "WorkingSetMiB":  198.4,
+                        "Handles":  1213,
+                        "Threads":  69
+                    },
+                    {
+                        "Seconds":  14.13,
+                        "CpuOneCorePercent":  0.775,
+                        "PrivateMiB":  138.06,
+                        "WorkingSetMiB":  198.4,
+                        "Handles":  1213,
+                        "Threads":  69
+                    },
+                    {
+                        "Seconds":  16.15,
+                        "CpuOneCorePercent":  4.635,
+                        "PrivateMiB":  137.11,
+                        "WorkingSetMiB":  196.91,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  18.17,
+                        "CpuOneCorePercent":  0.774,
+                        "PrivateMiB":  137.11,
+                        "WorkingSetMiB":  196.91,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  20.19,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.04,
+                        "WorkingSetMiB":  196.85,
+                        "Handles":  1208,
+                        "Threads":  67
+                    },
+                    {
+                        "Seconds":  22.21,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.1,
+                        "WorkingSetMiB":  196.96,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  24.23,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.1,
+                        "WorkingSetMiB":  196.96,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  26.26,
+                        "CpuOneCorePercent":  0.772,
+                        "PrivateMiB":  137.09,
+                        "WorkingSetMiB":  196.98,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  28.28,
+                        "CpuOneCorePercent":  0.773,
+                        "PrivateMiB":  137.09,
+                        "WorkingSetMiB":  196.98,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  30.31,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.04,
+                        "WorkingSetMiB":  196.95,
+                        "Handles":  1208,
+                        "Threads":  67
+                    },
+                    {
+                        "Seconds":  32.32,
+                        "CpuOneCorePercent":  2.328,
+                        "PrivateMiB":  137.1,
+                        "WorkingSetMiB":  197.03,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  34.33,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.1,
+                        "WorkingSetMiB":  197.03,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  36.34,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.09,
+                        "WorkingSetMiB":  197.04,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  38.36,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.09,
+                        "WorkingSetMiB":  197.04,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  40.38,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.04,
+                        "WorkingSetMiB":  197,
+                        "Handles":  1208,
+                        "Threads":  67
+                    },
+                    {
+                        "Seconds":  42.41,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.08,
+                        "WorkingSetMiB":  197.03,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  44.43,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.08,
+                        "WorkingSetMiB":  197.03,
+                        "Handles":  1213,
+                        "Threads":  68
+                    },
+                    {
+                        "Seconds":  46.44,
+                        "CpuOneCorePercent":  0.777,
+                        "PrivateMiB":  137.33,
+                        "WorkingSetMiB":  197.04,
+                        "Handles":  1217,
+                        "Threads":  66
+                    },
+                    {
+                        "Seconds":  48.46,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.33,
+                        "WorkingSetMiB":  197.04,
+                        "Handles":  1217,
+                        "Threads":  66
+                    },
+                    {
+                        "Seconds":  50.47,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.29,
+                        "WorkingSetMiB":  197.02,
+                        "Handles":  1214,
+                        "Threads":  65
+                    },
+                    {
+                        "Seconds":  52.49,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.34,
+                        "WorkingSetMiB":  197.08,
+                        "Handles":  1219,
+                        "Threads":  66
+                    },
+                    {
+                        "Seconds":  54.51,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.25,
+                        "WorkingSetMiB":  197.03,
+                        "Handles":  1211,
+                        "Threads":  64
+                    },
+                    {
+                        "Seconds":  56.54,
+                        "CpuOneCorePercent":  1.544,
+                        "PrivateMiB":  137.25,
+                        "WorkingSetMiB":  197.06,
+                        "Handles":  1211,
+                        "Threads":  64
+                    },
+                    {
+                        "Seconds":  58.56,
+                        "CpuOneCorePercent":  0,
+                        "PrivateMiB":  137.25,
+                        "WorkingSetMiB":  197.06,
+                        "Handles":  1211,
+                        "Threads":  64
+                    },
+                    {
+                        "Seconds":  60.57,
+                        "CpuOneCorePercent":  0.777,
+                        "PrivateMiB":  137.2,
+                        "WorkingSetMiB":  197.02,
+                        "Handles":  1206,
+                        "Threads":  63
+                    }
+                ]
+}

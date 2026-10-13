@@ -34,6 +34,24 @@ static class LogAnalysisTests
         var many = Enumerable.Range(0, 1002).Select(i => new ConnectionEvent(now.AddSeconds(-i), "First seen", browser with { ProcessPath = $"C:\\Apps\\{i}.exe" }));
         var capped = LogAnalysis.Build(many, now, now, LogFilter.All);
         Check(capped.MatchingCount == 1002 && capped.Groups.Sum(x => x.Count) == 1000, "Display cap must preserve truthful total counts.");
+        int enriched = 0;
+        ConnectionEntry Enrich(ConnectionEntry entry) { enriched++; return entry with { DomainHint = "dns.google" }; }
+        var limited = LogAnalysis.Build(many, now, DateTimeOffset.MinValue, LogFilter.All, enrich: Enrich);
+        Check(enriched == LogAnalysis.DisplayLimit && limited.UnreadCount == 1002,
+            "Without search, enrich only displayed events while counting all unread entries.");
+        enriched = 0;
+        var filtered = LogAnalysis.Build(events, now, DateTimeOffset.MinValue, enrich: Enrich);
+        Check(enriched == 2 && filtered.Groups.SelectMany(x => x).All(x => x.Host == "dns.google"),
+            "Enrich only matching important events and retain their current hostname display.");
+        enriched = 0;
+        var excluded = LogAnalysis.Build(events, now.AddDays(10), DateTimeOffset.MinValue,
+            LogFilter.All, LogRange.Today, enrich: Enrich);
+        Check(enriched == 0 && excluded.MatchingCount == 0 && excluded.UnreadCount == 2,
+            "Date-excluded events must skip enrichment without changing unread counts.");
+        enriched = 0;
+        var searched = LogAnalysis.Build(events, now, now, LogFilter.Closed, query: "dns.google", enrich: Enrich);
+        Check(enriched == 1 && searched.MatchingCount == 1,
+            "Hostname search must enrich category candidates exactly once, including displayed results.");
         Check(new LogEntry(new(now, "First seen", browser with { State = "SynSent" }), LogCategory.Connection, true).Message.Contains("attempting"), "Attempts must not claim a successful connection.");
         Check(new LogEntry(new(now, "First seen", browser with { RemotePort = null, Protocol = "UDPv4" }), LogCategory.Connection, true).Host.StartsWith("Local "), "UDP must not invent a remote hostname.");
         var directory = Path.Combine(Path.GetTempPath(), "zikwall-log-test-" + Guid.NewGuid());

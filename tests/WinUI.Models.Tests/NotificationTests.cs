@@ -23,13 +23,26 @@ static class NotificationTests
         string assets = Path.GetFullPath("ui/ZikWall.WinUI/Assets");
         var xml = XDocument.Parse(outgoing.ToToastXml(assets));
         Check(xml.Descendants("text").First().Value == outgoing.Title && !xml.ToString().Contains("Recent connections"), "Toast headline must contain the event, without repeated branding.");
-        var flag = xml.Descendants("image").Single();
-        Check(flag.Attribute("placement")?.Value == "appLogoOverride" && new Uri(flag.Attribute("src")!.Value).LocalPath == Path.Combine(assets, "Flags", "us.svg"), "Toast must use the actual bundled country flag.");
+        var icon = xml.Descendants("image").Single();
+        Check(icon.Attribute("placement")?.Value == "appLogoOverride" && new Uri(icon.Attribute("src")!.Value).LocalPath == Path.Combine(assets, "ZikWall.png"), "Toast must fall back to the app logo, never a country flag.");
+        var withPath = Format(row with { ProcessPath = @"C:\Apps\browser.exe" });
+        Check(withPath.ProcessPath == @"C:\Apps\browser.exe", "Notification must retain the first app's executable for icon extraction.");
+        string customIcon = Path.Combine(Path.GetTempPath(), "zikwall-notification-" + Guid.NewGuid() + " & icon.png");
+        try
+        {
+            File.Copy(Path.Combine(assets, "ZikWall.png"), customIcon);
+            var custom = XDocument.Parse(Format(row with { ProcessName = "A&B <Browser>" }).ToToastXml(assets, customIcon)).Descendants("image").Single();
+            Check(new Uri(custom.Attribute("src")!.Value).LocalPath == customIcon && custom.Attribute("alt")?.Value == "A&B <Browser>", "Extracted app icon and accessible label must survive XML escaping.");
+            Check(custom.Attribute("hint-crop") is null, "Square app icons must not be cropped into a circle.");
+        }
+        finally { File.Delete(customIcon); }
+        foreach (string unavailable in new[] { Path.Combine(assets, "missing-icon.png"), "relative.png", @"\\server\share\icon.png" })
+            Check(new Uri(XDocument.Parse(outgoing.ToToastXml(assets, unavailable)).Descendants("image").Single().Attribute("src")!.Value).LocalPath == Path.Combine(assets, "ZikWall.png"), "Unavailable or nonlocal icons must use the bundled app logo.");
         Check(xml.Descendants("audio").Single().Attribute("silent")?.Value == "true", "Alerts must remain silent.");
         foreach (string country in new[] { "", "../us", "ZZ", "<x", "12" })
         {
             var unknown = XDocument.Parse(Format(row with { CountryCode = country }).ToToastXml(assets));
-            Check(new Uri(unknown.Descendants("image").Single().Attribute("src")!.Value).LocalPath.EndsWith("unknown.svg"), "Invalid/missing country asset must use the neutral flag.");
+            Check(new Uri(unknown.Descendants("image").Single().Attribute("src")!.Value).LocalPath.EndsWith("ZikWall.png"), "Country metadata must not select a notification icon.");
         }
         var escaped = Format(row with { ProcessName = "A&B <Browser>", DomainHint = "a&b.example" });
         var escapedXml = XDocument.Parse(escaped.ToToastXml(assets));

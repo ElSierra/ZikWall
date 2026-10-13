@@ -21,18 +21,19 @@ No upstream download is represented as a ZikWall release. The obsolete updater
 manifest and release action are disabled; the unpinned legacy rule-regeneration
 wrapper stops with an explanation instead of invoking an unknown renamed tool.
 
-The requested standalone branch is `codex/zikwall`, with one initial snapshot
-commit and no inherited parent commits. Original history remains recoverable
+The standalone history began on `codex/zikwall`, with one initial snapshot
+commit and no inherited parent commits. The publication branch is now `main`
+at [ElSierra/ZikWall](https://github.com/ElSierra/ZikWall). Original history remains recoverable
 from the previous local branch and the verified local bundle
 `temp/zikwall-before-history-rewrite.bundle`. No remote history is changed.
 The checkout directory and its configured startup executable path are unchanged.
 
-The inherited `origin` remote and its remote-tracking refs have been removed,
-along with the old `master` branch's upstream tracking configuration. No Git
-remote is configured. The old local branch and recovery bundle remain local
+The inherited upstream `origin` remote and its remote-tracking refs were removed,
+along with the old `master` branch's upstream tracking configuration. The new
+`origin` is `https://github.com/ElSierra/ZikWall.git`. The old local branch and recovery bundle remain local
 archives; the active branch has no inherited parent commits.
 Obsolete submodule declarations and upstream funding configuration have been
-removed. `build.bat` now builds the supported WinUI app and MSI installer instead
+removed. `build.bat` now builds the supported WinUI app, WinUI setup.exe, and MSI installer instead
 of invoking the external builder checkout. The archived legacy solution still refers to
 the sibling routine sources and remains unsupported. Original license,
 copyright, source links and audit records are retained as provenance.

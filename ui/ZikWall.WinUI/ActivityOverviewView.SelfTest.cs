@@ -15,7 +15,7 @@ public sealed partial class MainWindow
     {
         if (ActivityPanel is not null || LogPanel is not null) throw new InvalidOperationException("Unopened analysis pages were created at startup.");
         await MonitorPanel.PauseForDiagnosticAsync();
-        Root.RequestedTheme = ElementTheme.Light;
+        Root.RequestedTheme = Environment.GetCommandLineArgs().Contains("--test-dark") ? ElementTheme.Dark : ElementTheme.Light;
         // Give the actual parent enough client width; a child-only Width change
         // can pass measure checks while still being clipped by the window.
         AppWindow.Resize(new Windows.Graphics.SizeInt32(2500, 1300));

@@ -6,16 +6,16 @@ ZikWall is the new app name. The user-supplied blue Z shield is used in the titl
 
 This is a compiled native Windows desktop UI built with **WinUI 3, Windows App SDK 1.8, and the Windows SDK**, in C# and XAML. It uses Mica, NavigationView, CommandBar, native search, ListView, ContentDialog, InfoBar, Fluent icons, system theme resources and Windows typography. It is not a web page or a reskinned Win32 control panel.
 
-The screenshots below show the verified layout before the ZikWall branding change.
+The screenshots below show the current native UI with illustrative connection data. See the [screenshot gallery and reproduction steps](../docs/screenshots/README.md).
 
-![Windows 11 light theme, before branding change](../docs/winui-light.png)
+![Current ZikWall Connections in light theme](../docs/screenshots/connections-light.png)
 
-[Dark theme screenshot](../docs/winui-dark.png)
+[Dark theme screenshot](../docs/screenshots/connections-dark.png)
 
 ## Run
 
-To build the current app as an installable MSI, run `build.bat` from the repository
-root, then open `artifacts/installer/setup.msi`. Repeat after new changes for an
+To build the current app with WinUI 3 setup and an MSI, run `build.bat` from the repository
+root, then open `artifacts/installer/setup.exe`. Repeat after new changes for an
 upgrade installer. See [installer details](../docs/INSTALLER.md).
 
 For a portable development build:
@@ -53,7 +53,7 @@ The app opens on live Connections. **Firewall rules** shows the selected profile
 
 After opening a legacy XML profile, **Saved rules** returns to the working policy without changing it. Imported XML entries are never automatically enforced. Settings changes the UI theme for this session and supports current-user sign-in startup. All UI strings introduced here are currently English.
 
-Current output is `artifacts\ZikWall\ZikWall.exe`, accompanied by the WFP broker, engine DLL, runtime and assets. Keep this folder together. [Current implementation status](../docs/FEATURE-STATUS.md) distinguishes tested features from the privileged runtime gate and remaining parity work. The early screenshots below/above predate the new monitoring, policy, DNS and map pages.
+Current output is `artifacts\ZikWall\ZikWall.exe`, accompanied by the WFP broker, engine DLL, runtime and assets. Keep this folder together. [Current implementation status](../docs/FEATURE-STATUS.md) distinguishes tested features from the privileged runtime gate and remaining parity work. The screenshot gallery shows the current Connections, My activity, and Log analysis pages.
 
 ## Firewall integration
 
@@ -74,7 +74,7 @@ The test executable directly compiles production models and services; it needs n
 
 The monitor defaults to a five-second low-resource refresh, with two-/ten-second choices and slower 15-second background/minimized sampling. Native connection rows update incrementally without transition animations; hidden views avoid redraws. [Performance measurements, limits and repeatable benchmarks](../docs/PERFORMANCE.md) document the resource budgets and test scope.
 
-The project and namespaces now use ZikWall. Historical screenshots above predate the current monitoring layout; see the current validation reports for tested behavior.
+The project and namespaces now use ZikWall. Current screenshots use illustrative data; see the validation reports for tested behavior.
 
 To regenerate the logo assets, run `python tools/generate-brand-assets.py` with Pillow installed. The user-supplied master is preserved in `tools/branding/ZikWall-source.png`; conversion retains its artwork and transparency. The committed PNG and nine-size ICO (16–256 px), including native resource icons, require no Python dependency at app build or runtime.
 

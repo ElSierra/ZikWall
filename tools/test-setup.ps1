@@ -1,7 +1,8 @@
 param(
     [string]$MsiPath = (Join-Path $PSScriptRoot '..\artifacts\installer\setup.msi'),
     [string]$ManifestPath = (Join-Path $PSScriptRoot '..\artifacts\installer\manifest.json'),
-    [string]$InstallDirectory
+    [string]$InstallDirectory,
+    [switch]$RemoveStaging
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -40,6 +41,26 @@ try {
     while ($row = $view.Fetch()) { $sequence[$row.StringData(1)] = $row.IntegerData(2) }
     $view.Close()
     if ($sequence['RemoveExistingProducts'] -le $sequence['InstallInitialize'] -or $sequence['RemoveExistingProducts'] -ge $sequence['InstallFiles']) { throw 'Old products must be removed transactionally before files are installed.' }
+    [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($view)
+    $view = $database.OpenView('SELECT `Value` FROM `Property` WHERE `Property` = ''ALLUSERS''')
+    $view.Execute(); $row = $view.Fetch()
+    if (-not $row -or $row.StringData(1) -ne '1') { throw 'Setup must install the Programs shortcut for all users.' }
+    $view.Close()
+    [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($view)
+    $view = $database.OpenView('SELECT `Component_`, `FileName` FROM `File`')
+    $view.Execute(); $appComponent = $null
+    while ($row = $view.Fetch()) {
+        if (($row.StringData(2) -split '\|')[-1] -eq 'ZikWall.exe') { $appComponent = $row.StringData(1) }
+    }
+    $view.Close()
+    if (-not $appComponent) { throw 'Missing shortcut executable component.' }
+    [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($view)
+    $view = $database.OpenView('SELECT `Directory_`, `Component_`, `Target`, `Icon_`, `WkDir`, `Name` FROM `Shortcut` WHERE `Shortcut` = ''ZikWallShortcut''')
+    $view.Execute(); $row = $view.Fetch()
+    if (-not $row -or $row.StringData(1) -ne 'ProgramMenuFolder' -or $row.StringData(2) -ne $appComponent -or
+        $row.StringData(3) -ne 'Main' -or $row.StringData(4) -ne 'ZikWallIcon' -or $row.StringData(5) -ne 'INSTALLFOLDER' -or
+        ($row.StringData(6) -split '\|')[-1] -ne 'ZikWall') { throw 'Programs shortcut must launch the installed ZikWall executable with its app icon.' }
+    $view.Close()
 } finally {
     if ($view) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($view) }
     [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($database)
@@ -78,10 +99,21 @@ foreach ($file in $files) {
 }
 if ($expected.Count) { throw 'Manifest has files missing from the MSI.' }
 Write-Host "PASS: MSI version $($manifest.version), upgrade identity, Program Files location, shortcut and $($files.Count) extracted file hashes."
+Write-Host 'PASS: all-users Start Menu\Programs\ZikWall.lnk targets the app component and uses the ZikWall icon.'
 Write-Host 'PASS: branded setup/maintenance dialogs and isaacojo.me publisher links.'
 Write-Host 'PASS: no per-user settings components or cleanup actions; user settings stay outside MSI ownership.'
 if ($InstallDirectory) {
+    $shortcut = Join-Path ([Environment]::GetFolderPath('CommonPrograms')) 'ZikWall.lnk'
+    if (-not (Test-Path -LiteralPath $shortcut -PathType Leaf)) { throw "Installed Start menu shortcut is missing: $shortcut" }
     $installedProducts = @(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' | Where-Object { $_.DisplayName -eq 'ZikWall' })
     if ($installedProducts.Count -ne 1 -or $installedProducts[0].DisplayVersion -ne $manifest.version) { throw 'Expected exactly one installed ZikWall MSI matching this version.' }
     Write-Host "PASS: exactly one installed product; every installed file matches the MSI in $InstallDirectory."
+}
+if ($RemoveStaging) {
+    $resolvedWork = [IO.Path]::GetFullPath($work)
+    $tempRoot = [IO.Path]::GetFullPath((Join-Path $root 'temp'))
+    if (-not $resolvedWork.StartsWith($tempRoot + '\', [StringComparison]::OrdinalIgnoreCase) -or
+        ((Get-Item -LiteralPath $resolvedWork).Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+        (Get-ChildItem -LiteralPath $resolvedWork -Recurse -Force -Attributes ReparsePoint)) { throw 'Refusing unsafe verification staging cleanup.' }
+    Remove-Item -LiteralPath $resolvedWork -Recurse -Force
 }

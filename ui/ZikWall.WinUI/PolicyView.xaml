@@ -18,10 +18,21 @@
                 </StackPanel>
                 <Button x:Name="FilteringButton" Grid.Column="3" Content="Enable filtering…" VerticalAlignment="Bottom" Click="FilteringClicked" Style="{ThemeResource AccentButtonStyle}" />
             </Grid>
-            <TextBlock x:Name="NetworkLabel" Text="No network association" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
-            <TextBlock Text="First matching rule wins within ZikWall. Other firewall providers can still block traffic. Rules apply only while the broker is running; closing ZikWall removes its session filters." TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock x:Name="NetworkLabel" Text="No network association" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            <TextBlock Text="First matching rule wins within ZikWall. Other firewall providers can still block traffic. Rules apply only while the broker is running; closing ZikWall removes its session filters." TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel>
         <CommandBar Grid.Row="2" Background="Transparent" HorizontalAlignment="Left" DefaultLabelPosition="Right"><AppBarButton Icon="Add" Label="New rule" Click="NewRuleClicked" /><AppBarButton Icon="Edit" Label="Edit" Click="EditClicked" /><AppBarButton Icon="Delete" Label="Remove" Click="RemoveClicked" /><AppBarButton Icon="Up" Label="Move up" Click="UpClicked" /><AppBarButton Icon="Find" Label="Check rules" Click="CheckRulesClicked" /><AppBarButton Icon="Save" Label="Apply saved policy" Click="ApplyClicked" /></CommandBar>
-        <Border Grid.Row="3" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="8" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"><ListView x:Name="PolicyRules" SelectionMode="Single" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Saved firewall rules"><ListView.ItemTemplate><DataTemplate x:DataType="models:FirewallRule"><Grid Padding="12" ColumnDefinitions="90,*" ColumnSpacing="16"><TextBlock Text="{x:Bind Action}" VerticalAlignment="Center" /><StackPanel Grid.Column="1" Spacing="4"><TextBlock Text="{x:Bind Name}" /><TextBlock Text="{x:Bind Scope}" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><TextBlock Text="{x:Bind Lifetime}" Style="{ThemeResource CaptionTextBlockStyle}" /></StackPanel></Grid></DataTemplate></ListView.ItemTemplate></ListView></Border>
+        <Border Grid.Row="3" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="8" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"><Grid>
+            <ListView x:Name="PolicyRules" SelectionMode="Single" HorizontalContentAlignment="Stretch" Padding="4" AutomationProperties.Name="Saved firewall rules"><ListView.ItemTemplate><DataTemplate x:DataType="models:FirewallRule"><Grid Padding="4,8" ColumnDefinitions="72,*,Auto" ColumnSpacing="16">
+                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="8,2,8,3" HorizontalAlignment="Left" VerticalAlignment="Center"><TextBlock Text="{x:Bind Action}" Style="{ThemeResource CaptionTextBlockStyle}" /></Border>
+                <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center"><TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{x:Bind Scope}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" ToolTipService.ToolTip="{x:Bind Scope}" /></StackPanel>
+                <TextBlock Grid.Column="2" Text="{x:Bind Lifetime}" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Grid></DataTemplate></ListView.ItemTemplate></ListView>
+            <StackPanel x:Name="PolicyEmpty" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Visibility="Collapsed">
+                <FontIcon Glyph="&#xE83D;" FontSize="28" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock Text="No rules in this profile" HorizontalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock Text="Add a rule, or block an app from Connections." HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </Grid></Border>
     </Grid>
 </UserControl>

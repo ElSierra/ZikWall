@@ -1,12 +1,38 @@
 # Building and installing ZikWall
 
-Run `make setup`, `build.bat` or `tools/build-setup.ps1` after source changes. These build the
+Run `make setup`, `build.bat` or `tools/build-setup-exe.ps1` after source changes. These build the
 current WinUI app, broker and native engine, run the model/service and asset
-integrity checks, and produce `artifacts/installer/setup.msi`. WiX 4.0.6 is
+integrity checks, and produce `artifacts/installer/setup.exe` and `setup.msi`. WiX 4.0.6 is
 downloaded to the ignored `temp/wix` directory on first use. The usual .NET,
 Visual Studio C++ and Windows SDK build prerequisites still apply.
 
-The full setup wizard uses ZikWall's shield, navy artwork and Segoe UI type,
+`setup.exe` is a self-contained launcher for the native WinUI 3 setup interface.
+It bundles the verified MSI, .NET, the Windows App SDK and the VC runtime, so it
+does not download prerequisites during setup. Open it to install or upgrade;
+the matching installed product offers repair and removal. The interface includes
+license acceptance, an installation folder, progress, cancellation, error logs
+and completion guidance for the all-users Start menu shortcut. Windows Installer
+owns elevation and transactional installation/rollback through `MsiInstallProduct`
+and `MsiSetExternalUIRecord`; `INSTALLUILEVEL_NONE | INSTALLUILEVEL_UACONLY`
+keeps the wizard in WinUI while retaining the Windows consent prompt.
+
+The launcher verifies its embedded archive before extracting to a unique temporary
+folder and removes that folder when setup closes. Before installation, the MSI is
+verified against its compiled SHA-256 and retained under
+`%LOCALAPPDATA%\ZikWall\InstallerCache\<hash>` for subsequent repair. Setup logs
+are retained under `%LOCALAPPDATA%\ZikWall\SetupLogs`. No app is forcibly closed,
+and cancelling waits for Windows Installer to return before setup can exit.
+
+`tools/build-setup-exe.ps1 -UseExistingMsi` packages an already verified MSI without
+rebuilding the app. Every EXE build runs `setup.exe --self-test`: it extracts the
+real payload, opens the MSI database, exercises native MSI progress/cancellation
+records, checks the license gate and renders the WinUI screens in both themes.
+This diagnostic does not install, uninstall or alter firewall rules. Results and
+previews are in `artifacts/installer/setup-preview`; EXE/MSI hashes are recorded
+in `setup-exe-manifest.json`. A real install/upgrade/rollback should additionally
+be exercised in a disposable Windows environment before release.
+
+The standalone MSI remains available for deployment and uses ZikWall's shield, navy artwork and Segoe UI type,
 with clickable `https://isaacojo.me` links on the welcome and completion pages.
 It includes the complete GPLv3 license, installation folder selection, progress,
 cancellation, and repair/removal pages. Windows Installed apps also links to
@@ -34,20 +60,23 @@ After choosing an explicit release version, continue specifying increasing
 release versions; a higher installed version prevents downgrades. Keep the
 UpgradeCode in `installer/Package.wxs` stable across future releases.
 
-Open `setup.msi` to install, or use:
+Open `setup.exe` for the WinUI 3 interface. For direct MSI deployment, use:
 
 ```powershell
 msiexec /i artifacts\installer\setup.msi /norestart
 ```
 
 Installation requires elevation, places the app in `Program Files\ZikWall`,
-adds a Start menu shortcut and registers ZikWall in Windows Installed apps.
+adds `ZikWall.lnk` to the all-users Start menu Programs folder
+(`%ProgramData%\Microsoft\Windows\Start Menu\Programs`) and registers ZikWall in Windows Installed apps.
+Package verification checks the shortcut's folder, app component, working directory
+and icon; installed-copy verification also checks that the shortcut exists.
 Newer MSI builds upgrade the existing installation. Close the app through
 tray Exit before upgrading. User settings and history stay in the user's
 existing application-data directory. The installer does not enable filtering
 or change Windows Firewall settings. Startup remains an app Settings option.
 Use `/passive` for progress-only deployment or `/qn` for unattended deployment;
-omit both to see the branded wizard. `make install` opens the full wizard.
+omit both to see the MSI wizard. `make install` opens the WinUI setup.exe interface.
 
 Monitor choices (filters, grouping, refresh/range, adapter, alerts, history saving,
 system-app visibility and usage sorting) save immediately to

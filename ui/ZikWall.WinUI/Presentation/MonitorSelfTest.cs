@@ -35,7 +35,7 @@ internal static class MonitorSelfTest
                     "Established", "Example browser", Direction: "Outgoing", CountryCode: "US", CountryName: "United States", NetworkScope: "Internet");
                 var message = Models.ConnectionNotification.From(new([sample], 1, Models.ConnectionNotificationType.NewApps));
                 results["NotificationXml"] = message.ToToastXml(Path.Combine(AppContext.BaseDirectory, "Assets"));
-                notifications.Show(message with { Title = "Notification test: " + message.Title });
+                await notifications.ShowAsync(message with { Title = "Notification test: " + message.Title });
                 results["WindowsNotificationSubmitted"] = true;
             }
             var bitmap = new RenderTargetBitmap();

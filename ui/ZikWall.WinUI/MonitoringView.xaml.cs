@@ -158,10 +158,11 @@ public sealed partial class MonitoringView : UserControl
                 var message = ConnectionNotification.From(batch);
                 RecentBanner.Title = message.Title;
                 RecentBanner.Severity = InfoBarSeverity.Informational;
-                RecentBanner.Message = message.Body;
+                // One line in the app; the Windows notification keeps its two-line layout.
+                RecentBanner.Message = message.Application.Length > 0 ? $"{message.Application}  ·  {message.Destination}" : message.Body;
                 RecentBanner.IsOpen = RecentAlerts.IsOn;
                 if (DesktopAlerts.IsOn)
-                    try { desktopNotifications.Show(message); }
+                    try { await desktopNotifications.ShowAsync(message); }
                     catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException or UnauthorizedAccessException)
                     { DesktopAlerts.IsOn = false; RecentBanner.Severity = InfoBarSeverity.Warning; RecentBanner.Message = $"Windows notification unavailable: {ex.Message}"; RecentBanner.IsOpen = true; }
             }

@@ -39,19 +39,39 @@ public partial class App : Application
         }
         var main = new MainWindow(diagnostic && !arguments.Contains("--test-lifecycle"));
         window = main;
-        if (arguments.SequenceEqual(new[] { "--test-notification" }))
+        if (arguments.SequenceEqual(new[] { "--test-readme-screenshots" }))
+        {
+            window.Activate();
+            try { await Task.Delay(500); await main.CaptureReadmeScreenshotsAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "readme-screenshots.txt"), ex.ToString()); Environment.ExitCode = 1; }
+            window.Close(); return;
+        }
+        if (arguments.SequenceEqual(new[] { "--test-notification" }) || arguments.SequenceEqual(new[] { "--test-notification-icon" }))
         {
             var report = new Dictionary<string, object>();
             try
             {
                 var sample = new Models.ConnectionEntry("TCPv4", "192.0.2.1", 50000, "1.1.1.1", 443, Environment.ProcessId,
-                    "Established", "ZikWall", CountryCode: "AU", CountryName: "Australia");
+                    "Established", "ZikWall", ProcessPath: Environment.ProcessPath!, CountryCode: "AU", CountryName: "Australia");
                 var message = Models.ConnectionNotification.From(new([sample], 1, Models.ConnectionNotificationType.NewApps));
-                report["Xml"] = message.ToToastXml(Path.Combine(AppContext.BaseDirectory, "Assets"));
-                using var notifications = new Presentation.DesktopNotifications();
-                notifications.Enable();
-                notifications.Show(message with { Title = "Notification test: " + message.Title });
-                report["Submitted"] = true;
+                string iconDirectory = Path.Combine(AppContext.BaseDirectory, "notification-icon-test");
+                string xml = await Presentation.DesktopNotifications.CreateToastXmlAsync(message, iconDirectory);
+                report["Xml"] = xml;
+                string iconPath = new Uri(System.Xml.Linq.XDocument.Parse(xml).Descendants("image").Single().Attribute("src")!.Value).LocalPath;
+                if (Path.GetDirectoryName(iconPath) != iconDirectory) throw new InvalidOperationException("Notification did not use the executable's icon.");
+                using (var stream = await (await Windows.Storage.StorageFile.GetFileFromPathAsync(iconPath)).OpenReadAsync())
+                {
+                    var decoder = await Windows.Graphics.Imaging.BitmapDecoder.CreateAsync(stream);
+                    if (decoder.PixelWidth != 192 || decoder.PixelHeight != 192) throw new InvalidOperationException("Notification icon is not high resolution.");
+                    report["IconSize"] = $"{decoder.PixelWidth}x{decoder.PixelHeight}";
+                }
+                if (arguments[0] == "--test-notification")
+                {
+                    using var notifications = new Presentation.DesktopNotifications();
+                    notifications.Enable();
+                    await notifications.ShowAsync(message with { Title = "Notification test: " + message.Title });
+                    report["Submitted"] = true;
+                }
             }
             catch (Exception ex) { report["Error"] = ex.ToString(); }
             File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "notification-selftest.json"), System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
@@ -78,7 +98,7 @@ public partial class App : Application
         }
         if (wake is not null) wakeRegistration = ThreadPool.RegisterWaitForSingleObject(wake, (_, _) => main.DispatcherQueue.TryEnqueue(main.ShowFromTray), null, -1, false);
         window.Activate();
-        if (arguments.SequenceEqual(new[] { "--test-activity-overview" }))
+        if (arguments.Contains("--test-activity-overview"))
         {
             try { await Task.Delay(500); await main.ExerciseActivityOverviewAsync(); }
             catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "activity-overview-selftest.txt"), ex.ToString()); }

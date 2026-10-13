@@ -194,6 +194,7 @@ public sealed partial class PolicyView : UserControl
         AutoSwitch.IsOn = policy.AutoSwitch;
         var selection = (PolicyRules.SelectedItem as FirewallRule)?.Id;
         PolicyRules.ItemsSource = Selected.Rules.ToList(); PolicyRules.SelectedItem = Selected.Rules.FirstOrDefault(x => x.Id == selection);
+        PolicyEmpty.Visibility = Selected.Rules.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         NetworkLabel.Text = Selected.NetworkId.Length == 0 ? "No network associated with this profile." : $"Associated Windows network ID: {Selected.NetworkId}";
         refreshing = false;
         RulesChanged?.Invoke();

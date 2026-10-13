@@ -205,6 +205,7 @@ public sealed partial class MainWindow : Window
         if (!ready) return;
         var rule = RuleList.SelectedItem as RuleEntry;
         DetailName.Text = rule?.Name ?? "Select an entry";
+        DetailFields.Visibility = rule is null ? Visibility.Collapsed : Visibility.Visible;
         DetailCategory.Text = rule?.Category ?? "";
         DetailSummary.Text = rule is null ? "Choose an entry to inspect its details." : $"{rule.State} · {rule.Duration}\n{(rule.PolicyRuleId is { } id ? PolicyPanel.RuleStatus(id) : "Imported entry only. Not applied to the firewall.")}";
         DetailDestination.Text = rule is null ? "—" : $"Remote: {rule.Destination}\nLocal: {rule.LocalEndpoint}";

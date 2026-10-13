@@ -72,7 +72,7 @@ Build & develop
   make run / run-installed   Launch the existing dev / installed app
   make stop                  Stop only the workspace dev app
   make restore / engine      Restore locked UI packages / build native broker
-  make setup                 Build and verify artifacts/installer/setup.msi
+  make setup                 Build and verify WinUI setup.exe and setup.msi
   make setup VERSION=1.0.0   Build with an explicit MSI release version
   make install / uninstall   Open setup / uninstall the installed MSI
 
@@ -107,7 +107,7 @@ Performance & maintenance
   make clean-msi            Remove MSI output and temporary MSI staging
 
 Exit the installed app through tray Exit before make dev or UI benchmarks.
-make install uses the existing MSI; run make setup first after source changes.
+make install opens the existing WinUI setup.exe; run make setup after source changes.
 No make installation? Use powershell -File tools/tasks.ps1 -Task <target>.
 '@ | Write-Host
         }
@@ -118,8 +118,15 @@ No make installation? Use powershell -File tools/tasks.ps1 -Task <target>.
         stop { Stop-Dev }
         restore { Invoke-Native dotnet @('restore','ui\ZikWall.WinUI\ZikWall.WinUI.csproj','-p:Platform=x64','--locked-mode','--force') }
         engine { & "$PSScriptRoot\build-engine.ps1" }
-        setup { & "$PSScriptRoot\build-setup.ps1" -Version $Version }
-        install { & "$PSScriptRoot\test-setup.ps1"; Start-Process -FilePath msiexec.exe -ArgumentList "/i `"$root\artifacts\installer\setup.msi`"" }
+        setup { & "$PSScriptRoot\build-setup-exe.ps1" -Version $Version }
+        install {
+            & "$PSScriptRoot\test-setup.ps1"
+            $setupExe = Join-Path $root 'artifacts\installer\setup.exe'
+            $setupRecord = Get-Content (Join-Path $root 'artifacts\installer\setup-exe-manifest.json') -Raw | ConvertFrom-Json
+            $msiRecord = Get-Content (Join-Path $root 'artifacts\installer\manifest.json') -Raw | ConvertFrom-Json
+            if ($setupRecord.exeSha256 -ne (Get-FileHash $setupExe -Algorithm SHA256).Hash -or $setupRecord.msiSha256 -ne $msiRecord.sha256) { throw 'Setup EXE is out of date or changed. Run make setup.' }
+            Start-Process -FilePath $setupExe
+        }
         uninstall {
             $entry = @(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*' | Where-Object { $_.DisplayName -eq 'ZikWall' -and $_.PSChildName -match '^\{[0-9A-F-]{36}\}$' })
             if ($entry.Count -ne 1) { throw 'Expected one installed ZikWall MSI.' }

@@ -20,6 +20,7 @@ public sealed partial class PrivacyView : UserControl
     public event Action<IReadOnlyList<string>>? CopyNetworks;
     public bool DnsRunning => proxy is not null;
     public PrivacyView() : this(null) { }
+    public Visibility NoSubscriptions(object? items) => items is System.Collections.ICollection { Count: > 0 } ? Visibility.Collapsed : Visibility.Visible;
     internal PrivacyView(string? preferencesDirectory)
     {
         if (preferencesDirectory is not null) { store = new(preferencesDirectory); preferencesStore = new(preferencesDirectory); diagnostic = false; }

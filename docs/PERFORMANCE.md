@@ -1,5 +1,88 @@
 # ZikWall performance and resource budgets
 
+## Current-source MSI retest, 13 October 2026
+
+MSI **0.10.18411** builds successfully, but its foreground resource measurement
+**fails** the existing 2%-of-one-core / 200 MiB private-memory budgets. Over
+181.86 seconds after 15 seconds of warmup it averaged **3.188% of one core**
+(0.114% of the 28-thread machine), with **249.18 MiB peak private memory**,
+316.55 MiB peak working set and 80.67 MiB private growth. This run does not
+establish a memory leak or isolate the remaining foreground cost.
+
+The separate hidden-window run **passed** both budgets over 60.57 seconds
+after a 15-second warmup: **0.671% of one core**, **138.11 MiB peak private
+memory**, 198.43 MiB peak working set and -0.91 MiB private growth. The harness
+verified the window stayed hidden. Both resource reports identify the same
+assembly; this short run does not establish multi-hour stability.
+
+The earlier interrupted chat's benchmark also finished and failed: 5.823% of
+one core and 248.26 MiB peak private memory over 60.65 seconds. Its assembly was
+different. Both reports are retained; their changing live traffic and different
+durations do not establish a controlled speedup between versions.
+
+The fresh installer includes the current UI and readable-app-name edits and the
+Log Analysis optimization below. Building exposed a missing `KnownApps.cs`
+link in the broker and engine-test projects; both now include it and compile
+without warnings or errors. The model/service suite, native UI diagnostics
+(including 500 list updates, Activity and Log Analysis), dependency integrity
+checks, and MSI validation of all 803 extracted file hashes passed.
+
+General core benchmarks completed, including live Windows endpoint capture
+(19.7301 ms median), 10,000 connections grouped into 100 apps (7.8323 ms), and
+1,000 local blocked UDP DNS requests without errors. The privileged Windows DNS
+cache-provider measurement was skipped. All three deterministic Log Analysis
+enrichment-call budgets passed. Microbenchmark success does not override the
+failed whole-app foreground budgets.
+
+App resource measurements ran sequentially after packaging, core benchmarks
+and UI diagnostics completed. Optional collector, filtering and DNS proxy were off during the
+app resource run. Its assembly hash matches the installer manifest:
+`58092F1D388E29615C0FB4EDD94F9364E0D28C5A51C3E1D046A620E1D2AF217B`.
+MSI SHA-256:
+`A9A618F14AC9A3297C9E749BF42E5C78B01EF547EE35A8D68DB355702A40436C`.
+
+[Foreground](benchmarks/2026-10-13-retest-foreground.json) ·
+[Background](benchmarks/2026-10-13-retest-background.json) ·
+[Core](benchmarks/2026-10-13-retest-core.json) ·
+[Log Analysis](benchmarks/2026-10-13-retest-log-analysis.json) ·
+[Earlier foreground](benchmarks/2026-10-13-performance-review-foreground.json)
+
+## Log Analysis filtering and display cap, 13 October 2026
+
+Log Analysis used to resolve current hostname hints for every retained event
+before applying category/date filters or its 1,000-row display limit. It now
+filters first. With an empty search it enriches only the displayed rows; a
+nonempty search still resolves current hints for all filter candidates so
+hostname matches remain complete. First-app classification, unread counts,
+matching totals and stable newest-first ordering retain their existing semantics.
+
+A fixed 10,000-event fixture (100 apps, older history) reproduced the excessive
+work before the fix and passes the exact enrichment-call budgets afterward:
+
+| View | Hint lookups before / after | Allocated bytes before / after | Median ms before / after |
+| --- | ---: | ---: | ---: |
+| Important | 10,000 / 100 | 4,128,919 / 1,677,074 | 5.5475 / 3.4776 |
+| Today, all history outside range | 10,000 / 0 | 4,120,448 / 1,640,584 | 2.4801 / 1.5487 |
+| All, capped display | 10,000 / 1,000 | 4,688,147 / 2,776,064 | 3.3529 / 1.8365 |
+
+Each case uses five warmups and 100 Release iterations, the production
+`LogAnalysis.Build` and `MonitorEnrichment.WithDomainHint`, and empty local hint
+caches. Allocations fell 41–60%. Timings include host/JIT variability and are
+microbenchmarks, not whole-app speedup claims. Sorting remains necessary for
+arbitrarily ordered input; these measurements do not justify changing it.
+Four additional regression checks cover filtered/capped enrichment, current
+hostname search, displayed hints and unread totals. All 21 log checks pass.
+
+Reproduce (throws if unnecessary enrichment returns):
+
+```powershell
+dotnet run --project tests/ZikWall.Benchmarks -c Release -- artifacts/benchmarks/log-analysis.json --log-analysis-only
+dotnet run --project tests/WinUI.Models.Tests -c Release -- --log-analysis
+```
+
+[Before](benchmarks/2026-10-13-log-analysis-before.json) ·
+[After](benchmarks/2026-10-13-log-analysis-after.json)
+
 ## Foreground refresh and hostname-cache fixes, 13 October 2026
 
 The fixed foreground build passed the existing **2% of one core / 200 MiB private

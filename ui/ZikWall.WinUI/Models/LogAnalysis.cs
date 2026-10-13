@@ -12,7 +12,6 @@ public sealed record LogEntry(ConnectionEvent Source, LogCategory Category, bool
         LogCategory.FirstApp => "First app observation", LogCategory.Connection => "Connection observed",
         LogCategory.Closed => "No longer observed", _ => "Connection state"
     };
-    public string Badge => Category switch { LogCategory.FirstApp => "NEW", LogCategory.Connection => "NET", LogCategory.Closed => "END", _ => "TCP" };
     public string TimeLabel => Source.Time.ToLocalTime().ToString("t");
     public string FullTime => Source.Time.ToLocalTime().ToString("F");
     public string Message => Category switch
@@ -67,20 +66,25 @@ public static class LogAnalysis
             if (source.IsTcpDetail) continue;
             var category = first ? LogCategory.FirstApp : source.Event == "First seen" ? LogCategory.Connection
                 : source.Event == "No longer observed" ? LogCategory.Closed : LogCategory.State;
-            var row = new LogEntry(enrich is null ? source : source with { Connection = enrich(source.Connection) }, category,
-                category == LogCategory.FirstApp && source.Time > readThrough);
-            if (row.IsUnread) unreadCount++;
-            if (unreadOnly && !row.IsUnread) continue;
+            bool isUnread = category == LogCategory.FirstApp && source.Time > readThrough;
+            if (isUnread) unreadCount++;
+            if (unreadOnly && !isUnread) continue;
             if (filter == LogFilter.Important && category != LogCategory.FirstApp) continue;
             if (filter >= LogFilter.FirstApp && (int)category != (int)filter - (int)LogFilter.FirstApp) continue;
             var day = TimeZoneInfo.ConvertTime(source.Time, timeZone).Date;
             if (range == LogRange.Today && day != today || range == LogRange.Day && source.Time < now.AddDays(-1)
                 || range == LogRange.Week && source.Time < now.AddDays(-7)) continue;
+            // Search needs current hostnames, but category/date exclusions do not.
+            // With no query, defer enrichment until after the display limit below.
+            var row = new LogEntry(query.Length > 0 && enrich is not null
+                ? source with { Connection = enrich(source.Connection) } : source, category, isUnread);
             if (query.Length > 0 && !row.Connection.Matches(query) && !row.CategoryLabel.Contains(query, StringComparison.OrdinalIgnoreCase)
                 && !source.Event.Contains(query, StringComparison.OrdinalIgnoreCase)) continue;
             rows.Add(row);
         }
         var groups = rows.OrderByDescending(x => x.Source.Time).Take(DisplayLimit)
+            .Select(row => query.Length == 0 && enrich is not null
+                ? row with { Source = row.Source with { Connection = enrich(row.Connection) } } : row)
             .GroupBy(x => TimeZoneInfo.ConvertTime(x.Source.Time, timeZone).Date)
             .Select(g => new LogDayGroup(g.Key == today ? "Today" : g.Key == today.AddDays(-1) ? "Yesterday" : g.Key.ToString("dddd, MMMM d, yyyy"), g))
             .ToList();

@@ -3,70 +3,79 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ZikWall.WinUI" xmlns:models="using:ZikWall.WinUI.Models" xmlns:presentation="using:ZikWall.WinUI.Presentation">
     <UserControl.Resources>
-        <Style x:Key="QuietLabel" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}"><Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" /></Style>
+        <Style x:Key="QuietLabel" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}"><Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" /><Setter Property="TextWrapping" Value="NoWrap" /><Setter Property="TextTrimming" Value="CharacterEllipsis" /></Style>
         <Style x:Key="RankList" TargetType="ListView">
             <Setter Property="SelectionMode" Value="None" /><Setter Property="HorizontalContentAlignment" Value="Stretch" />
-            <Setter Property="Padding" Value="0,8,0,0" /><Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0,6,12,0" /><Setter Property="BorderThickness" Value="0" />
+            <!-- Dense ranking rows: the default 40 DIP item height left most of each column empty. -->
+            <Setter Property="ItemContainerStyle"><Setter.Value><Style TargetType="ListViewItem">
+                <Setter Property="MinHeight" Value="0" /><Setter Property="Padding" Value="0" /><Setter Property="Margin" Value="0" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            </Style></Setter.Value></Setter>
         </Style>
-        <DataTemplate x:Key="RankRow" x:DataType="models:ActivityRank">
-            <Grid Padding="0,4" RowDefinitions="Auto,3" ColumnDefinitions="Auto,*" ColumnSpacing="8" RowSpacing="3" ToolTipService.ToolTip="{x:Bind Hint}">
-                <presentation:AppIcon Grid.RowSpan="2" Executable="{x:Bind ProcessPath}" Width="20" Height="20" Visibility="{x:Bind presentation:Ui.ShowIf(IsApp)}" />
-                <Image Grid.RowSpan="2" Source="{x:Bind Flag}" Width="20" Height="15" Visibility="{x:Bind presentation:Ui.ShowIf(HasFlag)}" />
+        <Style x:Key="ColumnTitle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}"><Setter Property="TextWrapping" Value="NoWrap" /></Style>
+        <DataTemplate x:Key="RankRow" x:DataType="local:ActivityRankSlot">
+            <!-- Fixed row height keeps icon, flag and text-only columns on the same rhythm. -->
+            <Grid Padding="0,4,0,4" RowDefinitions="20,2" ColumnDefinitions="Auto,*" RowSpacing="3" ToolTipService.ToolTip="{x:Bind Hint, Mode=OneWay}">
+                <presentation:AppIcon Executable="{x:Bind ProcessPath, Mode=OneWay}" Width="18" Height="18" Margin="0,0,10,0" VerticalAlignment="Center" Visibility="{x:Bind presentation:Ui.ShowIf(IsApp), Mode=OneWay}" />
+                <Image Width="18" Height="13" Margin="0,0,10,0" VerticalAlignment="Center" Visibility="{x:Bind presentation:Ui.ShowIf(HasFlag), Mode=OneWay}"><Image.Source><SvgImageSource UriSource="{x:Bind Flag, Mode=OneWay}" RasterizePixelWidth="72" RasterizePixelHeight="52" /></Image.Source></Image>
                 <Grid Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <TextBlock Text="{x:Bind Title}" FontSize="12" TextTrimming="CharacterEllipsis" />
-                    <TextBlock Grid.Column="1" Text="{x:Bind Value}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock Text="{x:Bind Title, Mode=OneWay}" FontSize="12" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind Value, Mode=OneWay}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" HorizontalTextAlignment="Right" />
                 </Grid>
-                <Grid Grid.Row="1" Grid.Column="1" Height="3" HorizontalAlignment="Stretch">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="{x:Bind local:ActivityOverviewView.Portion(DownloadShare)}" /><ColumnDefinition Width="{x:Bind local:ActivityOverviewView.Portion(UploadShare)}" /><ColumnDefinition Width="{x:Bind local:ActivityOverviewView.Portion(RemainingShare)}" /></Grid.ColumnDefinitions>
-                    <Border Background="#FFD500" /><Border Grid.Column="1" Background="#EC93D4" />
+                <Grid Grid.Row="1" Grid.Column="1" Height="2" HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="{x:Bind local:ActivityOverviewView.Portion(DownloadShare), Mode=OneWay}" /><ColumnDefinition Width="{x:Bind local:ActivityOverviewView.Portion(UploadShare), Mode=OneWay}" /><ColumnDefinition Width="{x:Bind local:ActivityOverviewView.Portion(RemainingShare), Mode=OneWay}" /></Grid.ColumnDefinitions>
+                    <Border Background="#FFD500" CornerRadius="1" /><Border Grid.Column="1" Background="#EC93D4" CornerRadius="1" />
                 </Grid>
             </Grid>
         </DataTemplate>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="14" SizeChanged="OverviewSizeChanged" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-            <AutoSuggestBox x:Name="ActivitySearch" PlaceholderText="Search app, host, IP or country" QueryIcon="Find" TextChanged="SearchChanged" AutomationProperties.Name="Search My activity" />
-            <Button Grid.Column="1" Content="Filter" AutomationProperties.Name="Filter activity">
+    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12" SizeChanged="OverviewSizeChanged">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+            <AutoSuggestBox x:Name="ActivitySearch" PlaceholderText="Search app, host, IP or country" QueryIcon="Find" TextChanged="SearchChanged" VerticalAlignment="Center" AutomationProperties.Name="Search My activity" />
+            <Button Grid.Column="1" AutomationProperties.Name="Filter activity">
+                <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Filter" /></StackPanel>
                 <Button.Flyout><Flyout><StackPanel Spacing="12" MinWidth="240">
                     <ComboBox x:Name="ActivityScope" Header="Connections" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="FilterChanged"><ComboBoxItem Content="All endpoints" /><ComboBoxItem Content="Internet only" /><ComboBoxItem Content="Local and listening" /></ComboBox>
                     <TextBlock Text="App byte totals include all traffic for each matching app. Host, type and country rankings count observed connections." MaxWidth="260" TextWrapping="Wrap" Style="{StaticResource QuietLabel}" />
                 </StackPanel></Flyout></Button.Flyout>
             </Button>
-            <ComboBox x:Name="ActivityRange" Grid.Column="2" SelectedIndex="0" MinWidth="128" SelectionChanged="FilterChanged" AutomationProperties.Name="Activity time range"><ComboBoxItem Content="5 minutes" /><ComboBoxItem Content="1 hour" /><ComboBoxItem Content="Today" /></ComboBox>
+            <ComboBox x:Name="ActivityRange" Grid.Column="2" SelectedIndex="0" MinWidth="128" VerticalAlignment="Center" SelectionChanged="FilterChanged" AutomationProperties.Name="Activity time range"><ComboBoxItem Content="5 minutes" /><ComboBoxItem Content="1 hour" /><ComboBoxItem Content="Today" /></ComboBox>
+            <Button Grid.Column="3" Click="ConnectionsClicked" ToolTipService.ToolTip="Open live connections" AutomationProperties.Name="Live connections">
+                <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE968;" FontSize="14" /><TextBlock Text="Live" /></StackPanel>
+            </Button>
         </Grid>
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
-            <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" Spacing="5"><Ellipse Width="7" Height="7" Fill="#FFD500" /><TextBlock Text="Download / connections" Style="{StaticResource QuietLabel}" /></StackPanel>
-                <StackPanel Orientation="Horizontal" Spacing="5"><Ellipse Width="7" Height="7" Fill="#EC93D4" /><TextBlock Text="Upload" Style="{StaticResource QuietLabel}" /></StackPanel>
-            </StackPanel>
-            <Button Grid.Column="1" Content="Live connections →" Click="ConnectionsClicked" Padding="10,4" />
-        </Grid>
-        <Grid x:Name="RankColumns" Grid.Row="2" ColumnDefinitions="*,*,*,*" RowDefinitions="*,0" ColumnSpacing="16" RowSpacing="16">
-            <Grid x:Name="AppsColumn" RowDefinitions="Auto,*" Padding="0,0,12,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
-                <StackPanel><TextBlock Text="Apps" Style="{StaticResource BodyStrongTextBlockStyle}" /><TextBlock x:Name="AppsCaption" Text="Measured traffic" Style="{StaticResource QuietLabel}" /></StackPanel>
-                <ListView x:Name="AppsList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Apps ranked by traffic" />
+        <Grid x:Name="RankColumns" Grid.Row="1" ColumnDefinitions="*,*,*,*" RowDefinitions="*" ColumnSpacing="16" RowSpacing="16">
+            <Grid x:Name="AppsColumn" RowDefinitions="Auto,*" Padding="0,0,4,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
+                <StackPanel><TextBlock Text="Apps" Style="{StaticResource ColumnTitle}" /><TextBlock x:Name="AppsCaption" Text="Measured traffic" Style="{StaticResource QuietLabel}" /></StackPanel>
+                <ListView x:Name="AppsList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Apps ranked by traffic" ><ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions></ListView>
             </Grid>
-            <Grid x:Name="HostsColumn" Grid.Column="1" RowDefinitions="Auto,*" Padding="0,0,12,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
-                <StackPanel><TextBlock Text="Hosts" Style="{StaticResource BodyStrongTextBlockStyle}" /><TextBlock Text="Observed connections" Style="{StaticResource QuietLabel}" /></StackPanel>
-                <ListView x:Name="HostsList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Hosts ranked by observed connections" />
+            <Grid x:Name="HostsColumn" Grid.Column="1" RowDefinitions="Auto,*" Padding="0,0,4,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
+                <StackPanel><TextBlock Text="Hosts" Style="{StaticResource ColumnTitle}" /><TextBlock Text="Observed connections" Style="{StaticResource QuietLabel}" /></StackPanel>
+                <ListView x:Name="HostsList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Hosts ranked by observed connections" ><ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions></ListView>
             </Grid>
-            <Grid x:Name="TypesColumn" Grid.Column="2" RowDefinitions="Auto,*" Padding="0,0,12,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
-                <StackPanel><TextBlock Text="Traffic type" Style="{StaticResource BodyStrongTextBlockStyle}" /><TextBlock Text="Observed connections · by port" Style="{StaticResource QuietLabel}" /></StackPanel>
-                <ListView x:Name="TypesList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Traffic types ranked by observed connections" />
+            <Grid x:Name="TypesColumn" Grid.Column="2" RowDefinitions="Auto,*" Padding="0,0,4,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,1,0">
+                <StackPanel><TextBlock Text="Traffic type" Style="{StaticResource ColumnTitle}" /><TextBlock Text="Observed connections · by port" Style="{StaticResource QuietLabel}" /></StackPanel>
+                <ListView x:Name="TypesList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Traffic types ranked by observed connections" ><ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions></ListView>
             </Grid>
-            <Grid x:Name="CountriesColumn" Grid.Column="3" RowDefinitions="Auto,*">
-                <StackPanel><TextBlock Text="Countries" Style="{StaticResource BodyStrongTextBlockStyle}" /><TextBlock Text="Observed connections" Style="{StaticResource QuietLabel}" /></StackPanel>
-                <ListView x:Name="CountriesList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Countries ranked by observed connections" />
+            <Grid x:Name="CountriesColumn" Grid.Column="3" RowDefinitions="Auto,*" Padding="0,0,4,0" BorderThickness="0,0,1,0">
+                <StackPanel><TextBlock Text="Countries" Style="{StaticResource ColumnTitle}" /><TextBlock Text="Observed connections" Style="{StaticResource QuietLabel}" /></StackPanel>
+                <ListView x:Name="CountriesList" Grid.Row="1" Style="{StaticResource RankList}" ItemTemplate="{StaticResource RankRow}" AutomationProperties.Name="Countries ranked by observed connections" ><ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions></ListView>
             </Grid>
-            <StackPanel x:Name="OverviewEmpty" Grid.ColumnSpan="4" Grid.RowSpan="2" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Visibility="Collapsed">
+            <StackPanel x:Name="OverviewEmpty" Grid.ColumnSpan="4" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Visibility="Collapsed">
                 <FontIcon Glyph="&#xE9D9;" FontSize="28" /><TextBlock Text="No matching activity" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" /><TextBlock Text="Try a different search, filter or time range." Style="{StaticResource QuietLabel}" />
             </StackPanel>
         </Grid>
-        <Border Grid.Row="3" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" Padding="0,12,0,0">
-            <StackPanel Spacing="6">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12"><TextBlock x:Name="ActivityTotals" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" /><Button x:Name="ActivityUsageButton" Grid.Column="1" Content="Enable usage" Click="EnableUsageClicked" /></Grid>
-                <TextBlock x:Name="ActivityCoverage" Style="{StaticResource QuietLabel}" TextWrapping="Wrap" />
-            </StackPanel>
+        <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" Padding="0,10,0,0">
+            <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="4">
+                <TextBlock x:Name="ActivityTotals" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="5"><Ellipse Width="7" Height="7" Fill="#FFD500" VerticalAlignment="Center" /><TextBlock Text="Download / connections" Style="{StaticResource QuietLabel}" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="5"><Ellipse Width="7" Height="7" Fill="#EC93D4" VerticalAlignment="Center" /><TextBlock Text="Upload" Style="{StaticResource QuietLabel}" /></StackPanel>
+                </StackPanel>
+                <Button x:Name="ActivityUsageButton" Grid.Column="2" Grid.RowSpan="2" Content="Enable usage" Click="EnableUsageClicked" VerticalAlignment="Center" />
+                <TextBlock x:Name="ActivityCoverage" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource QuietLabel}" TextWrapping="Wrap" />
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

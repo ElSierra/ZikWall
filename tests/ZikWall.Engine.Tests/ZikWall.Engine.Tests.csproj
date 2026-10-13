@@ -5,5 +5,6 @@
     <Compile Include="../../ui/ZikWall.WinUI/Models/CachedDomainAnswer.cs" Link="CachedDomainAnswer.cs" />
     <Compile Include="../../ui/ZikWall.WinUI/Models/AppUsage.cs" Link="AppUsage.cs" />
     <Compile Include="../../ui/ZikWall.WinUI/Models/ConnectionEntry.cs" Link="ConnectionEntry.cs" /><Compile Include="../../ui/ZikWall.WinUI/Models/ConnectionContinuity.cs" Link="ConnectionContinuity.cs" />
+    <Compile Include="../../ui/ZikWall.WinUI/Models/KnownApps.cs" Link="KnownApps.cs" />
   </ItemGroup>
 </Project>

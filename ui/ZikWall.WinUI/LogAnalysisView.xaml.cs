@@ -36,7 +36,8 @@ public sealed partial class LogAnalysisView : UserControl
         var result = LogAnalysis.Build(monitor.LogEvents, DateTimeOffset.UtcNow, readThrough,
             (LogFilter)Math.Max(0, CategoryChoice.SelectedIndex), (LogRange)Math.Max(0, RangeChoice.SelectedIndex),
             LogSearch.Text ?? "", UnreadOnly.IsChecked == true, monitor.IsLogEntryVisible, monitor.EnrichLogEntry);
-        GroupedEvents.Source = result.Groups;
+        // Monitor ticks usually change nothing visible; re-binding the grouped source re-rendered every card.
+        if (GroupedEvents.Source is not IReadOnlyList<LogDayGroup> shown || !SameGroups(shown, result.Groups)) GroupedEvents.Source = result.Groups;
         EmptyState.Visibility = result.MatchingCount == 0 ? Visibility.Visible : Visibility.Collapsed;
         MarkReadButton.IsEnabled = result.UnreadCount > 0;
         string count = result.MatchingCount > LogAnalysis.DisplayLimit ? $"Showing newest {LogAnalysis.DisplayLimit:N0} of {result.MatchingCount:N0} matching events" : $"{result.MatchingCount:N0} matching events";
@@ -44,6 +45,9 @@ public sealed partial class LogAnalysisView : UserControl
             + (monitor.IsHistorySaved ? "History saved on this PC." : "History saving is off; new events stay in memory.")
             + (persistenceError.Length > 0 ? " " + persistenceError : "");
     }
+
+    private static bool SameGroups(IReadOnlyList<LogDayGroup> left, IReadOnlyList<LogDayGroup> right) =>
+        left.Count == right.Count && left.Zip(right).All(x => x.First.Title == x.Second.Title && x.First.SequenceEqual(x.Second));
 
     private void FilterChanged(object sender, SelectionChangedEventArgs args) => Refresh();
     private void UnreadChanged(object sender, RoutedEventArgs args) => Refresh();

@@ -11,6 +11,7 @@ using ZikWall.WinUI.Services;
 string output = args.FirstOrDefault() ?? "artifacts/benchmarks/core.json";
 if (args.Contains("--usage-only")) { UsageBenchmarks.Run(output); return; }
 if (args.Contains("--passive-dns-only")) { PassiveDnsBenchmarks.Run(output); return; }
+if (args.Contains("--log-analysis-only")) { LogAnalysisBenchmarks.Run(output); return; }
 var results = new List<object>();
 using var benchmarkProcess = Process.GetCurrentProcess();
 object? keepAlive = null;

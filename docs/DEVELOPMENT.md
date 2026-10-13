@@ -20,9 +20,9 @@ locally when building an installer. Do not commit `.wix`, `temp` or `artifacts`.
 | Launch existing dev / installed build | `make run` / `make run-installed` |
 | Stop only the workspace dev app | `make stop` |
 | Restore packages / rebuild engine and broker | `make restore` / `make engine` |
-| Create and verify a new MSI | `make setup` (aliases: `make all`, `make package`) |
+| Create and verify WinUI setup.exe and MSI | `make setup` (aliases: `make all`, `make package`) |
 | Explicit release version | `make setup VERSION=1.0.0` |
-| Open existing MSI / installed product removal wizard | `make install` / `make uninstall` |
+| Open existing WinUI setup / installed product removal wizard | `make install` / `make uninstall` |
 | Model and service tests / static checks / both | `make test` / `make lint` / `make check` |
 | Native UI checks | `make test-ui` |
 | Read-only DNS cache/provider and helper diagnostic (UAC) | `make test-domains` |
@@ -52,8 +52,9 @@ ETW usage. These actions are not part of `make check`. Native engine tests shoul
 Windows test environment. Tray benchmarks require `make startup` first and
 accept 15–600 seconds; the other app benchmarks accept 15–3600 seconds.
 
-`make install` uses the last successfully verified MSI. Run `make setup` after
-source changes, then `make install` to open its full wizard. `make verify-installed`
+`make install` uses the last successfully verified WinUI setup.exe and checks its
+hash against the matching MSI. Run `make setup` after source changes, then
+`make install` to open its wizard. `make verify-installed`
 compares against that MSI, so it intentionally fails when the installed version
 is older. Setup does not automatically stop or reinstall a running app.
 

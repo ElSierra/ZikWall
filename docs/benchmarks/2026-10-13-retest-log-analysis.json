@@ -1,0 +1,31 @@
+{
+  "Results": [
+    {
+      "Scenario": "Important",
+      "MedianMs": 1.3843,
+      "P95Ms": 3.1582,
+      "AllocatedBytesPerOperation": 1677074,
+      "EnrichmentCalls": 100,
+      "ExpectedEnrichmentCalls": 100,
+      "BudgetPassed": true
+    },
+    {
+      "Scenario": "Today with older history",
+      "MedianMs": 1.8559,
+      "P95Ms": 4.1722,
+      "AllocatedBytesPerOperation": 1640584,
+      "EnrichmentCalls": 0,
+      "ExpectedEnrichmentCalls": 0,
+      "BudgetPassed": true
+    },
+    {
+      "Scenario": "All with display cap",
+      "MedianMs": 1.2897,
+      "P95Ms": 6.1906,
+      "AllocatedBytesPerOperation": 2776064,
+      "EnrichmentCalls": 1000,
+      "ExpectedEnrichmentCalls": 1000,
+      "BudgetPassed": true
+    }
+  ]
+}

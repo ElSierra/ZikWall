@@ -16,8 +16,10 @@ public sealed record ConnectionEntry(string Protocol, string LocalAddress, int L
     [JsonIgnore] public string ProcessKey => $"{AppKey}|{ProcessId}|{ProcessStarted}";
     [JsonIgnore] public ConnectionIdentity Identity => new(Protocol, ProcessId, LocalAddress, LocalPort, RemoteAddress, RemotePort);
     [JsonIgnore] public string Key => $"{Protocol}|{ProcessId}|{LocalAddress}|{LocalPort}|{RemoteAddress}|{RemotePort}";
-    [JsonIgnore] public string Application => string.IsNullOrWhiteSpace(ProcessName) ? $"PID {ProcessId}" : ProcessName;
-    [JsonIgnore] public string ProcessLabel => ConnectionContinuity.IsOrphaned(this) ? $"{Application} · closing" : $"{Application} · PID {ProcessId}";
+    [JsonIgnore] public string Application => string.IsNullOrWhiteSpace(ProcessName) ? $"PID {ProcessId}" : KnownApps.Name(ProcessName, ProcessPath) ?? ProcessName;
+    // Friendly names keep the real file name beside the PID so "Windows Service Host" can still be traced to svchost.
+    [JsonIgnore] public string ProcessLabel => ConnectionContinuity.IsOrphaned(this) ? $"{Application} · closing"
+        : Application != ProcessName && ProcessName.Length > 0 ? $"{Application} · {ProcessName} · PID {ProcessId}" : $"{Application} · PID {ProcessId}";
     [JsonIgnore] public string LocalEndpoint => Endpoint(LocalAddress, LocalPort);
     [JsonIgnore] public string RemoteEndpoint => RemotePort.HasValue ? Endpoint(RemoteAddress, RemotePort.Value) : "Not available for UDP";
     [JsonIgnore] public string HostNames => DomainHint.Length > 0 ? DomainHint : ReverseDnsName;
@@ -33,6 +35,7 @@ public sealed record ConnectionEntry(string Protocol, string LocalAddress, int L
     [JsonIgnore] public string DirectionLabel => Direction switch { "Incoming" => "↓ Incoming", "Outgoing" => "↑ Outgoing", "Listening" => "Listening", _ => "Unknown" };
     public bool Matches(string query) => string.IsNullOrEmpty(query)
         || Application.Contains(query, StringComparison.OrdinalIgnoreCase)
+        || ProcessName.Contains(query, StringComparison.OrdinalIgnoreCase)
         || ProcessPath.Contains(query, StringComparison.OrdinalIgnoreCase)
         || Protocol.Contains(query, StringComparison.OrdinalIgnoreCase)
         || State.Contains(query, StringComparison.OrdinalIgnoreCase)

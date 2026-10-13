@@ -12,6 +12,8 @@ tests/**/bin/
 tests/**/obj/
 engine/**/bin/
 engine/**/obj/
+tools/ZikWall.SetupLauncher/bin/
+tools/ZikWall.SetupLauncher/obj/
 bin/32/
 bin/64/
 bin/arm64/

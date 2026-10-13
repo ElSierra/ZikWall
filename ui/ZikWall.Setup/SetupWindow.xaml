@@ -1,0 +1,56 @@
+<Window x:Class="ZikWall.Setup.SetupWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="ZikWall Setup">
+    <Window.SystemBackdrop><MicaBackdrop /></Window.SystemBackdrop>
+    <Grid x:Name="Root" RowDefinitions="48,*,Auto">
+        <Grid x:Name="TitleBar" Margin="24,0,140,0" ColumnDefinitions="24,*" ColumnSpacing="10">
+            <Image Source="ms-appx:///Assets/ZikWall.png" Width="20" Height="20" />
+            <TextBlock Grid.Column="1" Text="ZikWall Setup" VerticalAlignment="Center" Style="{ThemeResource CaptionTextBlockStyle}" />
+        </Grid>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Padding="36,24,36,28" RowDefinitions="Auto,Auto,*" RowSpacing="28">
+                <Grid ColumnDefinitions="80,*" ColumnSpacing="22">
+                    <Image Source="ms-appx:///Assets/ZikWall.png" Width="72" Height="72" VerticalAlignment="Top" />
+                    <StackPanel Grid.Column="1" Spacing="6">
+                        <TextBlock x:Name="Heading" Text="Your network. In clear view." Style="{ThemeResource TitleTextBlockStyle}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="Introduction" Text="Set up ZikWall to see what connects and choose what gets through." Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="VersionLabel" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </Grid>
+                <InfoBar x:Name="Notice" Grid.Row="1" IsOpen="False" IsClosable="False" Severity="Error" />
+                <StackPanel x:Name="Options" Grid.Row="2" Spacing="20">
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="20">
+                        <StackPanel Spacing="16">
+                            <Grid ColumnDefinitions="28,*" ColumnSpacing="12"><FontIcon Glyph="&#xE968;" FontSize="20" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="See your connections" FontWeight="SemiBold" /><TextBlock Text="Live apps, destinations, and local activity history." Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" /></StackPanel></Grid>
+                            <Grid ColumnDefinitions="28,*" ColumnSpacing="12"><FontIcon Glyph="&#xEA18;" FontSize="20" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Stay in control" FontWeight="SemiBold" /><TextBlock Text="Monitoring first. Turn on firewall rules when you are ready." Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" /></StackPanel></Grid>
+                            <Grid ColumnDefinitions="28,*" ColumnSpacing="12"><FontIcon Glyph="&#xE8B9;" FontSize="20" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Ready in your Start menu" FontWeight="SemiBold" /><TextBlock Text="A ZikWall shortcut is installed for everyone on this PC." Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" /></StackPanel></Grid>
+                        </StackPanel>
+                    </Border>
+                    <TextBox x:Name="InstallFolder" Header="Installation folder" TextChanged="OptionsChanged" />
+                    <StackPanel Spacing="4">
+                        <CheckBox x:Name="AcceptLicense" Content="I accept the GNU General Public License v3." Checked="OptionsChanged" Unchecked="OptionsChanged" />
+                        <HyperlinkButton Content="Read the license" Click="ReadLicense" Padding="0" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel x:Name="ProgressPanel" Grid.Row="2" Spacing="18" Visibility="Collapsed">
+                    <TextBlock x:Name="ProgressTitle" Text="Installing ZikWall" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <ProgressBar x:Name="Progress" IsIndeterminate="True" AutomationProperties.Name="Installation progress" />
+                    <TextBlock x:Name="ProgressMessage" Text="Preparing installation…" TextWrapping="Wrap" />
+                    <TextBlock Text="Windows may ask for administrator permission. Keep setup open until this finishes." Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel x:Name="ResultPanel" Grid.Row="2" Spacing="18" Visibility="Collapsed">
+                    <FontIcon x:Name="ResultIcon" Glyph="&#xE73E;" FontSize="48" HorizontalAlignment="Left" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    <TextBlock x:Name="ResultTitle" Style="{ThemeResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="ResultMessage" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <HyperlinkButton x:Name="OpenLogButton" Content="Open installation log" Click="OpenLog" Padding="0" Visibility="Collapsed" />
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+        <Border Grid.Row="2" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,1,0,0" Padding="24,16">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="10">
+                <HyperlinkButton NavigateUri="https://isaacojo.me" Content="isaacojo.me" VerticalAlignment="Center" />
+                <Button x:Name="RemoveButton" Grid.Column="1" Content="Uninstall" Click="RemoveClicked" Visibility="Collapsed" />
+                <Button x:Name="CancelButton" Grid.Column="2" Content="Cancel" Click="CancelClicked" MinWidth="92" />
+                <Button x:Name="PrimaryButton" Grid.Column="3" Content="Install" Click="PrimaryClicked" Style="{ThemeResource AccentButtonStyle}" MinWidth="116" IsEnabled="False" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
