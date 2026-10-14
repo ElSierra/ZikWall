@@ -1,5 +1,93 @@
 # ZikWall performance and resource budgets
 
+## Separate tool windows, 14 October 2026
+
+Monitor options, hosts, usage history, connection/executable details, log details,
+rule details, the rule editor and rule-check results now use resizable windows in
+the existing process. Each tool is created on demand, repeated clicks reuse its
+window, theme subscriptions are removed on close, and owner exit closes all
+children. List-based tools retain virtualization. Opening a tool does not start
+another connection monitor or collector.
+
+An unchanged history refresh previously replaced its native list source. The
+native regression reproduced that replacement before the fix. It now retains
+rows, scroll position and selection until the displayed events or hostname hints
+change; the test also verifies that changed history still refreshes.
+
+The live grouping path also allocated formatted socket keys even when its new-
+connection set was empty, and formatted more keys just to count distinct sockets
+per host. Empty-set checks now short-circuit, and host counting uses the existing
+value-based transport identity. A fixed 10,000-connection / 100-app workload
+reduced allocation from **9,542,107 to 7,778,605 bytes per refresh (18.5%)**. The
+median over 100 warmed Release iterations changed from **11.0238 to 8.3848 ms**;
+these are microbenchmark results, not a whole-app speedup claim. Socket counts,
+new markers, clearing markers and row identity have regression coverage.
+
+Reproduce with `dotnet run --project tests/ZikWall.Benchmarks -c Release -- artifacts/benchmarks/activity.json --activity-only`.
+The command fails above its 8 MB allocation budget or if the fixture result
+changes. [Before](benchmarks/2026-10-14-activity-allocations-before.json) ·
+[After](benchmarks/2026-10-14-activity-allocations-after.json).
+
+The native suite passed 500 live-list churn iterations, options layout at
+600/440/360 DIP, window reuse and close/reopen, theme propagation, child cleanup,
+host snapshots, rule editor save/cancel, usage sorting, preferences, context
+menus, responsive policy controls, Activity and Log Analysis. The model/service
+suite and dependency/asset integrity checks passed. An interactive desktop
+inspection verified the actual options window; the XAML bitmap export cannot
+reliably reproduce its compositor colors.
+
+The benchmark now discovers and verifies its owned native window, checks that
+foreground runs remain visible and unminimized, and rejects sampling gaps over
+10 seconds. An early sandboxed run had no visible window and is invalid. A
+later repeat crossed system suspension (44,400 seconds reported elapsed) and is
+also invalid; its tiny CPU average must not be interpreted as an improvement.
+
+The earlier 181.69-second run failed at 5.848% of one core and 203.05 MiB private
+memory. Its first 16 seconds included a large CPU burst. Short list/chart
+suppression experiments did not establish a consistent culprit. The managed
+trace is dominated by native WinUI and waiting stacks, so it does not establish
+CPU attribution. These observations remain evidence, not a claimed causal
+speedup. All temporary suppression switches were removed before the final build.
+
+The 181.76-second optimized-candidate run measured **2.304% of one core** and
+**194.24 MiB peak private memory**. Memory passed the 200 MiB budget; CPU still
+failed the 2% budget. The preceding clean run measured 2.029% / 201.2 MiB.
+Changing live host traffic prevents a controlled whole-app CPU comparison; the
+allocation improvement above is deterministic, while overall CPU compliance
+remains unresolved. The benchmark's background warmup now accounts for WinUI
+activating after its HWND is created; samples still reject a window becoming
+visible after warmup.
+
+[Optimized candidate](benchmarks/2026-10-14-windows-optimized-foreground.json) ·
+[Before allocation changes](benchmarks/2026-10-14-windows-before-allocations.json)
+
+The exact final assembly passed separate 60.54-second visible and hidden runs,
+after 15-second warmups:
+
+| Release scenario | CPU, one core | Peak private memory | Peak working set |
+| --- | ---: | ---: | ---: |
+| Foreground | 1.445% | 183.30 MiB | 254.56 MiB |
+| Hidden | 0.826% | 162.15 MiB | 230.84 MiB |
+
+Assembly SHA-256: `A7EF12F5DFCC6E6A5B11D5EBD650E97CBB683DFE66D1D6A3D1D651FC23BFA205`.
+These short passes do not erase the longer candidate's CPU failure or establish
+multi-hour stability. Filtering, the DNS proxy and the ETW collector were off;
+normal live host traffic and retained local history were present. No build,
+UI inspection or other diagnostic touched the app during these samples.
+
+[Release foreground](benchmarks/2026-10-14-windows-release-foreground.json) ·
+[Release hidden](benchmarks/2026-10-14-windows-release-background.json)
+
+Installer **0.10.19294** contains the exact measured assembly. All 803 extracted
+MSI file hashes and 27 standalone installer diagnostics passed; setup extraction,
+native screens and embedded MSI integrity were checked without installing it.
+[Release integrity record](benchmarks/2026-10-14-tool-windows-release.json).
+
+[Native validation](benchmarks/2026-10-14-tool-windows-ui.txt) ·
+[Earlier failing run](benchmarks/2026-10-13-windows-final-foreground.json) ·
+[Managed trace summary](benchmarks/2026-10-13-tool-windows-managed-trace.txt)
+
+
 ## Current-source MSI retest, 13 October 2026
 
 MSI **0.10.18411** builds successfully, but its foreground resource measurement

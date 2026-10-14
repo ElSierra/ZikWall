@@ -110,7 +110,7 @@ public sealed class ActivityTree
         IReadOnlySet<string>? fresh = null, bool showUsage = false, UsageSort sort = UsageSort.AppName,
         Func<string, AppUsageDisplay>? usageDisplay = null)
     {
-        bool IsNew(ConnectionEntry entry) => fresh?.Contains(entry.Key) == true;
+        bool IsNew(ConnectionEntry entry) => fresh is { Count: > 0 } && fresh.Contains(entry.Key);
         var next = new List<ActivityRow>();
         var valid = new HashSet<string>(StringComparer.Ordinal);
         blocks.Clear();

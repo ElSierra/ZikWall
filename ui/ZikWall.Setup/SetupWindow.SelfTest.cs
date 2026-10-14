@@ -67,6 +67,34 @@ public sealed partial class SetupWindow
         }
         finally { Native.MsiCloseHandle(record); }
         Check(new InstallResult(3010, "", "").Succeeded && new InstallResult(3010, "", "").NeedsRestart, "Reboot-required success is recognized without restarting Windows.");
+        var launches = new List<System.Diagnostics.ProcessStartInfo>();
+        foreach (var selected in new[] { InstallOperation.Install, InstallOperation.Repair })
+        {
+            CompleteOperation(selected, new(0, "", ""), @"C:\Program Files\ZikWall", launches.Add);
+            Check(ResultMessage.Text.Contains("opening"), "Successful " + selected + " automatically opens the app.");
+        }
+        Check(launches.Count == 2 && launches.All(start => start.FileName == @"C:\Program Files\ZikWall\ZikWall.exe" && start.WorkingDirectory == @"C:\Program Files\ZikWall" && start.UseShellExecute), "Auto-launch uses the installed executable and its working directory, including spaces.");
+        foreach (uint code in new uint[] { 1602, 1603, 1618, 3010 })
+            CompleteOperation(InstallOperation.Install, new(code, "", ""), @"C:\Program Files\ZikWall", launches.Add);
+        CompleteOperation(InstallOperation.Remove, new(0, "", ""), @"C:\Program Files\ZikWall", launches.Add);
+        Check(launches.Count == 2, "Cancellation, failure, restart-required success and removal never launch ZikWall.");
+        CompleteOperation(InstallOperation.Install, new(0, "", ""), @"C:\Program Files\ZikWall", _ => throw new IOException("Launch test failure"));
+        Check(ResultTitle.Text == "ZikWall is ready." && ResultMessage.Text.Contains("could not open automatically") && Notice.IsOpen, "An auto-launch error preserves installation success and provides manual launch guidance.");
+        Notice.IsOpen = false;
+        // Exercise actual process termination without touching the user's ZikWall instance.
+        using (var sleeper = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("powershell.exe")
+        { UseShellExecute = false, CreateNoWindow = true, ArgumentList = { "-NoProfile", "-Command", "Start-Sleep -Seconds 60" } })!)
+        {
+            try
+            {
+                Check(!sleeper.HasExited, "The shutdown fixture is running before setup closes it.");
+                await Task.Run(() => ApplicationLifetime.StopProcesses(new[] { System.Diagnostics.Process.GetProcessById(sleeper.Id) }));
+                Check(sleeper.WaitForExit(1000), "Setup terminates and waits for a process that has no closeable window.");
+            }
+            finally { if (!sleeper.HasExited) sleeper.Kill(); }
+        }
+        ApplicationLifetime.StopProcesses(Array.Empty<System.Diagnostics.Process>());
+        checks.Add("Shutdown also succeeds when no app process is running.");
         foreach (var theme in new[] { ElementTheme.Dark, ElementTheme.Light })
         {
             Root.RequestedTheme = theme;

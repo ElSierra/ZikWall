@@ -15,6 +15,7 @@ public sealed class FirewallClient : IDisposable
     private readonly SemaphoreSlim gate = new(1);
     public bool Connected => pipe?.IsConnected == true;
     internal int BrokerProcessId { get; private set; }
+    internal bool UsesService { get; private set; }
     public async Task StartAsync(bool domainsOnly = false)
     {
         if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException();
@@ -22,16 +23,24 @@ public sealed class FirewallClient : IDisposable
         string broker = Path.Combine(AppContext.BaseDirectory, "ZikWall.Broker.exe");
         if (!File.Exists(broker)) throw new FileNotFoundException("Build the ZikWall broker before enabling filtering.", broker);
         using var parent = Process.GetCurrentProcess();
-        string id = Guid.NewGuid().ToString("N");
-        var start = new ProcessStartInfo(broker) { UseShellExecute = true, Verb = "runas", WorkingDirectory = AppContext.BaseDirectory, Arguments = $"{id} {parent.Id} {parent.StartTime.ToUniversalTime().Ticks}" + (domainsOnly ? " domains" : ""), WindowStyle = ProcessWindowStyle.Hidden };
-        using var process = Process.Start(start) ?? throw new IOException("Windows did not start the broker.");
+        var session = await ServiceSessionClient.TryStartAsync(domainsOnly);
+        UsesService = session is not null;
+        string id = session?.PipeId ?? Guid.NewGuid().ToString("N");
+        int expectedPid;
+        if (session is not null) expectedPid = session.ProcessId;
+        else
+        {
+            var start = new ProcessStartInfo(broker) { UseShellExecute = true, Verb = "runas", WorkingDirectory = AppContext.BaseDirectory, Arguments = $"{id} {parent.Id} {parent.StartTime.ToUniversalTime().Ticks}" + (domainsOnly ? " domains" : ""), WindowStyle = ProcessWindowStyle.Hidden };
+            using var process = Process.Start(start) ?? throw new IOException("Windows did not start the broker.");
+            expectedPid = process.Id;
+        }
         var connection = new NamedPipeClientStream(".", "ZikWall." + id, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Identification);
         try
         {
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
             await connection.ConnectAsync(timeout.Token);
-            if (!GetNamedPipeServerProcessId(connection.SafePipeHandle, out uint serverPid) || serverPid != process.Id) throw new IOException("The broker process identity did not match.");
-            BrokerProcessId = process.Id;
+            if (!GetNamedPipeServerProcessId(connection.SafePipeHandle, out uint serverPid) || serverPid != expectedPid) throw new IOException("The broker process identity did not match.");
+            BrokerProcessId = expectedPid;
             pipe = connection;
             var status = await SendAsync(new("status"));
             if (!status.Success) throw new IOException(status.Message);

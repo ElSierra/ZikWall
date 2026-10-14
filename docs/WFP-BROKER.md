@@ -1,10 +1,10 @@
 # ZikWall WFP broker
 
-This is a new, small Windows SDK backend. It does not make the legacy simplewall/routine source compatible. The WinUI app runs without elevation; enabling filtering explicitly launches a separate broker with Windows UAC.
+This is a new, small Windows SDK backend. It does not make the legacy simplewall/routine source compatible. The WinUI app runs without elevation; installed builds request isolated brokers through ZikWall Background Service. Portable development builds launch brokers with Windows UAC. See [service installation and validation](INSTALLER.md).
 
 ## Scope and lifetime
 
-The broker uses a dynamic WFP session, its own sublayer, ALE connect/receive-accept layers for IPv4/IPv6, and transactional replacement of only its own filter IDs. It never changes Windows Firewall defaults, disables another firewall, installs a service or creates startup persistence. Closing the app, broker, pipe or idle session removes its filters. This is **session filtering**, not protection across reboot or application exit.
+The broker uses a dynamic WFP session, its own sublayer, ALE connect/receive-accept layers for IPv4/IPv6, and transactional replacement of only its own filter IDs. It never changes Windows Firewall defaults or disables another firewall. The MSI installs the launcher service; the broker does not install itself. Closing the app, broker, pipe or idle session removes its filters. Stopping the service terminates its brokers too. This is **session filtering**, not protection across reboot or application exit.
 
 Rules support a local executable path, remote address/CIDR, TCP/UDP/any protocol, optional remote port and inbound/outbound/both directions. Rules need an application or remote network scope. Higher list positions have higher weight in ZikWall's sublayer. Allow rules are soft permits and cannot override another provider's block. Rule expiry is enforced by the broker's half-second maintenance loop, independently of UI list refreshes.
 
@@ -14,7 +14,7 @@ Saved policy profiles are separate from the imported simplewall XML viewer. Netw
 
 - A new unpredictable pipe name is used for each session; first-instance creation prevents pipe-name takeover.
 - The pipe denies remote clients, grants the launching UI user's SID and SYSTEM access, and permits that user's medium-integrity UI to communicate with the elevated broker.
-- The broker verifies the parent PID, creation time, sibling executable path and connecting pipe client's PID. The UI verifies the server PID against the process started by Windows elevation.
+- The broker verifies the parent PID, creation time, sibling executable path and connecting pipe client's PID. The UI verifies the server PID against the helper returned by the authenticated service (or started by Windows elevation for a portable build).
 - IPC is length-framed and limited to 2 MB. The broker independently validates every rule and supports only status/apply/stop.
 - No caller-selected DLL, shell command, executable launch, registry edit or privileged file write is exposed.
 - The engine DLL is loaded by an absolute path from the broker's own directory.
@@ -41,10 +41,11 @@ It first proves a loopback connection works, then scopes a temporary block to it
 
 ## Startup state and throughput diagnostic
 
-ZikWall launches in monitoring mode, including at sign-in. It does not silently
-start an elevated broker or apply saved rules. Open **Firewall policy → Enable
-filtering** (or confirm **Block now** from a connection menu) to apply rules after
-Windows UAC approval. Without saved rules there is no ZikWall block policy to
+ZikWall launches in monitoring mode, including at sign-in. Saved monitoring
+sessions resume through the installed service without UAC; saved firewall rules
+are not applied automatically. Open **Firewall policy → Enable filtering** (or
+confirm **Block now** from a connection menu) to apply rules. Portable builds
+request Windows UAC approval for their helpers. Without saved rules there is no ZikWall block policy to
 apply. Session filters end on app/broker exit; the sign-in tray entry does not
 make them persistent. Windows Firewall configuration is unchanged.
 

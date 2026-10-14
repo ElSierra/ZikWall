@@ -8,6 +8,8 @@ if (-not $msbuild) { throw 'Visual Studio C++ build tools are required.' }
 if ($LASTEXITCODE -ne 0) { throw 'Windows SDK WFP engine build failed.' }
 & dotnet publish (Join-Path $root 'engine\ZikWall.Broker\ZikWall.Broker.csproj') -c Release -o $OutputDirectory
 if ($LASTEXITCODE -ne 0) { throw 'Broker build failed.' }
+& dotnet publish (Join-Path $root 'engine\ZikWall.Service\ZikWall.Service.csproj') -c Release -o $OutputDirectory
+if ($LASTEXITCODE -ne 0) { throw 'Windows service build failed.' }
 $source = [IO.Path]::GetFullPath((Join-Path $root 'temp\engine\ZikWall.Engine.dll'))
 $target = [IO.Path]::GetFullPath((Join-Path $OutputDirectory 'ZikWall.Engine.dll'))
 if ($source -ne $target) { Copy-Item -LiteralPath $source -Destination $target -Force }

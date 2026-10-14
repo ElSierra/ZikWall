@@ -46,6 +46,7 @@
             <Setter Property="BorderThickness" Value="0" />
         </Style>
         <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}" />
+        <DataTemplate x:Key="UsageHistoryTemplate"><TextBlock Text="{Binding}" TextWrapping="Wrap" IsTextSelectionEnabled="True" Margin="0,6" /></DataTemplate>
         <DataTemplate x:Key="HostEntryTemplate" x:DataType="models:HostEntry">
             <Grid ColumnDefinitions="24,*" ColumnSpacing="8" Padding="0,5" ToolTipService.ToolTip="{x:Bind Description}">
                 <Image Width="20" Height="15" VerticalAlignment="Top" Margin="0,3,0,0" ><Image.Source><SvgImageSource UriSource="{x:Bind Flag}" RasterizePixelWidth="64" RasterizePixelHeight="48" /></Image.Source></Image>
@@ -67,91 +68,83 @@
                 <Button x:Name="DetailsButton" Style="{StaticResource IconButton}" Click="DetailsClicked" ToolTipService.ToolTip="Details" AutomationProperties.Name="Details"><FontIcon Glyph="&#xE946;" FontSize="16" /></Button>
                 <Button x:Name="BlockButton" Style="{StaticResource IconButton}" Click="BlockAppClicked" ToolTipService.ToolTip="Block selected app…" AutomationProperties.Name="Block selected app"><FontIcon Glyph="&#xE711;" FontSize="16" /></Button>
                 <Button Style="{StaticResource IconButton}" Click="ExportClicked" ToolTipService.ToolTip="Export CSV" AutomationProperties.Name="Export CSV"><FontIcon Glyph="&#xEDE1;" FontSize="16" /></Button>
-                <Button Style="{StaticResource IconButton}" ToolTipService.ToolTip="View options, traffic chart, history and usage" AutomationProperties.Name="Monitor options"><FontIcon Glyph="&#xE713;" FontSize="16" />
-                    <Button.Flyout><Flyout x:Name="MonitorOptions" Opened="OptionsOpened" Placement="BottomEdgeAlignedRight">
-                        <Flyout.FlyoutPresenterStyle><Style TargetType="FlyoutPresenter">
-                            <Setter Property="MaxWidth" Value="600" />
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                            <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Disabled" />
-                            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
-                            <Setter Property="ScrollViewer.VerticalScrollMode" Value="Disabled" />
-                            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled" />
-                        </Style></Flyout.FlyoutPresenterStyle>
-                        <ScrollViewer MaxHeight="640" MaxWidth="560" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
-                            <StackPanel Spacing="20" Padding="2" SizeChanged="OptionsSizeChanged">
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="Website names" Style="{StaticResource SectionTitle}" />
-                                    <Button x:Name="DomainButton" Content="Capture website names" Click="DomainClicked" />
-                                    <TextBlock Text="Capture learns names from ordinary DNS replies for browsers and other apps while enabled. Requires administrator access. Names stay in memory until they expire or you stop capture." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <ToggleSwitch x:Name="ReverseDnsLookup" Header="Look up missing hostnames" Toggled="ReverseDnsChanged" />
-                                    <TextBlock Text="Optional reverse DNS sends public IP lookups to your DNS resolver. Names may identify a server or CDN rather than the website. Results appear gradually while monitoring." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <TextBlock x:Name="DomainStatus" Text="Checking the Windows DNS cache…" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <TextBlock Text="The Hosts column shows a name or IP and the number of other hosts. Select it for the full list. Shared IPs can have several names. Encrypted DNS cannot be read by capture; HTTPS paths and query strings stay encrypted." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="View" Style="{StaticResource SectionTitle}" />
-                                    <ToggleSwitch x:Name="HideSystemApps" Header="Hide Windows system apps" Toggled="HideSystemAppsChanged" />
-                                    <TextBlock Text="Hide Windows components and built-in system packages from Connections, Activity and the map, and mute their connection alerts. Turn off to show them again. Monitoring and firewall rules continue unchanged." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <Grid x:Name="ViewOptionsGrid" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-                                        <ComboBox x:Name="GroupChoice" Header="Group" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="By app" /><ComboBoxItem Content="No grouping" /></ComboBox>
-                                        <ComboBox x:Name="DirectionChoice" Grid.Column="1" Header="Direction" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="Both" /><ComboBoxItem Content="Outgoing" /><ComboBoxItem Content="Incoming" /></ComboBox>
-                                        <ComboBox x:Name="RefreshChoice" Grid.Column="2" Header="Refresh every" SelectedIndex="1" HorizontalAlignment="Stretch" SelectionChanged="RefreshIntervalChanged"><ComboBoxItem Content="2 seconds" /><ComboBoxItem Content="5 seconds" /><ComboBoxItem Content="10 seconds" /></ComboBox>
-                                    </Grid>
-                                    <TextBlock Text="5 seconds uses the least resources. Hidden or minimized windows sample every 15 seconds." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="Adapter traffic" Style="{StaticResource SectionTitle}" />
-                                    <Grid x:Name="AdapterOptionsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
-                                        <ComboBox x:Name="AdapterChoice" Header="Adapter" HorizontalAlignment="Stretch" SelectionChanged="AdapterChanged" DisplayMemberPath="Name" />
-                                        <ComboBox x:Name="HistoryWindow" Grid.Column="1" Header="Chart and activity range" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="Last hour" /><ComboBoxItem Content="Last 24 hours" /><ComboBoxItem Content="Last 7 days" /></ComboBox>
-                                    </Grid>
-                                    <Border Style="{StaticResource StatTile}" Padding="8">
-                                        <Canvas x:Name="TrafficChart" Height="110" SizeChanged="ChartSizeChanged" AutomationProperties.Name="Selected adapter traffic chart"><Polyline x:Name="DownloadLine" Stroke="{x:Bind presentation:Ui.Incoming}" StrokeThickness="2" /><Polyline x:Name="UploadLine" Stroke="{x:Bind presentation:Ui.Outgoing}" StrokeThickness="2" /></Canvas>
-                                    </Border>
-                                    <StackPanel Spacing="4">
-                                        <StackPanel Orientation="Horizontal" Spacing="6"><Ellipse Width="8" Height="8" Fill="{x:Bind presentation:Ui.Incoming}" /><TextBlock Text="Download" Style="{StaticResource StatLabel}" /><Ellipse Width="8" Height="8" Margin="10,0,0,0" Fill="{x:Bind presentation:Ui.Outgoing}" /><TextBlock Text="Upload" Style="{StaticResource StatLabel}" /></StackPanel>
-                                        <TextBlock x:Name="ChartScale" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                    <TextBlock Text="Whole-adapter totals, not per-app traffic." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="Notifications" Style="{StaticResource SectionTitle}" />
-                                    <ComboBox x:Name="NotificationTypeChoice" Header="Notify me about" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="NotificationTypeChanged">
-                                        <ComboBoxItem Content="All new Internet connections" />
-                                        <ComboBoxItem Content="New apps only" />
-                                        <ComboBoxItem Content="Outgoing connections only" />
-                                        <ComboBoxItem Content="Incoming connections only" />
-                                    </ComboBox>
-                                    <TextBlock Text="Applies to banners and Windows notifications. New apps means the first Internet connection observed per app in this session; apps already connected at startup stay quiet. Alerts are grouped at most once every 30 seconds." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <Grid x:Name="NotificationOptionsGrid" ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="8">
-                                        <ToggleSwitch x:Name="RecentAlerts" Header="In-app banner" IsOn="True" Toggled="RecentAlertsChanged" />
-                                        <ToggleSwitch x:Name="DesktopAlerts" Grid.Column="1" Header="Windows notifications" Toggled="DesktopAlertsChanged" />
-                                    </Grid>
-                                </StackPanel>
-                                <StackPanel Spacing="4">
-                                    <TextBlock Text="History" Style="{StaticResource SectionTitle}" />
-                                    <Grid x:Name="HistoryOptionsGrid" ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                                        <ToggleSwitch x:Name="SaveHistory" Header="Save activity on this PC" Toggled="SaveHistoryChanged" />
-                                        <Button Grid.Column="1" Content="Clear history…" Click="ClearHistoryClicked" VerticalAlignment="Bottom" Margin="0,0,0,6" />
-                                        <ToggleSwitch x:Name="TcpDetails" Grid.Row="1" Header="Show TCP details in history" Toggled="TcpDetailsChanged" ToolTipService.ToolTip="Include TCP state changes, connection teardown and sockets whose app already exited." />
-                                    </Grid>
-                                </StackPanel>
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="Per-app usage" Style="{StaticResource SectionTitle}" />
-                                    <Grid x:Name="UsageOptionsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8"><Button x:Name="UsageButton" Content="Enable usage" Click="UsageClicked" /><Button Grid.Column="1" Content="All app usage…" Click="AllUsageClicked" /></Grid>
-                                    <TextBlock x:Name="UsageStatus" Text="Usage is off. Enabled usage resumes after a restart with a Windows permission prompt. Daily totals retain 30 days; network traffic includes local connections." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Spacing="6">
-                                    <TextBlock Text="About this data" Style="{StaticResource SectionTitle}" />
-                                    <TextBlock Text="Direction comes from Windows TCP SYN options; unavailable results stay Unknown. Flags are approximate offline IP locations. Snapshots can miss short connections; UDP destinations are unavailable." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <TextBlock x:Name="CountryDataStatus" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
-                                    <HyperlinkButton Content="Country and network data: DB-IP · CC BY 4.0" NavigateUri="https://db-ip.com" Padding="0" />
-                                </StackPanel>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Flyout></Button.Flyout>
-                </Button>
+                <Button x:Name="OptionsButton" Style="{StaticResource IconButton}" Click="OptionsClicked" ToolTipService.ToolTip="Open monitor options window" AutomationProperties.Name="Monitor options"><FontIcon Glyph="&#xE713;" FontSize="16" /></Button>
             </StackPanel>
+        </Grid>
+
+        <Grid x:Name="OptionsParking" Visibility="Collapsed">
+            <ScrollViewer x:Name="OptionsContent" HorizontalAlignment="Stretch" HorizontalScrollMode="Disabled" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
+                <StackPanel Spacing="20" Padding="2" SizeChanged="OptionsSizeChanged">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Website names" Style="{StaticResource SectionTitle}" />
+                        <Button x:Name="DomainButton" Content="Capture website names" Click="DomainClicked" />
+                        <TextBlock Text="Capture learns names from ordinary DNS replies for browsers and other apps while enabled. Requires administrator access. Names stay in memory until they expire or you stop capture." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <ToggleSwitch x:Name="ReverseDnsLookup" Header="Look up missing hostnames" Toggled="ReverseDnsChanged" />
+                        <TextBlock Text="Optional reverse DNS sends public IP lookups to your DNS resolver. Names may identify a server or CDN rather than the website. Results appear gradually while monitoring." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="DomainStatus" Text="Checking the Windows DNS cache…" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <TextBlock Text="The Hosts column shows a name or IP and the number of other hosts. Select it for the full list. Shared IPs can have several names. Encrypted DNS cannot be read by capture; HTTPS paths and query strings stay encrypted." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="View" Style="{StaticResource SectionTitle}" />
+                        <ToggleSwitch x:Name="HideSystemApps" Header="Hide Windows system apps" Toggled="HideSystemAppsChanged" />
+                        <TextBlock Text="Hide Windows components and built-in system packages from Connections, Activity and the map, and mute their connection alerts. Turn off to show them again. Monitoring and firewall rules continue unchanged." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <Grid x:Name="ViewOptionsGrid" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                            <ComboBox x:Name="GroupChoice" Header="Group" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="By app" /><ComboBoxItem Content="No grouping" /></ComboBox>
+                            <ComboBox x:Name="DirectionChoice" Grid.Column="1" Header="Direction" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="Both" /><ComboBoxItem Content="Outgoing" /><ComboBoxItem Content="Incoming" /></ComboBox>
+                            <ComboBox x:Name="RefreshChoice" Grid.Column="2" Header="Refresh every" SelectedIndex="1" HorizontalAlignment="Stretch" SelectionChanged="RefreshIntervalChanged"><ComboBoxItem Content="2 seconds" /><ComboBoxItem Content="5 seconds" /><ComboBoxItem Content="10 seconds" /></ComboBox>
+                        </Grid>
+                        <TextBlock Text="5 seconds uses the least resources. Hidden or minimized windows sample every 15 seconds." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Adapter traffic" Style="{StaticResource SectionTitle}" />
+                        <Grid x:Name="AdapterOptionsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+                            <ComboBox x:Name="AdapterChoice" Header="Adapter" HorizontalAlignment="Stretch" SelectionChanged="AdapterChanged" DisplayMemberPath="Name" />
+                            <ComboBox x:Name="HistoryWindow" Grid.Column="1" Header="Chart and activity range" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="MonitorOptionsChanged"><ComboBoxItem Content="Last hour" /><ComboBoxItem Content="Last 24 hours" /><ComboBoxItem Content="Last 7 days" /></ComboBox>
+                        </Grid>
+                        <Border Style="{StaticResource StatTile}" Padding="8">
+                            <Canvas x:Name="TrafficChart" Height="110" SizeChanged="ChartSizeChanged" AutomationProperties.Name="Selected adapter traffic chart"><Polyline x:Name="DownloadLine" Stroke="{x:Bind presentation:Ui.Incoming}" StrokeThickness="2" /><Polyline x:Name="UploadLine" Stroke="{x:Bind presentation:Ui.Outgoing}" StrokeThickness="2" /></Canvas>
+                        </Border>
+                        <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><Ellipse Width="8" Height="8" Fill="{x:Bind presentation:Ui.Incoming}" /><TextBlock Text="Download" Style="{StaticResource StatLabel}" /><Ellipse Width="8" Height="8" Margin="10,0,0,0" Fill="{x:Bind presentation:Ui.Outgoing}" /><TextBlock Text="Upload" Style="{StaticResource StatLabel}" /></StackPanel>
+                            <TextBlock x:Name="ChartScale" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <TextBlock Text="Whole-adapter totals, not per-app traffic." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Notifications" Style="{StaticResource SectionTitle}" />
+                        <ComboBox x:Name="NotificationTypeChoice" Header="Notify me about" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="NotificationTypeChanged">
+                            <ComboBoxItem Content="All new Internet connections" />
+                            <ComboBoxItem Content="New apps only" />
+                            <ComboBoxItem Content="Outgoing connections only" />
+                            <ComboBoxItem Content="Incoming connections only" />
+                        </ComboBox>
+                        <TextBlock Text="Applies to banners and Windows notifications. New apps means the first Internet connection observed per app in this session; apps already connected at startup stay quiet. Alerts are grouped at most once every 30 seconds." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <Grid x:Name="NotificationOptionsGrid" ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <ToggleSwitch x:Name="RecentAlerts" Header="In-app banner" IsOn="True" Toggled="RecentAlertsChanged" />
+                            <ToggleSwitch x:Name="DesktopAlerts" Grid.Column="1" Header="Windows notifications" Toggled="DesktopAlertsChanged" />
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="History" Style="{StaticResource SectionTitle}" />
+                        <Grid x:Name="HistoryOptionsGrid" ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                            <ToggleSwitch x:Name="SaveHistory" Header="Save activity on this PC" Toggled="SaveHistoryChanged" />
+                            <Button Grid.Column="1" Content="Clear history…" Click="ClearHistoryClicked" VerticalAlignment="Bottom" Margin="0,0,0,6" />
+                            <ToggleSwitch x:Name="TcpDetails" Grid.Row="1" Header="Show TCP details in history" Toggled="TcpDetailsChanged" ToolTipService.ToolTip="Include TCP state changes, connection teardown and sockets whose app already exited." />
+                        </Grid>
+                    </StackPanel>
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Per-app usage" Style="{StaticResource SectionTitle}" />
+                        <Grid x:Name="UsageOptionsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8"><Button x:Name="UsageButton" Content="Enable usage" Click="UsageClicked" /><Button Grid.Column="1" Content="All app usage…" Click="AllUsageClicked" /></Grid>
+                        <TextBlock x:Name="UsageStatus" Text="Usage is off. Enabled usage resumes after a restart with a Windows permission prompt. Daily totals retain 30 days; network traffic includes local connections." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="About this data" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="Direction comes from Windows TCP SYN options; unavailable results stay Unknown. Flags are approximate offline IP locations. Snapshots can miss short connections; UDP destinations are unavailable." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="CountryDataStatus" Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <HyperlinkButton Content="Country and network data: DB-IP · CC BY 4.0" NavigateUri="https://db-ip.com" Padding="0" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
         </Grid>
 
         <!-- Live summary: the numbers match the filtered list below. -->

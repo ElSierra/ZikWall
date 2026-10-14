@@ -113,6 +113,9 @@ internal sealed class InstallerEngine
         string package = Package.Cache();
         using var lockedPackage = Package.OpenVerified(package);
         if (cancelRequested) return new(1602, "", log);
+        progress.Report(new("Closing running ZikWall processes…", null));
+        ApplicationLifetime.CloseRunning();
+        if (cancelRequested) return new(1602, "", log);
         var callback = new Native.RecordHandler(HandleMessage);
         uint previousUi = Native.MsiSetInternalUI(2 | 0x200, ref owner); // NONE | UACONLY: native WinUI screens, standard Windows consent.
         bool handlerSet = false;
@@ -151,7 +154,7 @@ internal sealed class InstallerEngine
             if (type == 0x01000000) error = Native.Format(record);
             if (type is 0x05000000 or 0x19000000)
             {
-                error = "Close ZikWall from its tray menu and close any applications using its files, then try again.";
+                error = "Another application is still using ZikWall files. Close it, then try setup again.";
                 cancelSent = true;
                 return 2;
             }

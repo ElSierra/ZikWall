@@ -1,4 +1,4 @@
-param([string]$Version)
+param([string]$Version, [string]$StagingRoot = [IO.Path]::GetTempPath())
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 # MSI versions have three bounded integer fields. UTC minutes within a month
@@ -24,7 +24,13 @@ if (-not (Test-Path -LiteralPath $uiExtension)) {
     finally { Pop-Location }
 }
 & (Join-Path $PSScriptRoot 'generate-installer-assets.ps1')
-$work = Join-Path $root ('temp\msi-' + [guid]::NewGuid().ToString('N'))
+$utilExtension = Join-Path $root '.wix\extensions\WixToolset.Util.wixext\4.0.6\wixext4\WixToolset.Util.wixext.dll'
+if (-not (Test-Path -LiteralPath $utilExtension)) {
+    Push-Location $root
+    try { & $wix extension add WixToolset.Util.wixext/4.0.6; if ($LASTEXITCODE -ne 0) { throw 'Installing the pinned WiX utility extension failed.' } }
+    finally { Pop-Location }
+}
+$work = Join-Path $StagingRoot ('ZikWall-msi-' + [guid]::NewGuid().ToString('N'))
 $payload = Join-Path $work 'payload'
 $null = New-Item -ItemType Directory -Path $payload -Force
 & (Join-Path $PSScriptRoot 'build-winui.ps1') -OutputDirectory $payload
@@ -77,22 +83,31 @@ foreach ($file in $files) {
     $directoryId = if ($parent) { Stable-Id "dir:$parent" } else { 'INSTALLFOLDER' }
     $id = Stable-Id "file:$relative"
     $source = Escape-Xml $file.FullName
-    $shortcut = if ($relative -eq 'ZikWall.exe') { '<Shortcut Id="ZikWallShortcut" Directory="ProgramMenuFolder" Name="ZikWall" Advertise="yes" WorkingDirectory="INSTALLFOLDER" Icon="ZikWallIcon" />' } else { '' }
-    $xml.Add("<Component Id=`"C$id`" Directory=`"$directoryId`" Guid=`"*`" Bitness=`"always64`"><File Id=`"$id`" Source=`"$source`" KeyPath=`"yes`">$shortcut</File></Component>")
+    $shortcut = if ($relative -eq 'ZikWall.exe') { '<Shortcut Id="ZikWallShortcut" Directory="ProgramMenuFolder" Name="ZikWall" Advertise="yes" WorkingDirectory="INSTALLFOLDER" Icon="ZikWall.exe" IconIndex="0" />' } else { '' }
+    $service = if ($relative -eq 'ZikWall.Service.exe') {
+        '<ServiceInstall Id="ZikWallServiceInstall" Name="ZikWallService" DisplayName="ZikWall Background Service" Description="Starts isolated ZikWall traffic, website-name and firewall sessions for the installed app." Type="ownProcess" Start="auto" ErrorControl="normal" Account="LocalSystem" Vital="yes" /><ServiceControl Id="ZikWallServiceControl" Name="ZikWallService" Start="install" Stop="both" Remove="uninstall" Wait="yes" />'
+    } else { '' }
+    $xml.Add("<Component Id=`"C$id`" Directory=`"$directoryId`" Guid=`"*`" Bitness=`"always64`"><File Id=`"$id`" Source=`"$source`" KeyPath=`"yes`">$shortcut</File>$service</Component>")
     $manifest += [ordered]@{ path = $relative; sha256 = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash }
 }
 $xml.Add('</ComponentGroup></Fragment></Wix>')
 $harvest = Join-Path $work 'Payload.wxs'
 $xml | Set-Content -LiteralPath $harvest -Encoding UTF8
 $msi = Join-Path $work 'setup.msi'
-& $wix build (Join-Path $root 'installer\Package.wxs') (Join-Path $root 'installer\UserInterface.wxs') $harvest -ext $uiExtension -loc (Join-Path $root 'installer\Strings.en-us.wxl') -culture en-US -arch x64 -d "Version=$Version" -d "Payload=$payload" -d "InstallerAssets=$root\installer\Assets" -o $msi
+& $wix build (Join-Path $root 'installer\Package.wxs') (Join-Path $root 'installer\UserInterface.wxs') $harvest -ext $uiExtension -ext $utilExtension -loc (Join-Path $root 'installer\Strings.en-us.wxl') -culture en-US -arch x64 -d "Version=$Version" -d "Payload=$payload" -d "InstallerAssets=$root\installer\Assets" -o $msi
 if ($LASTEXITCODE -ne 0) { throw 'MSI compilation or validation failed.' }
 $output = Join-Path $root 'artifacts\installer'
 $null = New-Item -ItemType Directory -Path $output -Force
 $manifestPath = Join-Path $work 'manifest.json'
 [ordered]@{ version = $Version; builtUtc = [DateTime]::UtcNow.ToString('o'); sha256 = (Get-FileHash -LiteralPath $msi -Algorithm SHA256).Hash; files = $manifest } |
     ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
-& (Join-Path $PSScriptRoot 'test-setup.ps1') -MsiPath $msi -ManifestPath $manifestPath
+& (Join-Path $PSScriptRoot 'test-setup.ps1') -MsiPath $msi -ManifestPath $manifestPath -RemoveStaging
 Copy-Item -LiteralPath $msi -Destination (Join-Path $output 'setup.msi') -Force
 Copy-Item -LiteralPath $manifestPath -Destination (Join-Path $output 'manifest.json') -Force
 Write-Host "Built: $(Join-Path $output 'setup.msi') (version $Version; $($files.Count) files)"
+$resolvedWork = [IO.Path]::GetFullPath($work)
+$stagingPath = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($StagingRoot))
+if (-not $resolvedWork.StartsWith($stagingPath + '\', [StringComparison]::OrdinalIgnoreCase) -or
+    ((Get-Item -LiteralPath $resolvedWork).Attributes -band [IO.FileAttributes]::ReparsePoint) -or
+    (Get-ChildItem -LiteralPath $resolvedWork -Recurse -Force -Attributes ReparsePoint)) { throw 'Refusing unsafe MSI staging cleanup.' }
+Remove-Item -LiteralPath $resolvedWork -Recurse -Force

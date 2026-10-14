@@ -19,7 +19,7 @@ public sealed partial class PolicyView : UserControl
     private Guid? appliedProfile;
     private bool dialogOpen;
     private ContentDialog? monitorDialog;
-    private ContentDialog? ruleDialog;
+    private Window? ruleDialog;
     private void ProfileControlsSizeChanged(object sender, SizeChangedEventArgs args)
     {
         bool narrow = args.NewSize.Width < 900;
@@ -46,7 +46,7 @@ public sealed partial class PolicyView : UserControl
         var operation = EditRuleAsync(id);
         await Task.Delay(200);
         if (ruleDialog is null) throw new InvalidOperationException("The saved rule editor did not open.");
-        ruleDialog.Hide();
+        ruleDialog.Close();
         await operation;
         if (policy != before || client.Connected) throw new InvalidOperationException("Cancel changed the policy or enabled filtering.");
     }
@@ -55,7 +55,8 @@ public sealed partial class PolicyView : UserControl
         var operation = EditRuleAsync(id);
         await Task.Delay(250);
         var dialog = ruleDialog ?? throw new InvalidOperationException("The editor did not open.");
-        var form = (StackPanel)((ScrollViewer)dialog.Content).Content;
+        var root = (Grid)dialog.Content;
+        var form = (StackPanel)((ScrollViewer)((Grid)root.Children[1]).Children[0]).Content;
         form.Children.OfType<ComboBox>().Single(x => (string)x.Header == "Rule group").SelectedItem = "System rules";
         form.Children.OfType<ComboBox>().Single(x => (string)x.Header == "Protocol").SelectedIndex = 2;
         form.Children.OfType<CheckBox>().Single().IsChecked = false;
@@ -66,7 +67,7 @@ public sealed partial class PolicyView : UserControl
                 if (FindPrimary(Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(parent, i)) is { } found) return found;
             return null;
         }
-        var primary = FindPrimary(dialog) ?? throw new InvalidOperationException("The editor Save button was not found.");
+        var primary = FindPrimary(dialog.Content) ?? throw new InvalidOperationException("The editor Save button was not found.");
         var peer = new Microsoft.UI.Xaml.Automation.Peers.ButtonAutomationPeer(primary);
         ((Microsoft.UI.Xaml.Automation.Provider.IInvokeProvider)peer.GetPattern(Microsoft.UI.Xaml.Automation.Peers.PatternInterface.Invoke)).Invoke();
         await operation.WaitAsync(TimeSpan.FromSeconds(5));
@@ -225,7 +226,7 @@ public sealed partial class PolicyView : UserControl
         if (busy || dialogOpen) return;
         if (!client.Connected)
         {
-            var confirm = new ContentDialog { XamlRoot = Owner?.Content.XamlRoot ?? XamlRoot, RequestedTheme = ActualTheme, Title = "Enable ZikWall filtering?", Content = "This starts an elevated WFP broker and applies the selected profile. Rules can interrupt matching connections. These session filters are removed when ZikWall or its broker closes. Windows Firewall defaults are unchanged.", PrimaryButtonText = "Enable filtering", CloseButtonText = "Cancel" };
+            var confirm = new ContentDialog { XamlRoot = Owner?.Content.XamlRoot ?? XamlRoot, RequestedTheme = ActualTheme, Title = "Enable ZikWall filtering?", Content = "This applies the selected profile. Rules can interrupt matching connections. These session filters are removed when ZikWall closes or its background session stops. Windows Firewall defaults are unchanged.", PrimaryButtonText = "Enable filtering", CloseButtonText = "Cancel" };
             dialogOpen = true;
             ContentDialogResult confirmation;
             try { confirmation = await confirm.ShowAsync(); } finally { dialogOpen = false; }
@@ -330,11 +331,16 @@ public sealed partial class PolicyView : UserControl
             var snapshot = selected.Rules.ToArray();
             var now = DateTimeOffset.UtcNow;
             var analysis = await Task.Run(() => PolicyAnalysis.Analyze(snapshot, now, File.Exists));
-            var content = new StackPanel { Spacing = 12, MinWidth = 400 };
+            var content = new Grid { RowSpacing = 12 };
+            content.RowDefinitions.Add(new() { Height = GridLength.Auto });
+            content.RowDefinitions.Add(new() { Height = GridLength.Auto });
+            content.RowDefinitions.Add(new() { Height = new(1, GridUnitType.Star) });
             content.Children.Add(new TextBlock { Text = $"Saved snapshot: {selected.Name} · {now.ToLocalTime():g}. These checks describe ordering within ZikWall, not observed connection decisions or rules from other firewalls. No rules are changed.", TextWrapping = TextWrapping.Wrap });
-            content.Children.Add(new TextBlock { Text = !analysis.Complete ? "Partial results: the analysis reached its work limit. Review the remaining rules in smaller profiles." : analysis.Findings.Count == 0 ? "No fully covered, inactive or unavailable-executable rules found. Partial overlaps and combinations of several earlier rules are not analyzed." : $"{analysis.Findings.Count} findings. Partial overlaps and combinations of several earlier rules are not analyzed.", TextWrapping = TextWrapping.Wrap });
-            content.Children.Add(new ListView { ItemsSource = analysis.Findings, ItemTemplate = (DataTemplate)Resources["PolicyFindingTemplate"], SelectionMode = ListViewSelectionMode.None, HorizontalContentAlignment = HorizontalAlignment.Stretch, MaxHeight = 380 });
-            await new ContentDialog { XamlRoot = Owner?.Content.XamlRoot ?? XamlRoot, RequestedTheme = ActualTheme, Title = "Check saved rules", Content = content, CloseButtonText = "Done" }.ShowAsync();
+            var summary = new TextBlock { Text = !analysis.Complete ? "Partial results: the analysis reached its work limit. Review the remaining rules in smaller profiles." : analysis.Findings.Count == 0 ? "No fully covered, inactive or unavailable-executable rules found. Partial overlaps and combinations of several earlier rules are not analyzed." : $"{analysis.Findings.Count} findings. Partial overlaps and combinations of several earlier rules are not analyzed.", TextWrapping = TextWrapping.Wrap };
+            Grid.SetRow(summary, 1); content.Children.Add(summary);
+            var findings = new ListView { ItemsSource = analysis.Findings, ItemTemplate = (DataTemplate)Resources["PolicyFindingTemplate"], SelectionMode = ListViewSelectionMode.None, HorizontalContentAlignment = HorizontalAlignment.Stretch };
+            Grid.SetRow(findings, 2); content.Children.Add(findings);
+            if (Owner is not null) Presentation.ToolWindows.For(Owner).Show("rule-check", "Check saved rules", () => content, scroll: false);
         }
         finally { dialogOpen = false; }
     }
@@ -355,13 +361,14 @@ public sealed partial class PolicyView : UserControl
     private void ReplaceRules(List<FirewallRule> rules) { policy = policy with { Profiles = policy.Profiles.Select(x => x.Id == Selected.Id ? x with { Rules = rules } : x).ToList() }; Saved(); }
     private async Task EditAsync(FirewallRule? original)
     {
-        if (busy || dialogOpen) return;
+        if (ruleDialog is not null) { ruleDialog.Activate(); return; }
+        if (busy || dialogOpen || Owner is null) return;
         var profileId = Selected.Id;
         var group = new ComboBox { Header = "Rule group", ItemsSource = new[] { "Applications", "Custom rules", "System rules", "Blocklists" }, SelectedItem = original is null ? "Custom rules" : PolicyRuleEntries.FromRule(original).Category };
         var name = new TextBox { Header = "Name", Text = original?.Name ?? "", MaxLength = 128 };
         var app = new TextBox { Header = "Local application .exe path (optional if IP is set)", Text = original?.Application ?? "" };
         var browse = new Button { Content = "Choose application…" };
-        browse.Click += async (_, _) => { if (Owner is null) return; var picker = new FileOpenPicker(); picker.FileTypeFilter.Add(".exe"); WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(Owner)); var file = await picker.PickSingleFileAsync(); if (file is not null) app.Text = file.Path; };
+        browse.Click += async (_, _) => { if (Owner is null) return; var picker = new FileOpenPicker(); picker.FileTypeFilter.Add(".exe"); WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(ruleDialog ?? Owner)); var file = await picker.PickSingleFileAsync(); if (file is not null) app.Text = file.Path; };
         var network = new TextBox { Header = "Remote IPv4/IPv6 address or CIDR (blank = any)", Text = original?.RemoteNetwork ?? "" };
         var port = new NumberBox { Header = "Remote port (0 = any)", Minimum = 0, Maximum = 65535, Value = original?.RemotePort ?? 0, SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact };
         var protocol = new ComboBox { Header = "Protocol", ItemsSource = new[] { "Any", "TCP", "UDP" }, SelectedIndex = original?.Protocol == 6 ? 1 : original?.Protocol == 17 ? 2 : 0 };
@@ -369,14 +376,13 @@ public sealed partial class PolicyView : UserControl
         var action = new ComboBox { Header = "Action", ItemsSource = new[] { "Block", "Allow" }, SelectedIndex = original?.Block == false ? 1 : 0 };
         var duration = new ComboBox { Header = "Expiry", ItemsSource = new[] { "Keep existing / no expiry", "5 minutes", "30 minutes", "1 hour", "No expiry" }, SelectedIndex = 0 };
         var enabled = new CheckBox { Content = "Enabled", IsChecked = original?.Enabled ?? true };
-        var form = new StackPanel { Spacing = 10, MinWidth = 410 };
+        var form = new StackPanel { Spacing = 10 };
         foreach (var element in new UIElement[] { name, group, app, browse, network, protocol, port, direction, action, duration, enabled }) form.Children.Add(element);
-        var dialog = new ContentDialog { XamlRoot = Owner?.Content.XamlRoot ?? XamlRoot, RequestedTheme = ActualTheme, Title = "Saved firewall rule", Content = new ScrollViewer { Content = form, MaxHeight = 600 }, PrimaryButtonText = "Save", CloseButtonText = "Cancel" };
-        ruleDialog = dialog;
         dialogOpen = true;
-        ContentDialogResult result;
-        try { result = await dialog.ShowAsync(); } finally { dialogOpen = false; ruleDialog = null; }
-        if (result != ContentDialogResult.Primary) return;
+        bool saved;
+        try { saved = await Presentation.ToolWindows.For(Owner).EditAsync("rule-editor", "Saved firewall rule", form, window => ruleDialog = window); }
+        finally { dialogOpen = false; ruleDialog = null; }
+        if (!saved) return;
         try
         {
             if (double.IsNaN(port.Value) || port.Value != Math.Truncate(port.Value)) throw new InvalidDataException("Use a whole-number port.");
@@ -384,7 +390,14 @@ public sealed partial class PolicyView : UserControl
             var rule = new FirewallRule(original?.Id ?? Guid.NewGuid(), name.Text.Trim(), app.Text.Trim(), network.Text.Trim(), protocol.SelectedIndex == 1 ? 6 : protocol.SelectedIndex == 2 ? 17 : 0, (int)port.Value, direction.SelectedIndex + 1, action.SelectedIndex == 0, enabled.IsChecked == true, expires) { Group = (string)group.SelectedItem };
             rule.Validate();
             if (Selected.Id != profileId) throw new InvalidDataException("The selected profile changed. Reopen the editor.");
-            var rules = Selected.Rules.ToList(); if (original is null) rules.Add(rule); else rules[rules.IndexOf(original)] = rule;
+            var rules = Selected.Rules.ToList();
+            if (original is null) rules.Add(rule);
+            else
+            {
+                int index = rules.IndexOf(original);
+                if (index < 0) throw new InvalidDataException("This rule changed while the editor was open. Reopen it to edit the latest version.");
+                rules[index] = rule;
+            }
             ReplaceRules(rules);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Error(ex.Message); }

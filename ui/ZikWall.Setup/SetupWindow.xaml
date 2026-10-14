@@ -24,7 +24,7 @@
                             <Grid ColumnDefinitions="28,*" ColumnSpacing="12"><FontIcon Glyph="&#xE8B9;" FontSize="20" /><StackPanel Grid.Column="1" Spacing="3"><TextBlock Text="Ready in your Start menu" FontWeight="SemiBold" /><TextBlock Text="A ZikWall shortcut is installed for everyone on this PC." Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" /></StackPanel></Grid>
                         </StackPanel>
                     </Border>
-                    <TextBox x:Name="InstallFolder" Header="Installation folder" TextChanged="OptionsChanged" />
+                    <TextBox x:Name="InstallFolder" Header="Installation folder (required for the background service)" IsReadOnly="True" TextChanged="OptionsChanged" />
                     <StackPanel Spacing="4">
                         <CheckBox x:Name="AcceptLicense" Content="I accept the GNU General Public License v3." Checked="OptionsChanged" Unchecked="OptionsChanged" />
                         <HyperlinkButton Content="Read the license" Click="ReadLicense" Padding="0" />

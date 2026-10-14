@@ -3,6 +3,12 @@ $ErrorActionPreference = 'Stop'
 $directory = [IO.Path]::GetFullPath($Directory)
 $app = Join-Path $directory 'ZikWall.exe'
 function Run-Diagnostic([string]$Mode) {
+    $startedUtc = [DateTime]::UtcNow
+    $reportName = switch ($Mode) {
+        '--test-monitor-churn' { 'monitor-churn.txt' }
+        '--test-monitor' { 'monitor-selftest.json' }
+        default { $Mode.Replace('--test-', '') + '-selftest.txt' }
+    }
     $process = Start-Process -FilePath $app -WorkingDirectory $directory -ArgumentList $Mode -WindowStyle Hidden -PassThru
     try {
         if (-not $process.WaitForExit(60000)) {
@@ -10,6 +16,8 @@ function Run-Diagnostic([string]$Mode) {
             throw "$Mode timed out."
         }
         if ($process.ExitCode -ne 0) { throw "$Mode crashed: $($process.ExitCode)" }
+        $report = Get-Item (Join-Path $directory $reportName)
+        if ($report.LastWriteTimeUtc -lt $startedUtc) { throw "$Mode did not produce a fresh result." }
     } finally { $process.Dispose() }
 }
 for ($i = 0; $i -lt $Runs; $i++) {
@@ -32,7 +40,7 @@ Write-Host 'PASS: native context-menu routing, invocation, pinned targets and bl
 
 Run-Diagnostic '--test-monitor-options'
 $options = Get-Content (Join-Path $directory 'monitor-options-selftest.txt') -Raw
-if ($options -notmatch '^PASS: native options') { throw "Options layout checks failed: $options" }
+if ($options -notmatch '^PASS: separate native options window') { throw "Options layout checks failed: $options" }
 Write-Host $options
 
 Run-Diagnostic '--test-usage-view'
@@ -63,3 +71,8 @@ foreach ($page in @('activity-overview', 'log-analysis')) {
     if ($report.LastWriteTime -lt $started -or $result -notmatch '^PASS:') { throw "$page checks failed: $result" }
     Write-Host $result
 }
+
+Run-Diagnostic '--test-rules'
+$rules = Get-Content (Join-Path $directory 'rules-selftest.txt') -Raw
+if ($rules -notmatch '^PASS:') { throw "Separate rule editor checks failed: $rules" }
+Write-Host $rules

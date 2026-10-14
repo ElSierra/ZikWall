@@ -43,7 +43,7 @@ public sealed partial class SetupWindow : Window
             installed = await Task.Run(() => { using var verified = Package.OpenVerified(Package.Path); return Package.Installed(); });
             string productCode = Package.ProductCode();
             operation = installed?.Code.Equals(productCode, StringComparison.OrdinalIgnoreCase) == true ? InstallOperation.Repair : InstallOperation.Install;
-            InstallFolder.Text = !string.IsNullOrWhiteSpace(installed?.Directory) ? installed.Directory : System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "ZikWall");
+            InstallFolder.Text = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "ZikWall");
             InstallFolder.IsEnabled = installed is null;
             RemoveButton.Visibility = installed is null ? Visibility.Collapsed : Visibility.Visible;
             removable = installed is not null;
@@ -88,13 +88,6 @@ public sealed partial class SetupWindow : Window
         try
         {
             directory = InstallerEngine.ValidateDirectory(InstallFolder.Text);
-            foreach (string name in new[] { "ZikWall", "ZikWall.Broker" })
-            {
-                var processes = Process.GetProcessesByName(name);
-                bool running = processes.Length > 0;
-                foreach (var process in processes) process.Dispose();
-                if (running) throw new InvalidOperationException("Close ZikWall using Exit in its tray menu, then try again.");
-            }
         }
         catch (Exception ex) { Notice.Severity = InfoBarSeverity.Error; Notice.Message = ex.Message; Notice.IsOpen = true; return; }
         ShowProgress(selected);
@@ -103,10 +96,32 @@ public sealed partial class SetupWindow : Window
         {
             IntPtr owner = WinRT.Interop.WindowNative.GetWindowHandle(this);
             var result = await Task.Run(() => engine.Run(selected, directory, installed, owner));
-            ShowResult(selected, result);
+            CompleteOperation(selected, result, directory);
         }
         catch (Exception ex) { ShowResult(selected, new(1603, ex.Message, "")); }
         finally { engine = null; }
+    }
+    private void CompleteOperation(InstallOperation selected, InstallResult result, string directory, Action<ProcessStartInfo>? launch = null)
+    {
+        ShowResult(selected, result);
+        if (!result.Succeeded || result.NeedsRestart || selected == InstallOperation.Remove) return;
+        try
+        {
+            var start = new ProcessStartInfo(System.IO.Path.Combine(directory, "ZikWall.exe"))
+            { UseShellExecute = true, WorkingDirectory = directory };
+            if (launch is not null) launch(start);
+            else
+            {
+                using var process = Process.Start(start) ?? throw new InvalidOperationException("Windows did not start ZikWall.");
+            }
+            ResultMessage.Text = "ZikWall is opening. You can also open it from the Start menu.";
+        }
+        catch (Exception ex)
+        {
+            // Launch failure must not turn a committed installation into an install error.
+            ResultMessage.Text = "ZikWall was installed, but could not open automatically. Open it from the Start menu.";
+            Notice.Severity = InfoBarSeverity.Warning; Notice.Message = ex.Message; Notice.IsOpen = true;
+        }
     }
     private void ShowProgress(InstallOperation selected)
     {

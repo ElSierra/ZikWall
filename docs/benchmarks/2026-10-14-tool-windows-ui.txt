@@ -1,0 +1,40 @@
+Native tool-window regression validation, 14 October 2026
+Assembly SHA-256: 1BA6B90C998195DDBDB2F7E41D97DF9084686861B0D1967AED58B319B865DAEF
+Command: tools/test-monitor-ui.ps1 -Runs 1
+
+monitor-options-selftest.txt
+PASS: separate native options window fits 600/440/360 DIP, controls fit, bottom reachable, repeat clicks reuse the window, close releases it, reopen preserves settings, themes synchronize, owner exit closes children. Unchanged history retains its native list; changed history refreshes. Async website hints display and search without entering saved activity. Host windows bind current snapshots, are lazy and release their lists on close; live row bindings preserve containers and flag images.
+
+rules-selftest.txt
+PASS: empty policy, saved-rule synchronization, scope filters, search, editor cancellation, removal and native render. Isolated diagnostic policy; filtering remained off.
+
+context-menu-selftest.txt
+PASS: 8 native context-menu routing, invocation and stale-target checks.
+PASS: native block-review cancellation leaves policy and filtering unchanged.
+
+usage-view-selftest.txt
+PASS: native usage column enable/disable, two heading clicks, numeric order, selection preservation and expanded rows. Fixture only; no collector or saved usage changes.
+
+preferences-selftest.txt
+PASS: monitor settings save immediately and survive a fresh view without an exit-time save. Theme and DNS provider choices also survive native view recreation. Separate tray icon loads and registers with Windows.
+
+policy-layout-selftest.txt
+PASS: profile control alignment and bounds at 1800 DIP.
+PASS: profile control alignment and bounds at 1000 DIP.
+PASS: profile control alignment and bounds at 720 DIP.
+PASS: profile control alignment and bounds at 480 DIP.
+
+activity-overview-selftest.txt
+PASS: activity columns fit 1280 DIP; native rank lists, byte bars and country flags rendered.
+PASS: activity columns fit 800 DIP; native rank lists, byte bars and country flags rendered.
+PASS: selected time range, search and empty state change the actual rankings.
+
+log-analysis-selftest.txt
+PASS: native date grouping, realized rows, app search, today range, unread filtering and timeline render.
+
+monitor-churn.txt
+PASS: 500 native row churn and notification-layout iterations.
+
+
+Final maximize/minimize repair: monitor-options diagnostic passed again.
+Final release assembly SHA-256: A7EF12F5DFCC6E6A5B11D5EBD650E97CBB683DFE66D1D6A3D1D651FC23BFA205

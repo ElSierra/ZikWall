@@ -50,13 +50,13 @@ in place. They do not rebuild app icons, connection rows or DNS summaries.
 Native checks cover actual heading invocation, both sort directions, preserving
 selection, enabling/disabling the column and visible number updates.
 
-**Enable usage** requests Windows UAC for a session-owned collector. It does not enable filtering. The UI remains unelevated. The collector uses the installed Windows SDK ETW APIs and Microsoft-Windows-Kernel-Network metadata; it records no packet payload or ETL file and contacts no external service. It aggregates packet-size events before returning counters through the existing authenticated parent/child pipe. A separate collector process does not open a WFP session unless a policy is applied.
+**Enable usage** starts a session-owned collector through the installed background service; portable builds request Windows UAC. It does not enable filtering. The UI remains unelevated. The collector uses the installed Windows SDK ETW APIs and Microsoft-Windows-Kernel-Network metadata; it records no packet payload or ETL file and contacts no external service. It aggregates packet-size events before returning counters through the existing authenticated parent/child pipe. A separate collector process does not open a WFP session unless a policy is applied.
 
 The first snapshot establishes rates; subsequent samples calculate upload and download per second. Daily totals are saved under `%LOCALAPPDATA%\ZikWall\daily-usage.json`, retaining today and 29 previous local calendar days. Details shows an app's retained days; Options → All app usage includes apps without current connections. A cumulative-counter session ID prevents duplicate samples and restarts from double-counting. A sample spanning midnight is assigned to the local day at its end, so boundary totals can shift by one polling interval.
 
 These are **partial observed network bytes**, including local/loopback traffic, not ISP-billed bytes or guaranteed application payload counts. Collection gaps, denied/exited process identity, ETW losses, offloading, proxies and VPNs affect coverage and attribution. The status reports lost events, unsupported events, unattributed bytes and actual allocated trace buffers. Unknown identity never gets silently charged to the next process reusing that PID. No event coverage is claimed merely because a provider starts successfully.
 
-Enabled usage collection and domain-cache access are remembered across restarts. Each requests Windows permission again when the app starts; cancelling leaves that feature off until it is enabled again. No permanent privileged service or elevated scheduled task is installed. Historical traffic from before collection cannot be recovered. Usage is polled independently of paused connection snapshots so an enabled collector retains a heartbeat.
+Enabled usage collection and domain-cache access are remembered across restarts. Installed builds resume both through ZikWall Background Service without new UAC prompts. Portable builds still request permission for each helper. Setup installs and removes the service; no elevated scheduled task is used. Historical traffic from before collection cannot be recovered. Usage is polled independently of paused connection snapshots so an enabled collector retains a heartbeat.
 
 Bounds: 512 app aggregates, 2,048 retained process handles, 64 KiB ETW buffers with requested 16–64 buffer count (Windows can adjust this), 2 MiB IPC limit, 15,360 daily rows and a 16 MiB load limit. New identities past the aggregate bound are reported as unattributed bytes. Unexpected trace-consumer exit is reported as collection failure.
 
@@ -70,7 +70,7 @@ Each changed country receives one 450 ms opacity pulse, bounded to 32 pulses per
 
 `tools/build-winui.ps1` builds the UI, native collector/WFP DLL and broker, runs model/service tests, and verifies pinned supply-chain inputs and bundled country/flag hashes.
 
-`tools/test-monitor-ui.ps1 -Runs 3 -RenderAndNotify` exercises native rows and icon recycling. `ZikWall.exe --test-lifecycle` checks tray hide/restore and actual background samples. `ZikWall.exe --test-map` renders labeled offline fixtures. `ZikWall.exe --test-usage` requests UAC and tests four loopback TCP/UDP IPv4/IPv6 paths against known fixture payload sizes, reporting a coverage failure rather than accepting missing events as zero traffic. Diagnostics bypass normal single-instance reuse and do not enable autorun.
+`tools/test-monitor-ui.ps1 -Runs 3 -RenderAndNotify` exercises native rows and icon recycling. `ZikWall.exe --test-lifecycle` checks tray hide/restore and actual background samples. `ZikWall.exe --test-map` renders labeled offline fixtures. `ZikWall.exe --test-usage` uses the service (UAC for portable builds) and tests four loopback TCP/UDP IPv4/IPv6 paths against known fixture payload sizes, reporting a coverage failure rather than accepting missing events as zero traffic. Diagnostics bypass normal single-instance reuse and do not enable autorun.
 
 The first ETW runtime attempt on 12 October 2026 returned Windows error 1223 (UAC canceled). **Native accounting coverage and collector-under-load performance remain unverified on this machine.** Parsing/accounting tests and a successful build do not substitute for that privileged runtime test. Do not represent the feature as complete accounting until the diagnostic and additional Internet/VPN workload measurements pass.
 
@@ -97,7 +97,7 @@ row. Right-clicking blank space does not act on an earlier selection.
 The block-review dialog lists the scope and offers no expiry, 5 minutes,
 30 minutes or 1 hour. **Block now** saves rules at the start of the selected
 profile and applies that profile, including existing saved changes shown in the
-review. It requests UAC if filtering is off. Success is shown only after the
+review. It starts a service session if filtering is off; portable builds request UAC. Success is shown only after the
 broker acknowledges the policy; a rejected/canceled elevation is reported as
 saved but not confirmed active. Canceling the review itself saves nothing.
 Session filters end on exit; saved unexpired rules can be applied again later.

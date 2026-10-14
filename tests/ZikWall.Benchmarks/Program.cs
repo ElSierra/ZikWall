@@ -9,6 +9,7 @@ using ZikWall.WinUI.Services;
 
 // No test framework/package, real firewall changes, public requests or user-data writes.
 string output = args.FirstOrDefault() ?? "artifacts/benchmarks/core.json";
+if (args.Contains("--activity-only")) { ActivityAllocationBenchmarks.Run(output); return; }
 if (args.Contains("--usage-only")) { UsageBenchmarks.Run(output); return; }
 if (args.Contains("--passive-dns-only")) { PassiveDnsBenchmarks.Run(output); return; }
 if (args.Contains("--log-analysis-only")) { LogAnalysisBenchmarks.Run(output); return; }

@@ -42,7 +42,7 @@ public sealed partial class MonitoringView
     private async Task RestoreSessionsAsync()
     {
         if (diagnostic) return;
-        // Await one prompt at a time. Failed/cancelled elevation never marks a helper active.
+        // Restore independently through the installed service (portable builds use UAC).
         if (rememberDomains) await ToggleDomainAsync();
         if (!closed && rememberUsage && usageClient is null && !usageBusy) await ToggleUsageAsync();
     }

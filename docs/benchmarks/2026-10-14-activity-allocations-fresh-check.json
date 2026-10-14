@@ -1,0 +1,9 @@
+{
+  "Scenario": "10,000 connections, 100 collapsed apps, empty new-connection set (production monitor path)",
+  "Iterations": 100,
+  "AllocatedBytesPerRefresh": 8004527,
+  "MedianMs": 10.4584,
+  "P95Ms": 12.1776,
+  "AllocationBudget": 8000000,
+  "Passed": false
+}

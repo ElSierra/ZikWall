@@ -10,7 +10,8 @@ public sealed partial class LogAnalysisView : UserControl
     private readonly LogReadStateStore readStore = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZikWall"));
     private MonitoringView? monitor;
     private DateTimeOffset readThrough;
-    private bool ready, detailOpen;
+    private bool ready;
+    public Window? Owner { get; set; }
     private string persistenceError = "";
 
     public LogAnalysisView()
@@ -63,16 +64,10 @@ public sealed partial class LogAnalysisView : UserControl
         Refresh();
     }
 
-    private async void EventClicked(object sender, ItemClickEventArgs args)
+    private void EventClicked(object sender, ItemClickEventArgs args)
     {
-        if (detailOpen || args.ClickedItem is not LogEntry row) return;
-        detailOpen = true;
-        try
-        {
-            var text = new TextBlock { Text = $"{row.FullTime}\n{row.Connection.Application} {row.Message}.\n\n{row.Host}\n{row.Context}\n{row.Connection.CountryLabel}\n\n{row.Source.Details}\n{row.Connection.ProcessPath}\n\n{row.Connection.DomainDescription}", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxWidth = 540 };
-            await new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = row.CategoryLabel,
-                Content = new ScrollViewer { Content = text, MaxHeight = 500 }, CloseButtonText = "Close" }.ShowAsync();
-        }
-        finally { detailOpen = false; }
+        if (Owner is null || args.ClickedItem is not LogEntry row) return;
+        Presentation.ToolWindows.For(Owner).Text("log:" + row.Source.Time.UtcTicks + ":" + row.Source.Event + ":" + row.Connection.Key, row.CategoryLabel,
+            $"{row.FullTime}\n{row.Connection.Application} {row.Message}.\n\n{row.Host}\n{row.Context}\n{row.Connection.CountryLabel}\n\n{row.Source.Details}\n{row.Connection.ProcessPath}\n\n{row.Connection.DomainDescription}");
     }
 }

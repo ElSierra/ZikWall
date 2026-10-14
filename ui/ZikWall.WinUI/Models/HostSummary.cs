@@ -28,7 +28,7 @@ public sealed record HostSummary(IReadOnlyList<HostEntry> Items, int Count)
             .Select(group => new HostEntry(group.Key,
                 string.Join(", ", group.SelectMany(x => x.HostNames.Split(", ", StringSplitOptions.RemoveEmptyEntries))
                     .Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.OrdinalIgnoreCase)),
-                group.First().CountryFlag, group.Select(x => x.Key).Distinct().Count(),
+                group.First().CountryFlag, group.Select(x => x.Identity).Distinct().Count(),
                 string.Join(" / ", group.Select(x => x.HostNameSource).Distinct())) )
             .OrderBy(x => x.Names.Length == 0).ThenBy(x => x.Label, StringComparer.OrdinalIgnoreCase)
             .ThenBy(x => x.Address, StringComparer.Ordinal).ToArray();

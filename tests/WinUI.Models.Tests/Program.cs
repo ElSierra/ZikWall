@@ -5,6 +5,8 @@ using ZikWall.WinUI.Models;
 if (args.Contains("--activity-overview-only")) { ActivityOverviewTests.Run(); return; }
 if (args.Contains("--notifications-only")) { NotificationTests.Run(); return; }
 if (args.Contains("--passive-dns-only")) { await PassiveDnsTests.RunAsync(); return; }
+if (args.Contains("--service-only")) { await ServiceProtocolTests.RunAsync(); return; }
+if (args.Contains("--service-rejection-only")) { await ServiceProtocolTests.RejectUntrustedClientAsync(); return; }
 
 if (args.SequenceEqual(new[] { "--log-analysis" })) { LogAnalysisTests.Run(); return; }
 
@@ -68,6 +70,7 @@ PreferencesTests.Run();
 await CachedDomainTests.RunAsync(args.Contains("--dns-cache"));
 await HostNameTests.RunAsync();
 await PassiveDnsTests.RunAsync();
+await ServiceProtocolTests.RunAsync();
 PolicyTests.Run();
 PolicyAnalysisTests.Run();
 PrivacyTests.RunAsync().GetAwaiter().GetResult();

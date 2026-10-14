@@ -11,6 +11,10 @@ public partial class App : Application
     public App() => InitializeComponent();
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        if (Environment.GetCommandLineArgs().Skip(1).SequenceEqual(new[] { "--test-service" }))
+        {
+            await Services.ServiceSelfTest.RunAsync(); Exit(); return;
+        }
         if (Environment.GetCommandLineArgs().Skip(1).SequenceEqual(new[] { "--test-domain-benchmark" }))
         {
             await Services.DomainCaptureBenchmark.RunAsync(); Exit(); return;

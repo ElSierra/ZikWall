@@ -173,7 +173,7 @@ public sealed partial class MainWindow : Window
             ActivityPanel.EnableUsageRequested = MonitorPanel.EnableOverviewUsageAsync;
             ActivityPanel.ConnectionsRequested += () => Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "connections");
         }
-        if (view == "logs" && LogPanel is null) { LogPanel = new(); LogHost.Content = LogPanel; LogPanel.Connect(MonitorPanel); }
+        if (view == "logs" && LogPanel is null) { LogPanel = new() { Owner = this }; LogHost.Content = LogPanel; LogPanel.Connect(MonitorPanel); }
         ActivityHost.Visibility = view == "activity" ? Visibility.Visible : Visibility.Collapsed;
         LogHost.Visibility = view == "logs" ? Visibility.Visible : Visibility.Collapsed;
         if (ActivityPanel is not null) ActivityPanel.Visibility = view == "activity" ? Visibility.Visible : Visibility.Collapsed;
@@ -218,12 +218,22 @@ public sealed partial class MainWindow : Window
         DetailsButton.IsEnabled = rule is not null;
     }
 
-    private async void DetailsClicked(object sender, RoutedEventArgs args)
+    private void DetailsClicked(object sender, RoutedEventArgs args)
     {
         if (RuleList.SelectedItem is not RuleEntry rule) return;
-        var text = new TextBlock { Text = $"{rule.State} · {rule.Duration}\n\nRemote: {rule.Destination}\nLocal: {rule.LocalEndpoint}\n\n{rule.Direction} · {rule.Protocol}\n\n{rule.Path}\n{rule.Applications}\n\n{rule.Notes}", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxWidth = 460 };
-        var dialog = new ContentDialog { XamlRoot = Root.XamlRoot, RequestedTheme = Root.ActualTheme, Title = rule.Name, Content = text, CloseButtonText = "Close", PrimaryButtonText = imported ? "" : "Edit rule", IsPrimaryButtonEnabled = !imported };
-        if (await dialog.ShowAsync() == ContentDialogResult.Primary) await EditRule(rule);
+        bool editable = !imported;
+        Presentation.ToolWindows.For(this).Show("rule:" + (rule.PolicyRuleId?.ToString() ?? rule.Name + rule.Path), rule.Name, () =>
+        {
+            var content = new StackPanel { Spacing = 16 };
+            content.Children.Add(new TextBlock { Text = $"{rule.State} · {rule.Duration}\n\nRemote: {rule.Destination}\nLocal: {rule.LocalEndpoint}\n\n{rule.Direction} · {rule.Protocol}\n\n{rule.Path}\n{rule.Applications}\n\n{rule.Notes}", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true });
+            if (editable)
+            {
+                var edit = new Button { Content = "Edit rule" };
+                edit.Click += async (_, _) => await EditRule(rule);
+                content.Children.Add(edit);
+            }
+            return content;
+        });
     }
 
     private async void OpenProfileClicked(object sender, RoutedEventArgs args)

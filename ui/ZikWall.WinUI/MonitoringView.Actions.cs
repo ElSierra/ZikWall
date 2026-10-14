@@ -120,8 +120,8 @@ public sealed partial class MonitoringView
     private async Task InspectTargetAsync(string path)
     {
         var identity = await ExecutableIdentity.InspectAsync(path);
-        await new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Executable identity",
-            Content = new TextBlock { Text = $"{identity.Path}\n\n{identity.TrustDescription}\n\nSHA-256: {identity.Sha256}\n\nThis describes the file at inspection time. Firewall rules match paths, not signatures or hashes.", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxWidth = 520 }, CloseButtonText = "Close" }.ShowAsync();
+        if (!closed && Owner is not null) Presentation.ToolWindows.For(Owner).Text("identity:" + path, "Executable identity",
+            $"{identity.Path}\n\n{identity.TrustDescription}\n\nSHA-256: {identity.Sha256}\n\nThis describes the file at inspection time. Firewall rules match paths, not signatures or hashes.");
     }
     private async Task RunRowActionAsync(Func<Task> action)
     {

@@ -17,6 +17,17 @@ try
     if (parent.StartTime.ToUniversalTime().Ticks != startTicks || !string.Equals(parent.MainModule?.FileName, Path.Combine(AppContext.BaseDirectory, "ZikWall.exe"), StringComparison.OrdinalIgnoreCase)) return;
     string sid = PipeSecurityNative.OwnerSid(parent);
     using var pipe = PipeSecurityNative.Create("ZikWall." + pipeId.ToString("N"), sid);
+    if (Environment.GetEnvironmentVariable("ZIKWALL_SERVICE_SESSION") == "1")
+    {
+        // The service closes stdin before stopping. Break IPC so normal finally/
+        // using cleanup releases ETW, DNS capture and dynamic WFP resources.
+        _ = Task.Run(async () =>
+        {
+            try { await Console.In.ReadLineAsync(); }
+            catch (IOException) { }
+            pipe.Dispose();
+        });
+    }
     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
     await pipe.WaitForConnectionAsync(timeout.Token);
     if (!PipeSecurityNative.GetNamedPipeClientProcessId(pipe.SafePipeHandle, out uint clientId) || clientId != parentId) return;

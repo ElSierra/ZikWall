@@ -16,11 +16,18 @@ static class HostNameTests
         Check(summary.Items[0].Names.Contains("site.example") && !summary.Items[0].Names.Contains("server.example"), "Cache hints take priority over reverse lookup.");
         Check(HostSummary.Create([row, row with { RemoteAddress = "::ffff:8.8.8.8" }]).Count == 1, "Mapped IPv4 must identify the same host.");
         Check(HostSummary.Create([row with { RemotePort = 0 }]).Count == 0, "Listening endpoints have no remote host.");
+        Check(HostSummary.Create([row, row with { State = "CloseWait", DomainHint = "updated.example" }, row with { LocalPort = 40001 }]).Items.Single().Connections == 2,
+            "Host socket counts must deduplicate transport identities while preserving distinct ports.");
         var reversed = row with { ReverseDnsName = "server.example" };
         Check(reversed.DestinationLabel == "server.example" && reversed.DomainDescription.Contains("Reverse DNS") && reversed.Matches("SERVER.EXAMPLE"), "Reverse DNS must display, search and identify its source.");
         Check(reversed.Identity == row.Identity && !JsonSerializer.Serialize(reversed).Contains("server.example"), "Lookup names must not change identity or persist in history.");
         var tree = new ActivityTree(); tree.Update([row]); tree.Update([reversed]);
         Check(tree.Rows[0].Hosts.Primary == "server.example", "Live rows must update when hostnames arrive.");
+        var retained = tree.Rows[0];
+        tree.Update([reversed], fresh: new HashSet<string> { reversed.Key });
+        Check(tree.Rows[0].IsNew, "New connection markers must appear for matching identities.");
+        tree.Update([reversed], fresh: new HashSet<string>());
+        Check(!tree.Rows[0].IsNew && ReferenceEquals(retained, tree.Rows[0]), "An empty fresh set must clear the marker without replacing its row.");
         long now = 0; int calls = 0;
         using var resolver = new ReverseDnsHints((_, _) => { calls++; return Task.FromResult("SERVER.Example."); }, () => now);
         resolver.RequestRefresh([row], false); await resolver.Pending;

@@ -1,4 +1,4 @@
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
   <Package Name="ZikWall" Manufacturer="isaacojo.me" Version="$(var.Version)" Language="1033"
            UpgradeCode="A73F13E3-53D4-4D63-96AD-85460794860F" Scope="perMachine"
            InstallerVersion="500" Compressed="yes">
@@ -12,11 +12,27 @@
     <Launch Condition="Installed OR (VersionNT64 AND WINDOWSBUILD &gt;= 19041)"
             Message="ZikWall requires 64-bit Windows 10 build 19041 or newer." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-    <Icon Id="ZikWallIcon" SourceFile="$(var.Payload)\Assets\ZikWall.ico" />
-    <Property Id="ARPPRODUCTICON" Value="ZikWallIcon" />
+    <!-- Advertised shortcut icons must retain the target's extension. An
+         extensionless cached ICO is displayed as a generic document by Explorer. -->
+    <Icon Id="ZikWall.exe" SourceFile="$(var.Payload)\ZikWall.exe" />
+    <Property Id="ARPPRODUCTICON" Value="ZikWall.exe" />
+    <util:CloseApplication Id="CloseZikWall" Target="ZikWall.exe" Sequence="1"
+                           CloseMessage="yes" EndSessionMessage="yes" ElevatedCloseMessage="yes"
+                           ElevatedEndSessionMessage="yes" Timeout="5" RebootPrompt="no" TerminateProcess="0" />
+    <util:CloseApplication Id="CloseZikWallBroker" Target="ZikWall.Broker.exe" Sequence="2"
+                           CloseMessage="yes" ElevatedCloseMessage="yes" Timeout="5"
+                           RebootPrompt="no" TerminateProcess="0" />
+    <SetProperty Id="WixShellExecTarget" Value="[INSTALLFOLDER]ZikWall.exe" After="CostFinalize" Sequence="both" />
+    <CustomAction Id="LaunchZikWall" BinaryRef="Wix4UtilCA_X64" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
     <Property Id="ARPURLINFOABOUT" Value="https://isaacojo.me" />
     <Property Id="ARPHELPLINK" Value="https://isaacojo.me" />
     <SetProperty Id="ARPINSTALLLOCATION" Value="[INSTALLFOLDER]" After="CostFinalize" Sequence="both" />
+    <!-- A boot-started SYSTEM executable must not live in a user-writable folder. -->
+    <SetProperty Id="ZIKWALL_SECURE_DIRECTORY" Value="[ProgramFiles64Folder]ZikWall\" Before="CostFinalize" Sequence="both" />
+    <CustomAction Id="RequireSecureServiceDirectory" Error="ZikWall Background Service requires installation in the default Program Files\ZikWall folder." />
+    <InstallExecuteSequence>
+      <Custom Action="RequireSecureServiceDirectory" After="CostFinalize" Condition="NOT (REMOVE ~= &quot;ALL&quot;) AND NOT (INSTALLFOLDER ~= ZIKWALL_SECURE_DIRECTORY)" />
+    </InstallExecuteSequence>
     <UIRef Id="ZikWallUI" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.InstallerAssets)\Dialog.bmp" />
     <WixVariable Id="WixUIBannerBmp" Value="$(var.InstallerAssets)\Banner.bmp" />

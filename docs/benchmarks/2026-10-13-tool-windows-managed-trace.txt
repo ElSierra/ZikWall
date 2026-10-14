@@ -1,0 +1,21 @@
+Top 20 Functions (Exclusive)                                                  Inclusive           Exclusive           
+1.  il!Interop+Kernel32.GetQueuedCompletionStatus(int,unsigned int32&,unsi    54.53%              54.53%              
+2.  WaitHandle.WaitOneNoCheck(int32)                                          22.49%              22.49%              
+3.  IApplicationStaticsMethods.Start(class WinRT.IObjectReference,class Mi    22.5%               22.4%               
+4.  SystemNetworkInterface.GetNetworkInterfaces()                             0.17%               0.14%               
+5.  IntPtr].GetResults(class WinRT.IObjectReference)                          0.09%               0.09%               
+6.  IStorageItemPropertiesMethods.GetThumbnailAsync(class WinRT.IObjectRef    0.04%               0.04%               
+7.  TcpDirection.Read(class ZikWall.WinUI.Models.ConnectionEntry)             0.03%               0.03%               
+8.  SystemIPv4InterfaceProperties.GetPerAdapterInfo(unsigned int32)           0.03%               0.03%               
+9.  ConnectionMonitor.Capture()                                               0.17%               0.02%               
+10. IStorageFileStaticsMethods.GetFileFromPathAsync(class WinRT.IObjectRef    0.01%               0.01%               
+11. IToolTipServiceStaticsMethods.SetToolTip(class WinRT.IObjectReference,    0.01%               0.01%               
+12. il!Interop+Kernel32.GetSystemTimes(int64&,int64&,int64&)                  0.01%               0.01%               
+13. __Canon].FromAbi(int)                                                     0.01%               0.01%               
+14. CastHelpers.StelemRef(class System.Array,int,class System.Object)         0.01%               0.01%               
+15. __Canon].set_Capacity(int32)                                              0.01%               0.01%               
+16. ComWrappers.TryGetOrCreateComInterfaceForObjectInternal(value class Sy    0.01%               0.01%               
+17. Missing Symbol                                                            0%                  0%                  
+18. IUIElementMethods.set_Visibility(class WinRT.IObjectReference,value cl    0%                  0%                  
+19. AsyncMethodBuilderCore.Start(!!0&)                                        0.03%               0%                  
+20. __Canon].<set_Completed>g__set_CompletedFallback|7_0(class WinRT.IObje    0%                  0%                  

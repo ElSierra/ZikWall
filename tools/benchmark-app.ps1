@@ -15,12 +15,27 @@ $output = [IO.Path]::GetFullPath($OutputPath)
 if (-not (Test-Path -LiteralPath $app)) { throw 'Build ZikWall before benchmarking.' }
 # A normal fresh process starts monitoring but never enables filtering or DNS.
 # Do not interact with its window during measurement; only this process is closed.
-if ($Background -and -not ('ZikWallBenchmarkWindow' -as [type])) {
+if (-not ('ZikWallBenchmarkWindow' -as [type])) {
     Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 public static class ZikWallBenchmarkWindow {
+    private delegate bool EnumCallback(IntPtr window, IntPtr param);
+    [DllImport("user32.dll")] private static extern bool EnumWindows(EnumCallback callback, IntPtr param);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(IntPtr window, System.Text.StringBuilder name, int count);
+    public static IntPtr FindWindow(uint pid) {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((window, _) => {
+            GetWindowThreadProcessId(window, out uint owner);
+            if (owner != pid) return true;
+            var name = new System.Text.StringBuilder(256); GetClassName(window, name, 256);
+            if (name.ToString().Contains("WinUIDesktop")) { found = window; return false; }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
     [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr window);
+    [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr window);
     [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr window, int command);
     [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
     [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr window, uint message, IntPtr wparam, IntPtr lparam);
@@ -36,13 +51,20 @@ try {
         Start-Sleep -Milliseconds 100
         $process.Refresh()
         if ($process.HasExited) { throw "App exited during warmup ($($process.ExitCode))." }
-        if ($null -eq $windowReadyMs -and $process.MainWindowHandle -ne 0) {
+        if ($ownedWindow -eq [IntPtr]::Zero) { $ownedWindow = [ZikWallBenchmarkWindow]::FindWindow($process.Id) }
+        if ($null -eq $windowReadyMs -and $ownedWindow -ne [IntPtr]::Zero) {
             $windowReadyMs = $launch.Elapsed.TotalMilliseconds
-            $ownedWindow = $process.MainWindowHandle
-            if ($Background) { $null = [ZikWallBenchmarkWindow]::ShowWindow($ownedWindow, 0) }
+            $null = [ZikWallBenchmarkWindow]::ShowWindow($ownedWindow, $(if ($Background) { 0 } else { 5 }))
+        }
+        # WinUI can activate after creating its HWND. Keep the requested hidden
+        # state throughout warmup, then verify it without intervention in samples.
+        if ($Background -and $ownedWindow -ne [IntPtr]::Zero -and [ZikWallBenchmarkWindow]::IsWindowVisible($ownedWindow)) {
+            $null = [ZikWallBenchmarkWindow]::ShowWindow($ownedWindow, 0)
         }
     }
     $process.Refresh()
+    if ($ownedWindow -eq [IntPtr]::Zero) { throw "No owned WinUI window was found; measurement would be invalid." }
+    if (-not $Background -and (-not [ZikWallBenchmarkWindow]::IsWindowVisible($ownedWindow) -or [ZikWallBenchmarkWindow]::IsIconic($ownedWindow))) { throw "Foreground benchmark window is not visible." }
     if ($Background -and ($ownedWindow -eq [IntPtr]::Zero -or [ZikWallBenchmarkWindow]::IsWindowVisible($ownedWindow))) { throw 'Background benchmark is invalid: the test window was not hidden.' }
     $startCpu = $process.TotalProcessorTime.TotalMilliseconds
     $previousCpu = $startCpu
@@ -54,7 +76,14 @@ try {
         $process.Refresh()
         if ($process.HasExited) { throw "App exited during measurement ($($process.ExitCode))." }
         if ($Background -and [ZikWallBenchmarkWindow]::IsWindowVisible($ownedWindow)) { throw 'Background benchmark is invalid: the test window became visible.' }
+        if (-not $Background -and (-not [ZikWallBenchmarkWindow]::IsWindowVisible($ownedWindow) -or [ZikWallBenchmarkWindow]::IsIconic($ownedWindow))) { throw "Foreground window became hidden." }
         $elapsed = $clock.Elapsed.TotalMilliseconds
+        if ($elapsed - $previousMs -gt 10000) {
+            [IO.Directory]::CreateDirectory((Split-Path $output)) | Out-Null
+            [ordered]@{ Label = $Label; BudgetsPassed = $false; InvalidReason = 'Sampling gap exceeded 10 seconds (system suspension or stalled sampler).'; GapSeconds = ($elapsed - $previousMs) / 1000 } |
+                ConvertTo-Json | Set-Content -LiteralPath $output -Encoding utf8
+            throw 'Resource measurement invalid: sampling gap exceeded 10 seconds.'
+        }
         $cpu = $process.TotalProcessorTime.TotalMilliseconds
         $samples.Add([pscustomobject]@{
             Seconds = [Math]::Round($elapsed / 1000, 2)
@@ -81,6 +110,7 @@ try {
         CpuModel = $cpuModel
         PhysicalMemoryGiB = $memoryGiB
         Scenario = $(if ($Background) { 'Hidden window; 15-second background monitoring; collector/filtering/DNS off' } else { 'Fresh grouped Connections page; normal host traffic; collector/filtering/DNS off; no interactions' })
+        WindowVisibilityVerified = $true
         WarmupSeconds = $WarmupSeconds
         MeasuredSeconds = [Math]::Round($previousMs / 1000, 2)
         WindowReadyMs = $windowReadyMs
@@ -103,7 +133,7 @@ try {
 }
 finally {
     if (-not $process.HasExited) {
-        if ($Background) {
+        if ($ownedWindow -ne [IntPtr]::Zero) {
             $owner = [uint32]0
             $null = [ZikWallBenchmarkWindow]::GetWindowThreadProcessId($ownedWindow, [ref]$owner)
             if ($owner -ne $process.Id) { throw 'Benchmark window ownership changed.' }

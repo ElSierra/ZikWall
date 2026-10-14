@@ -1,12 +1,12 @@
-param([switch]$UseExistingMsi, [string]$Version)
+param([switch]$UseExistingMsi, [string]$Version, [string]$StagingRoot = [IO.Path]::GetTempPath())
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
-if (-not $UseExistingMsi) { & "$PSScriptRoot\build-setup.ps1" -Version $Version }
+if (-not $UseExistingMsi) { & "$PSScriptRoot\build-setup.ps1" -Version $Version -StagingRoot $StagingRoot }
 $msi = Join-Path $root 'artifacts\installer\setup.msi'
 $manifestPath = Join-Path $root 'artifacts\installer\manifest.json'
 & "$PSScriptRoot\test-setup.ps1" -MsiPath $msi -ManifestPath $manifestPath -RemoveStaging
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-$work = Join-Path $root ('temp\setup-exe-' + [guid]::NewGuid().ToString('N'))
+$work = Join-Path $StagingRoot ('ZikWall-setup-exe-' + [guid]::NewGuid().ToString('N'))
 $payload = Join-Path $work 'payload'
 $null = New-Item -ItemType Directory -Path $payload -Force
 $project = Join-Path $root 'ui\ZikWall.Setup\ZikWall.Setup.csproj'
@@ -56,7 +56,7 @@ $record | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $destination 'setup-e
 Write-Host "PASS: self-contained setup.exe extraction, MSI integrity, native WinUI screens and $($report.Checks.Count) diagnostic checks. No installation performed."
 Write-Host "Built: $(Join-Path $destination 'setup.exe')"
 $resolvedWork = [IO.Path]::GetFullPath($work)
-$tempRoot = [IO.Path]::GetFullPath((Join-Path $root 'temp'))
+$tempRoot = [IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($StagingRoot))
 if (-not $resolvedWork.StartsWith($tempRoot + '\', [StringComparison]::OrdinalIgnoreCase) -or
     ((Get-Item -LiteralPath $resolvedWork).Attributes -band [IO.FileAttributes]::ReparsePoint) -or
     (Get-ChildItem -LiteralPath $resolvedWork -Recurse -Force -Attributes ReparsePoint)) { throw 'Refusing unsafe setup staging cleanup.' }

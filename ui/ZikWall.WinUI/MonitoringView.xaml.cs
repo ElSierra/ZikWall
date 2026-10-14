@@ -115,7 +115,7 @@ public sealed partial class MonitoringView : UserControl
     public void Stop() { closed = true; domainClient?.Dispose(); usageTimer.Stop(); usageClient?.Dispose(); SaveUsage(); timer.Stop(); desktopNotifications.Dispose(); if (!busy) enrichment?.Dispose(); if (SaveHistory.IsOn) _ = PersistAsync(); }
     public void SetPageActive(bool active) { pageActive = active; UpdateInterval(); }
     private void RefreshIntervalChanged(object sender, SelectionChangedEventArgs args) { UpdateInterval(); SavePreferences(); }
-    private void UpdateInterval() => timer.Interval = TimeSpan.FromSeconds(!pageActive || WindowMinimized ? 15 : RefreshChoice?.SelectedIndex switch { 0 => 2, 2 => 10, _ => 5 });
+    private void UpdateInterval() => timer.Interval = TimeSpan.FromSeconds((!pageActive || WindowMinimized) && !OptionsVisible ? 15 : RefreshChoice?.SelectedIndex switch { 0 => 2, 2 => 10, _ => 5 });
 
     private async Task CaptureAsync()
     {
@@ -170,7 +170,7 @@ public sealed partial class MonitoringView : UserControl
             ActivityStore.TrimInPlace(archive, now);
             LogChanged?.Invoke();
             if (Visibility != Visibility.Visible && !WindowMinimized) ActivityOverviewChanged?.Invoke();
-            if (Visibility == Visibility.Visible && !WindowMinimized)
+            if ((Visibility == Visibility.Visible && !WindowMinimized) || OptionsVisible)
             {
                 // Counter values are not displayed in the picker. Rebind only if its
                 // names/IDs change, avoiding extra selection events and chart redraws.
@@ -187,7 +187,7 @@ public sealed partial class MonitoringView : UserControl
                     }
                     finally { updatingAdapters = false; }
                 }
-                UpdateLists(freshChanged);
+                if (Visibility == Visibility.Visible && !WindowMinimized) UpdateLists(freshChanged);
                 DrawTraffic();
             }
             MonitorStatus.Text = $"Updated {now.ToLocalTime():T} · {current.Count} endpoints · {archive.Events.Count} history events";
@@ -220,8 +220,13 @@ public sealed partial class MonitoringView : UserControl
                 if (events[i].Time.ToLocalTime() is var time && events[i - 1].Time.ToLocalTime() is var newer
                     && time.Date == newer.Date && time.Hour == newer.Hour && time.Minute == newer.Minute)
                     events[i] = events[i] with { SameMinuteAsPrevious = true };
-            HistoryList.ItemsSource = events;
-            HistoryList.SelectedItem = selectedEvent is null ? null : events.FirstOrDefault(x => x.Time == selectedEvent.Time && x.Event == selectedEvent.Event && x.Connection.Identity == selectedEvent.Connection.Identity);
+            // A stable refresh must retain native rows and scroll/selection state.
+            // Asynchronous hostname hints still participate in record equality.
+            if (HistoryList.ItemsSource is not IReadOnlyList<ConnectionEvent> shown || !shown.SequenceEqual(events))
+            {
+                HistoryList.ItemsSource = events;
+                HistoryList.SelectedItem = selectedEvent is null ? null : events.FirstOrDefault(x => x.Time == selectedEvent.Time && x.Event == selectedEvent.Event && x.Connection.Identity == selectedEvent.Connection.Identity);
+            }
             ShowEmpty(events.Count == 0, "No activity in this range", query.Length > 0 ? "Try another search, filter or range." : "New, changed and closed connections appear here as they happen.");
             return;
         }
@@ -298,11 +303,15 @@ public sealed partial class MonitoringView : UserControl
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(PauseButton, tip);
     }
 
-    private async void AllUsageClicked(object sender, RoutedEventArgs args)
+    private void AllUsageClicked(object sender, RoutedEventArgs args)
     {
-        var list = new ListView { MaxHeight = 440, MinWidth = 500, SelectionMode = ListViewSelectionMode.None };
-        list.ItemsSource = usage.Days.OrderByDescending(x => x.Day).ThenBy(x => x.Path).Select(x => $"{x.Day:yyyy-MM-dd} · {Path.GetFileName(x.Path)}\n↓ {UsageLedger.Bytes(x.Received)}   ↑ {UsageLedger.Bytes(x.Sent)}\n{x.Path}").ToList();
-        await new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Observed usage · last 30 days", Content = list.Items.Count == 0 ? "No recorded usage. Enable usage to begin collecting. Totals cover collection time only." : list, CloseButtonText = "Close" }.ShowAsync();
+        if (Owner is null) return;
+        Presentation.ToolWindows.For(Owner).Show("all-usage", "Observed usage · last 30 days", () =>
+        {
+            var rows = usage.Days.OrderByDescending(x => x.Day).ThenBy(x => x.Path).Select(x => $"{x.Day:yyyy-MM-dd} · {Path.GetFileName(x.Path)}\n↓ {UsageLedger.Bytes(x.Received)}   ↑ {UsageLedger.Bytes(x.Sent)}\n{x.Path}").ToList();
+            return rows.Count == 0 ? new TextBlock { Text = "No recorded usage. Enable usage to begin collecting. Totals cover collection time only.", TextWrapping = TextWrapping.Wrap }
+                : new ListView { ItemsSource = rows, SelectionMode = ListViewSelectionMode.None, HorizontalContentAlignment = HorizontalAlignment.Stretch, ItemTemplate = (DataTemplate)Resources["UsageHistoryTemplate"] };
+        }, scroll: false);
     }
     private async void DomainClicked(object sender, RoutedEventArgs args) => await ToggleDomainAsync();
     private void ReverseDnsChanged(object sender, RoutedEventArgs args)
@@ -420,7 +429,22 @@ public sealed partial class MonitoringView : UserControl
     {
         if (args.ClickedItem is ActivityRow row) { activityTree.Toggle(row); UpdateLists(); }
     }
-    private void OptionsOpened(object sender, object args) { UpdateDomainStatus(); DrawTraffic(); }
+    private Window? optionsWindow;
+    private bool OptionsVisible => optionsWindow is { AppWindow.IsVisible: true } && optionsWindow.AppWindow.Presenter is not Microsoft.UI.Windowing.OverlappedPresenter { State: Microsoft.UI.Windowing.OverlappedPresenterState.Minimized };
+    private void OptionsClicked(object sender, RoutedEventArgs args)
+    {
+        if (Owner is null) return;
+        optionsWindow = Presentation.ToolWindows.For(Owner).Show("monitor-options", "Monitor options", () =>
+        {
+            OptionsParking.Children.Remove(OptionsContent);
+            return OptionsContent;
+        }, scroll: false, closed: () =>
+        {
+            optionsWindow = null;
+            OptionsParking.Children.Add(OptionsContent);
+        });
+        UpdateDomainStatus(); DrawTraffic();
+    }
     private void UpdateDomainStatus()
     {
         int matched = current.Count(x => x.DomainHint.Length > 0);
@@ -523,44 +547,56 @@ public sealed partial class MonitoringView : UserControl
     }
     private async void ClearHistoryClicked(object sender, RoutedEventArgs args)
     {
-        var dialog = new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Clear local activity?", Content = "This removes the displayed activity and the saved ZikWall activity file on this PC.", PrimaryButtonText = "Clear", CloseButtonText = "Cancel" };
+        var dialog = new ContentDialog { XamlRoot = OptionsContent.XamlRoot, RequestedTheme = ActualTheme, Title = "Clear local activity?", Content = "This removes the displayed activity and the saved ZikWall activity file on this PC.", PrimaryButtonText = "Clear", CloseButtonText = "Cancel" };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
         try { store.Clear(); archive = new([], []); connections.Reset(); recent.ResetBaseline(); traffic.Reset(); baselineTaken = false; fresh = []; UpdateLists(); LogChanged?.Invoke(); DrawTraffic(); MonitorStatus.Text = "Local activity cleared."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { MonitorStatus.Text = ex.Message; }
     }
     private async void DetailsClicked(object sender, RoutedEventArgs args) => await RunRowActionAsync(() => ShowDetailsAsync(SelectedActionRow()));
-    private async Task ShowDetailsAsync(ActivityRow? row)
+    private Task ShowDetailsAsync(ActivityRow? row)
     {
+        if (Owner is null) return Task.CompletedTask;
+        var windows = Presentation.ToolWindows.For(Owner);
         if (row is { Expandable: true } group)
         {
             var days = usage.Days.Where(x => x.AppKey == group.Entry.AppKey).OrderByDescending(x => x.Day).ToList();
             string totals = days.Count == 0 ? "No usage recorded. Enable usage to start observing traffic." : string.Join("\n", days.Select(x => $"{x.Day:yyyy-MM-dd}   ↓ {UsageLedger.Bytes(x.Received)}   ↑ {UsageLedger.Bytes(x.Sent)}"));
-            await new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = group.Title, Content = new TextBlock { Text = group.Entry.ProcessPath + "\n\nObserved traffic · retained daily totals\n" + totals + "\n\nTotals cover collection time only, include local traffic and can be incomplete. Expand a process and select a connection for IP details.", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxWidth = 560 }, CloseButtonText = "Close" }.ShowAsync();
-            return;
+            windows.Text("app-details:" + group.Key, group.Title, group.Entry.ProcessPath + "\n\nObserved traffic · retained daily totals\n" + totals + "\n\nSnapshot when opened. Totals cover collection time only, include local traffic and can be incomplete. Expand a process and select a connection for IP details.");
+            return Task.CompletedTask;
         }
         var item = row?.Entry;
-        if (item is null) { ActionNotice("Select a connection or history event first.", true); return; }
-        var details = new TextBlock { Text = $"{item.ProcessLabel}\n{item.ProcessPath}\n\n{item.Protocol} · {item.State} · {item.Direction}\nLocal: {item.LocalEndpoint}\nRemote: {item.RemoteEndpoint}\nDomain: {item.DomainDescription}\nNetwork: {item.NetworkDescription}\nCountry: {item.CountryLabel}\nScope: {item.NetworkScope}\n\nA connection snapshot does not establish the firewall decision or the hostname requested by the app.", IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap, MaxWidth = 520 };
-        var dialog = new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Connection details", Content = details, CloseButtonText = "Close", PrimaryButtonText = item.RemotePort is > 0 ? "Reverse DNS lookup" : "", SecondaryButtonText = item.ProcessPath.Length > 0 ? "Inspect executable" : "" };
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Secondary)
+        if (item is null) { ActionNotice("Select a connection or history event first.", true); return Task.CompletedTask; }
+        windows.Show("connection:" + item.Key, "Connection details", () =>
         {
-            try
+            var content = new StackPanel { Spacing = 16 };
+            content.Children.Add(new TextBlock { Text = $"{item.ProcessLabel}\n{item.ProcessPath}\n\n{item.Protocol} · {item.State} · {item.Direction}\nLocal: {item.LocalEndpoint}\nRemote: {item.RemoteEndpoint}\nDomain: {item.DomainDescription}\nNetwork: {item.NetworkDescription}\nCountry: {item.CountryLabel}\nScope: {item.NetworkScope}\n\nSnapshot when opened. A connection snapshot does not establish the firewall decision or the hostname requested by the app.", IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap });
+            if (item.ProcessPath.Length > 0)
             {
-                var identity = await ExecutableIdentity.InspectAsync(item.ProcessPath);
-                await new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Executable identity", Content = new TextBlock { Text = $"{identity.Path}\n\n{identity.TrustDescription}\n\nSHA-256: {identity.Sha256}\n\nThis describes the file at inspection time. Current WFP rules match paths, not signatures or hashes.", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, MaxWidth = 520 }, CloseButtonText = "Close" }.ShowAsync();
+                var inspect = new Button { Content = "Inspect executable" };
+                inspect.Click += async (_, _) => await RunRowActionAsync(() => InspectTargetAsync(item.ProcessPath));
+                content.Children.Add(inspect);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException) { MonitorStatus.Text = $"Could not inspect executable: {ex.Message}"; }
-            return;
-        }
-        if (result != ContentDialogResult.Primary) return;
-        try
-        {
-            var lookup = await Dns.GetHostEntryAsync(IPAddress.Parse(item.RemoteAddress)).WaitAsync(TimeSpan.FromSeconds(3));
-            await new ContentDialog { XamlRoot = XamlRoot, RequestedTheme = ActualTheme, Title = "Reverse DNS hint", Content = $"{item.RemoteAddress}\n{lookup.HostName}\n\nThis name comes from your DNS resolver. It is not proof of the domain the app requested and is not used for firewall decisions.", CloseButtonText = "Close" }.ShowAsync();
-        }
-        catch (Exception ex) when (ex is System.Net.Sockets.SocketException or TimeoutException or ArgumentException)
-        { MonitorStatus.Text = $"No reverse-DNS result: {ex.Message}"; }
+            if (item.RemotePort > 0)
+            {
+                var lookup = new Button { Content = "Reverse DNS lookup" };
+                var status = new TextBlock { TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+                lookup.Click += async (_, _) =>
+                {
+                    lookup.IsEnabled = false;
+                    try
+                    {
+                        var result = await Dns.GetHostEntryAsync(IPAddress.Parse(item.RemoteAddress)).WaitAsync(TimeSpan.FromSeconds(3));
+                        status.Text = $"{result.HostName}\n\nThis name comes from your DNS resolver. It is not proof of the domain the app requested and is not used for firewall decisions.";
+                    }
+                    catch (Exception ex) when (ex is System.Net.Sockets.SocketException or TimeoutException or ArgumentException)
+                    { status.Text = $"No reverse-DNS result: {ex.Message}"; }
+                    finally { lookup.IsEnabled = true; }
+                };
+                content.Children.Add(lookup); content.Children.Add(status);
+            }
+            return content;
+        });
+        return Task.CompletedTask;
     }
 
     private async void BlockAppClicked(object sender, RoutedEventArgs args)
@@ -605,7 +641,7 @@ public sealed partial class MonitoringView : UserControl
         if (recentSamples.LastOrDefault() is { } latest) { RateDown.Text = TrafficSample.Rate(latest.Download); RateUp.Text = TrafficSample.Rate(latest.Upload); }
         else RateDown.Text = RateUp.Text = "—";
         Plot(recentSamples, Sparkline, SparkDown, SparkUp);
-        if (MonitorOptions?.IsOpen != true) return;
+        if (!OptionsVisible) return;
         var since = HistorySince();
         var samples = archive.Traffic.Where(x => x.AdapterId == id && x.Time >= since).ToList();
         // Bucket older samples instead of dropping the requested history window. Preserve peaks.
