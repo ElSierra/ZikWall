@@ -1,5 +1,213 @@
 # ZikWall performance and resource budgets
 
+## Connection atlas, 15 October 2026
+
+The animated map now skips identical snapshots, caches unchanged country
+summaries, and compares remote-IP sets without sorting/concatenating socket
+keys. In the native 10,000-connection fixture, unchanged refreshes fell from
+14.35 ms / 5.96 MB allocated to 0.302 ms / 0.080 MB. Animations are finite,
+compositor-driven and stopped when hidden. See [the atlas report](CONNECTION-ATLAS.md)
+for changed-snapshot results, animation measurements, whole-app benchmark scope,
+raw evidence and reproduction commands.
+
+## Log timeline scrolling, 15 October 2026
+
+The native `--test-log-scroll` diagnostic reproduced a refresh moving the viewport
+from offset 8,000 to 0. The view now keeps one observable grouped source, applies
+incremental changes, and uses `KeepItemsInView`. It retains unchanged row objects,
+updates read markers individually, and only resets a group when replacing a page.
+Rows have a fixed height and a lighter text/icon layout; country codes replace
+per-row flag SVGs. Icon recycling avoids redundant bitmaps and rejects stale
+asynchronous completions. Cached pixels remain separate from each row's bitmap.
+
+Automatic saved-history scans pause below the top and while scrolling. Starting
+to scroll cancels a pending automatic scan without disabling paging or leaving a
+loading message. Explicit search, filters and page navigation still query history.
+
+The Release native fixture scrolls 1,000 events through 180 scripted steps with
+monitoring paused. Measurements on this host:
+
+| Measurement | Before | After (four runs) |
+| --- | ---: | ---: |
+| UI layout-step p95 | 12.98 ms | 3.59–9.81 ms |
+| Render-frame interval p95 | 18.39 ms | 8.00–11.90 ms |
+| Process CPU during scrolling | 4.97 s | 1.50–3.17 s |
+| Managed allocations during scrolling | 1.47 MB | 0.87–0.98 MB |
+| Maximum realized panel children | 47 | 44 |
+
+All four updated runs retained the reading position. The final two additionally
+measured the same on-screen row before/after insertion: drift was below 0.001 px.
+The scroll offset correctly increases by one row's height when an event is added
+above it. The test asserts less than 2 px of visible-row drift and bounded native
+realization. Timings vary with host load; these are short fixture measurements,
+not a guarantee of smoothness under all traffic or archive sizes.
+
+Native `--test-log-analysis` checks actual row invocation, read-state persistence,
+archive paging, suppressed scans while reading, and cancellation during scrolling.
+Model regressions cover stable row identity, notification counts, read updates,
+page replacement and date-group changes.
+
+Raw results: [before](benchmarks/2026-10-15-log-scroll-before.json),
+[after 1](benchmarks/2026-10-15-log-scroll-after-1.json),
+[after 2](benchmarks/2026-10-15-log-scroll-after-2.json),
+[final 1](benchmarks/2026-10-15-log-scroll-final-1.json),
+[final 2](benchmarks/2026-10-15-log-scroll-final-2.json).
+
+## Retained history and current setup, 14 October 2026
+
+The final setup 0.10.19696 Release measurements passed the existing foreground/background
+limits of 2% of one CPU core and 200 MiB peak private memory. Each app run used a
+15-second warmup; no builds or component benchmarks ran during the samples.
+
+| Scenario | Measured duration | CPU, one core | Peak private memory |
+| --- | ---: | ---: | ---: |
+| Foreground Connections | 121.08 s | 1.381% | 183.39 MiB |
+| Hidden window | 60.66 s | 0.695% | 126.06 MiB |
+
+Measured assembly SHA-256:
+`A2D34B7FE8A0E9CE3AF32CB45844545B8A82890137562150FB0450416C339487`.
+The app hash matches the MSI manifest. The initial development build also
+passed (1.367% / 174.69 MiB foreground; 0.877% / 127.03 MiB hidden), but its
+assembly differed, so the exact packaged files were measured again after the
+installer build completed. Both sets of raw results are retained.
+These are short live-host samples, not long-running leak or traffic-throughput
+tests. Benchmark mode disables user-history loading/writing and privileged
+collectors, filtering and DNS. The new persistence path was measured separately
+against isolated disk fixtures rather than modifying user history.
+
+| Persistence scenario | Median | p95 |
+| --- | ---: | ---: |
+| Check unchanged 10,000 events / 15,000 adapter samples | 3.31 ms | 6.30 ms |
+| Append and flush 100 new events with a full live window | 5.12 ms | 9.10 ms |
+| Checkpoint the full recent window, including durable flush | 29.61 ms | 41.57 ms |
+| Restart from full checkpoint plus daily journal | 119.00 ms | 132.89 ms |
+| Rebuild missing cache from 13,300 archived events | 66.88 ms | 89.80 ms |
+| Save 512 apps across 30 days, changing today's totals | 40.83 ms | 52.42 ms |
+
+Unchanged snapshots did not grow the archive; checkpoint/replay checks verified
+the restored event/sample counts. Restart allocated 54.95 MB transiently and
+the 30-day usage save allocated 16.13 MB; these are component allocations, not
+resident memory. This fixture does not establish performance for arbitrarily
+large daily journals or years of retained files. Persistence timings are reported
+measurements, with no newly invented pass/fail timing threshold.
+
+Live grouping used 7,676,267 bytes per 10,000-connection refresh, below its 8 MB
+budget. The 1,000-rule mixed sync plan used 4,409,008 bytes and a 10.57 ms median,
+passing its existing allocation/time limits. Log analysis with 50 of 100 apps
+marked read verified unread counts and enrichment bounds; Important took 2.31 ms
+median and All with the 1,000-row display cap took 4.75 ms. The core, usage,
+grouping, log and sync component runs completed successfully. Native firewall
+mutations and DNS-cache provider scans requiring elevation were not benchmarked.
+
+Reproduce the new cases:
+
+```powershell
+dotnet run --project tests/ZikWall.Benchmarks -c Release -- artifacts/benchmarks/history.json --history-only
+dotnet run --project tests/ZikWall.Benchmarks -c Release -- artifacts/benchmarks/read-markers.json --log-analysis-only --read-markers
+```
+
+The full model/service regression suite, native log-click and preference/history
+diagnostics, all 807 extracted MSI hashes, and 35 standalone setup diagnostics
+passed. Setup was built and tested without installing it.
+
+Evidence: [packaged foreground](benchmarks/2026-10-14-retained-history-packaged-foreground.json),
+[packaged hidden](benchmarks/2026-10-14-retained-history-packaged-background.json),
+[release integrity](benchmarks/2026-10-14-retained-history-release.json),
+[initial foreground](benchmarks/2026-10-14-retained-history-foreground.json),
+[initial hidden](benchmarks/2026-10-14-retained-history-background.json),
+[persistence](benchmarks/2026-10-14-retained-history-history.json),
+[read markers](benchmarks/2026-10-14-retained-history-read-markers.json),
+[core](benchmarks/2026-10-14-retained-history-core.json),
+[grouping](benchmarks/2026-10-14-retained-history-activity.json),
+[usage](benchmarks/2026-10-14-retained-history-usage.json),
+[logs without markers](benchmarks/2026-10-14-retained-history-logs.json),
+[sync planner](benchmarks/2026-10-14-retained-history-sync.json).
+
+## Windows Firewall sync, 14 October 2026
+
+The sync benchmark exercises the production planner, native reader, polling helper,
+and completed-retry verifier. All native access in this benchmark is read-only;
+the retry wrapper throws if either write method is called. The machine had 1,003
+Windows rules, with 10 compatible existing rules linked for native measurements.
+
+Release/.NET 8.0.27 results (decimal MB; warmed medians):
+
+| Scenario | Before | After |
+| --- | ---: | ---: |
+| Plan 1,000 unchanged disjoint allow/block rules | 63.29 ms / 142.30 MB allocated | 13.23 ms / 4.41 MB allocated |
+| Plan 1,000 edits to those rules | 81.35 ms / 145.17 MB allocated | 12.06 ms / 7.33 MB allocated |
+| Automatic native read + plan, 10 linked imports | 23.21 ms / 1.31 MB allocated | 12.94 ms / 0.80 MB allocated |
+| Verify an already completed 10-rule retry | 163.22 ms / 6.42 MB allocated | 28.82 ms / 1.12 MB allocated |
+| Read the complete native inventory for the import dialog | 23.19 ms / 1.22 MB allocated | 22.26 ms / 1.22 MB allocated |
+
+The primary allocation defect was parsing both networks again for every
+allow/block pair. Parsing each distinct network once per plan removed quadratic
+allocation without removing overlap checks. Snapshot-local indexes replace
+repeated identity/name scans, retain duplicates for rejection, and avoid validating
+the same immutable entry twice. No native condition is cached between polls.
+
+Automatic sync now reads full conditions only for linked native rules, while
+retaining all inventory names for collision checks and scanning description markers
+when necessary to find renamed exports. The full inventory remains available to
+the import preview. A scan of 10 names plus an absent exported identity marker
+took 13.18 ms, so the marker path is measured separately from imported-name lookup.
+Automatic planning runs on a worker thread. Completed retries use two inventory
+scans regardless of rule count; pending writes retain their fresh pre-write checks,
+and every retry retains final verification. Tests inject drift between those scans.
+
+A first selective-read implementation accidentally made a helper invocation dynamic,
+causing per-rule binder overhead. Native measurements caught the regression; the
+helper is statically dispatched. Final full-inventory allocation matches baseline.
+
+### Polling CPU and memory
+
+Each isolated benchmark process warmed the read/plan path, sampled 65 seconds idle,
+then 65 seconds with three polls at the production 30-second cadence. Memory sampling
+uses `GetProcessMemoryInfo` to avoid enumerating other processes. An earlier sampler
+had material observer overhead and is excluded from the comparison.
+
+| Isolated sync worker | Before | After |
+| --- | ---: | ---: |
+| Idle CPU, percentage of one core | 0.024% | 0.024% |
+| Polling CPU, percentage of one core | 0.624% | 0.409% |
+| Allocations across three polls plus sampling | 3.92 MB | 2.40 MB |
+| Mean private memory during polling | 23.41 MiB | 19.46 MiB |
+| Peak private memory during polling | 26.51 MiB | 21.14 MiB |
+
+These are short component samples, not whole-app CPU/memory budgets, leak tests,
+Windows Firewall service CPU, native mutation latency, or traffic-throughput results.
+Windows CPU accounting and tiered JIT introduce noise; raw p95/CPU samples are retained.
+The allocation improvement is the stronger regression signal. Timing runs use
+10–40 iterations after four warmups; the cadence run has only three polls.
+
+### Reproduction and checks
+
+```powershell
+dotnet run --project tests/ZikWall.Benchmarks -c Release -- artifacts/benchmarks/windows-sync.json --windows-sync-only --native
+dotnet run --project tests/ZikWall.Benchmarks -c Release -- artifacts/benchmarks/windows-sync-poll.json --windows-sync-only --polling
+dotnet run --project tests/WinUI.Models.Tests -c Release -- --windows-sync-perf-regression
+```
+
+Native reads require access outside a restrictive application sandbox, but do not
+require administrator elevation or modify rules. The planner benchmark fails if an
+unchanged 1,000-rule case exceeds a 50 ms median or 8 MB managed allocation budget.
+The deterministic model regression enforces the allocation budget and unchanged
+results; it failed at 142,256,048 bytes before the fix and passes at 4,385,008 bytes.
+
+The full model/service suite, all 53 sync behavior checks, selective native-read
+parity, and native UI preview/cancellation passed. The app and broker built without
+warnings. The earlier native-write validation limitation remains: no Windows
+rule mutations or effective traffic enforcement were benchmarked here.
+
+Evidence: [baseline](benchmarks/2026-10-14-windows-sync-before.json),
+[after network caching](benchmarks/2026-10-14-windows-sync-overlap.json),
+[after indexing](benchmarks/2026-10-14-windows-sync-index.json),
+[retry baseline](benchmarks/2026-10-14-windows-sync-retry-before.json),
+[final](benchmarks/2026-10-14-windows-sync-after.json),
+[polling before](benchmarks/2026-10-14-windows-sync-poll-before.json),
+[polling after](benchmarks/2026-10-14-windows-sync-poll-after.json),
+[excluded observer-overhead run](benchmarks/2026-10-14-windows-sync-poll-observer-overhead.json).
+
 ## Separate tool windows, 14 October 2026
 
 Monitor options, hosts, usage history, connection/executable details, log details,

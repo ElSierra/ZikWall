@@ -1,0 +1,15 @@
+{
+  "Passed": true,
+  "ScrollSteps": 180,
+  "UiStepP95Ms": 3.9726,
+  "UiStepMaxMs": 5.3958,
+  "FrameP95Ms": 8.0242,
+  "LongFrames": 0,
+  "Frames": 910,
+  "CpuMs": 1718.75,
+  "AllocatedBytes": 982472,
+  "MaxRealizedChildren": 44,
+  "OffsetBeforeRefresh": 8000,
+  "OffsetAfterRefresh": 8065.3330078125,
+  "ScrollJumpPixels": 65.3330078125
+}

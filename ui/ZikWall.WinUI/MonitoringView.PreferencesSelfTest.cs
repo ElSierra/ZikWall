@@ -25,6 +25,39 @@ public sealed partial class MonitoringView
             throw new InvalidOperationException("Changed monitor settings reset when a fresh view is opened.");
         first.SaveHistory.IsOn = reopened.SaveHistory.IsOn = false;
         first.Stop(); reopened.Stop();
-        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "preferences-selftest.txt"), "PASS: monitor settings save immediately and survive a fresh view without an exit-time save.");
+        string historyDirectory = Path.Combine(directory, "history");
+        var activityStore = new Services.ActivityStore(historyDirectory);
+        var entry = new Models.ConnectionEntry("TCPv4", "127.0.0.1", 12345, "192.0.2.1", 443, 1, "Established");
+        var savedEvent = new Models.ConnectionEvent(DateTimeOffset.UtcNow, "First seen", entry);
+        activityStore.Save(new([savedEvent], []));
+        var unopened = new MonitoringView(historyDirectory);
+        if (!unopened.SaveHistory.IsOn) throw new InvalidOperationException("History must save by default.");
+        unopened.Stop();
+        if (activityStore.Load().Events.Single() != savedEvent)
+            throw new InvalidOperationException("Closing an unopened monitor overwrote saved history.");
+        var restored = new MonitoringView(historyDirectory);
+        restored.Show(false);
+        await restored.PauseForDiagnosticAsync();
+        var lastEvent = savedEvent with { Time = savedEvent.Time.AddTicks(1), Event = "No longer observed" };
+        restored.archive.Events.Add(lastEvent);
+        var handle = WinRT.Interop.WindowNative.GetWindowHandle(Owner!);
+        using (var shutdownTray = new Presentation.TrayIcon(handle, () => { }, () => { }, () => { }, () => { }, restored.FlushLocalData))
+        {
+            if (SendHistorySessionMessage(handle, 0x11, 0, 1) != 1 || !new Services.ActivityStore(historyDirectory).Load().Events.Contains(lastEvent))
+                throw new InvalidOperationException("Update/shutdown query must synchronously flush the latest history before acknowledging.");
+        }
+        restored.Stop();
+        if (!new Services.ActivityStore(historyDirectory).Load().Events.Contains(savedEvent))
+            throw new InvalidOperationException("Starting and stopping a replacement view lost saved activity.");
+        File.WriteAllText(activityStore.FilePath, "{broken");
+        var unreadable = new MonitoringView(historyDirectory);
+        unreadable.Show(false);
+        await unreadable.PauseForDiagnosticAsync();
+        unreadable.Stop();
+        if (File.ReadAllText(activityStore.FilePath) != "{broken")
+            throw new InvalidOperationException("Unreadable history was overwritten instead of preserved for recovery.");
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "preferences-selftest.txt"), "PASS: monitor settings save immediately and survive a fresh view; history defaults on, survives replacement views, and unopened/corrupt histories cannot be overwritten.");
     }
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW")]
+    private static extern nint SendHistorySessionMessage(nint window, uint message, nuint wparam, nint lparam);
 }

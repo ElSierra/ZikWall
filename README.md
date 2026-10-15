@@ -94,7 +94,7 @@ Keep the entire `artifacts\ZikWall` folder together. The executable depends on t
 
 ## Preview boundaries
 
-- **Session firewall enforcement:** applied filters end when the app/broker session closes. Saved policy definitions remain, but enforcement does not persist across reboot. Windows Firewall settings are unchanged.
+- **Session firewall enforcement:** applied WFP filters end when the app/broker session closes. Optional [two-way Windows Firewall sync](docs/WINDOWS-FIREWALL-SYNC.md) persists compatible linked rules across app exit and reboot. Sync requires an initial review; firewall defaults are unchanged.
 - **Observation is not packet capture:** polling can miss short connections. TCP endpoints are visible; UDP remote destinations are unavailable. First-observation events are not threat detections or firewall decisions.
 - **Hints have limits:** country/network-owner data and DNS names aid interpretation. They do not prove the requested website, expose full URLs, or inspect encrypted traffic.
 - **Traffic totals have scope:** adapter rates cover the adapter. Per-app usage is optional, requires elevation per session, and its native accuracy and collector-on resource use still need broader validation. Host, traffic-type, and country bars count connections rather than attributed bytes.

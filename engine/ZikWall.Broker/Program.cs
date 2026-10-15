@@ -41,9 +41,9 @@ try
     using var usage = new UsageCollector();
     List<FirewallRule> rules = [];
     int active = 0;
-    DateTimeOffset lastRequest = DateTimeOffset.UtcNow;
+    var idle = new BrokerIdleTimeout();
     var read = BrokerWire.ReadAsync<BrokerRequest>(pipe, CancellationToken.None);
-    while (!parent.HasExited && DateTimeOffset.UtcNow - lastRequest < TimeSpan.FromSeconds(20))
+    while (!parent.HasExited && !idle.IsExpired)
     {
         if (await Task.WhenAny(read, Task.Delay(500)) != read)
         {
@@ -55,7 +55,7 @@ try
             continue;
         }
         var request = await read;
-        lastRequest = DateTimeOffset.UtcNow;
+        idle.RecordActivity();
         BrokerResponse response;
         try
         {
@@ -75,11 +75,19 @@ try
                 active = engine.Apply(next, DateTimeOffset.UtcNow);
                 rules = next;
             }
+            else if (request.Command == "windows-sync")
+            {
+                using var windows = new WindowsFirewallStore();
+                windows.EnsureWritable();
+                WindowsFirewallWriter.Apply(windows, request.WindowsBatch ?? throw new InvalidDataException("Missing Windows sync changes."));
+            }
             else if (request.Command == "usage-start") usage.Start();
             else if (request.Command != "usage" && request.Command != "status") throw new InvalidDataException("Unsupported broker request.");
             response = request.Command is "usage" or "usage-start" ? new(true, "Observed traffic collection active", active, usage.Read()) : new(true, "Filtering session active", active);
         }
-        catch (Exception ex) when (ex is InvalidDataException or Win32Exception) { response = new(false, ex.Message, active); }
+        // InvalidDataException derives from SystemException, not IOException.
+        // A rejected policy must return its validation error and keep this session alive.
+        catch (Exception ex) when (ex is InvalidDataException or IOException or Win32Exception or COMException or UnauthorizedAccessException) { response = new(false, ex.Message, active); }
         using var writeTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         await BrokerWire.WriteAsync(pipe, response, writeTimeout.Token);
         read = BrokerWire.ReadAsync<BrokerRequest>(pipe, CancellationToken.None);

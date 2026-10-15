@@ -9,10 +9,12 @@ using ZikWall.WinUI.Services;
 
 // No test framework/package, real firewall changes, public requests or user-data writes.
 string output = args.FirstOrDefault() ?? "artifacts/benchmarks/core.json";
+if (args.Contains("--windows-sync-only")) { WindowsSyncBenchmarks.Run(output, args.Contains("--native"), args.Contains("--polling")); return; }
 if (args.Contains("--activity-only")) { ActivityAllocationBenchmarks.Run(output); return; }
 if (args.Contains("--usage-only")) { UsageBenchmarks.Run(output); return; }
 if (args.Contains("--passive-dns-only")) { PassiveDnsBenchmarks.Run(output); return; }
-if (args.Contains("--log-analysis-only")) { LogAnalysisBenchmarks.Run(output); return; }
+if (args.Contains("--log-analysis-only")) { LogAnalysisBenchmarks.Run(output, args.Contains("--read-markers")); return; }
+if (args.Contains("--history-only")) { HistoryPersistenceBenchmarks.Run(output); return; }
 var results = new List<object>();
 using var benchmarkProcess = Process.GetCurrentProcess();
 object? keepAlive = null;

@@ -32,12 +32,14 @@ public sealed partial class MonitoringView : UserControl
     private readonly UsageStore usageStore = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZikWall"));
     private DateTimeOffset lastUsageSaved;
     private bool usageBusy, usageDirty;
+    private bool usageWritable = true;
     internal int CaptureCount { get; private set; }
     private readonly DispatcherTimer usageTimer = new() { Interval = TimeSpan.FromSeconds(5) };
     private readonly ActivityStore store = new(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ZikWall"));
     private List<ConnectionEntry> current = [];
     private ActivityArchive archive = new([], []);
     private bool busy, started, closed, history;
+    private bool historyWritable = true;
     private bool updatingAdapters;
     private List<ConnectionEntry>? displayedConnections;
     private readonly ActivityTree activityTree = new();
@@ -52,6 +54,7 @@ public sealed partial class MonitoringView : UserControl
     private DateTimeOffset lastSaved;
     public Window? Owner { get; set; }
     public event Action<IReadOnlyList<ConnectionEntry>>? SnapshotChanged;
+    public event Action<string>? CountryDataChanged;
     public Func<MonitorBlockPlan, Task<string?>>? BlockRequested { get; set; }
     public event Action? ManageRulesRequested;
 
@@ -79,7 +82,13 @@ public sealed partial class MonitoringView : UserControl
     public MonitoringView() : this(null) { }
     internal MonitoringView(string? preferencesDirectory)
     {
-        if (preferencesDirectory is not null) { preferencesStore = new(preferencesDirectory); diagnostic = false; }
+        if (preferencesDirectory is not null)
+        {
+            preferencesStore = new(preferencesDirectory);
+            store = new(preferencesDirectory);
+            usageStore = new(preferencesDirectory);
+            diagnostic = false;
+        }
         InitializeComponent();
         if (!diagnostic)
             try { LoadPreferences(); }
@@ -89,8 +98,9 @@ public sealed partial class MonitoringView : UserControl
         desktopNotifications.Invoked = () => DispatcherQueue.TryEnqueue(() => { if (Owner is MainWindow main) main.ShowFromTray(); else Owner?.Activate(); });
         timer.Tick += async (_, _) => await CaptureAsync();
         usageTimer.Tick += async (_, _) => await CaptureUsageAsync();
-        try { usage.Load(usageStore.Load(), DateOnly.FromDateTime(DateTime.Now)); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { UsageStatus.Text = ex.Message; }
+        try { if (!diagnostic) usage.Load(usageStore.Load(), DateOnly.FromDateTime(DateTime.Now)); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+        { usageWritable = false; UsageStatus.Text = $"Could not load saved usage; original files preserved: {ex.Message}"; }
     }
 
     public void Show(bool showHistory)
@@ -103,8 +113,9 @@ public sealed partial class MonitoringView : UserControl
         if (!started)
         {
             started = true;
-            try { archive = store.Load(); }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException) { MonitorStatus.Text = $"Could not load saved history: {ex.Message}"; }
+            try { if (!diagnostic) archive = store.Load(); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            { historyWritable = false; MonitorStatus.Text = $"Could not load saved history; original file preserved: {ex.Message}"; }
             timer.Start();
             _ = CaptureAsync();
             _ = RestoreSessionsAsync();
@@ -113,6 +124,7 @@ public sealed partial class MonitoringView : UserControl
     }
 
     public void Stop() { closed = true; domainClient?.Dispose(); usageTimer.Stop(); usageClient?.Dispose(); SaveUsage(); timer.Stop(); desktopNotifications.Dispose(); if (!busy) enrichment?.Dispose(); if (SaveHistory.IsOn) _ = PersistAsync(); }
+    public void FlushLocalData() { SaveUsage(); if (SaveHistory.IsOn) _ = PersistAsync(); }
     public void SetPageActive(bool active) { pageActive = active; UpdateInterval(); }
     private void RefreshIntervalChanged(object sender, SelectionChangedEventArgs args) { UpdateInterval(); SavePreferences(); }
     private void UpdateInterval() => timer.Interval = TimeSpan.FromSeconds((!pageActive || WindowMinimized) && !OptionsVisible ? 15 : RefreshChoice?.SelectedIndex switch { 0 => 2, 2 => 10, _ => 5 });
@@ -146,6 +158,7 @@ public sealed partial class MonitoringView : UserControl
             if (!current.SequenceEqual(next)) current = next;
             UpdateDomainStatus();
             CaptureCount++;
+            CountryDataChanged?.Invoke(enrichment!.CountryDataStatus);
             PublishVisibleSnapshot();
             var observed = connections.Observe(current, now);
             archive.Events.AddRange(observed);
@@ -167,6 +180,11 @@ public sealed partial class MonitoringView : UserControl
                     { DesktopAlerts.IsOn = false; RecentBanner.Severity = InfoBarSeverity.Warning; RecentBanner.Message = $"Windows notification unavailable: {ex.Message}"; RecentBanner.IsOpen = true; }
             }
             archive.Traffic.AddRange(traffic.Observe(snapshot.Counters, now));
+            // Save before bounding the live view, including bursts larger than the view cap.
+            if (SaveHistory.IsOn && !diagnostic && historyWritable)
+                try { store.Append(archive); }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                { MonitorStatus.Text = $"Could not archive activity: {ex.Message}"; return; }
             ActivityStore.TrimInPlace(archive, now);
             LogChanged?.Invoke();
             if (Visibility != Visibility.Visible && !WindowMinimized) ActivityOverviewChanged?.Invoke();
@@ -421,7 +439,7 @@ public sealed partial class MonitoringView : UserControl
     }
     private void SaveUsage()
     {
-        if (!usageDirty) return; // Read-only diagnostics must never overwrite the live instance's totals.
+        if (!usageDirty || !usageWritable || diagnostic) return; // Never overwrite unreadable data or save diagnostic fixtures.
         try { usageStore.Save(usage.Days); usageDirty = false; lastUsageSaved = DateTimeOffset.UtcNow; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { UsageStatus.Text = $"Could not save usage: {ex.Message}"; }
     }
@@ -532,6 +550,7 @@ public sealed partial class MonitoringView : UserControl
     }
     private Task PersistAsync()
     {
+        if (diagnostic || !started || !historyWritable) return Task.CompletedTask;
         // The snapshot cannot be mutated by a later UI refresh while the writer serializes it.
         var snapshot = new ActivityArchive(archive.Events.ToList(), archive.Traffic.ToList());
         try { store.Save(snapshot); lastSaved = DateTimeOffset.UtcNow; }
@@ -547,9 +566,9 @@ public sealed partial class MonitoringView : UserControl
     }
     private async void ClearHistoryClicked(object sender, RoutedEventArgs args)
     {
-        var dialog = new ContentDialog { XamlRoot = OptionsContent.XamlRoot, RequestedTheme = ActualTheme, Title = "Clear local activity?", Content = "This removes the displayed activity and the saved ZikWall activity file on this PC.", PrimaryButtonText = "Clear", CloseButtonText = "Cancel" };
+        var dialog = new ContentDialog { XamlRoot = OptionsContent.XamlRoot, RequestedTheme = ActualTheme, Title = "Clear local activity?", Content = "This permanently deletes the displayed activity and all saved connection logs and adapter samples on this PC, including older archived activity. Per-app usage totals and settings are kept.", PrimaryButtonText = "Clear", CloseButtonText = "Cancel" };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
-        try { store.Clear(); archive = new([], []); connections.Reset(); recent.ResetBaseline(); traffic.Reset(); baselineTaken = false; fresh = []; UpdateLists(); LogChanged?.Invoke(); DrawTraffic(); MonitorStatus.Text = "Local activity cleared."; }
+        try { store.Clear(); historyWritable = true; archive = new([], []); connections.Reset(); recent.ResetBaseline(); traffic.Reset(); baselineTaken = false; fresh = []; UpdateLists(); LogChanged?.Invoke(); DrawTraffic(); MonitorStatus.Text = "Local activity cleared."; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { MonitorStatus.Text = ex.Message; }
     }
     private async void DetailsClicked(object sender, RoutedEventArgs args) => await RunRowActionAsync(() => ShowDetailsAsync(SelectedActionRow()));
@@ -560,29 +579,41 @@ public sealed partial class MonitoringView : UserControl
         if (row is { Expandable: true } group)
         {
             var days = usage.Days.Where(x => x.AppKey == group.Entry.AppKey).OrderByDescending(x => x.Day).ToList();
-            string totals = days.Count == 0 ? "No usage recorded. Enable usage to start observing traffic." : string.Join("\n", days.Select(x => $"{x.Day:yyyy-MM-dd}   ↓ {UsageLedger.Bytes(x.Received)}   ↑ {UsageLedger.Bytes(x.Sent)}"));
-            windows.Text("app-details:" + group.Key, group.Title, group.Entry.ProcessPath + "\n\nObserved traffic · retained daily totals\n" + totals + "\n\nSnapshot when opened. Totals cover collection time only, include local traffic and can be incomplete. Expand a process and select a connection for IP details.");
+            windows.Details("app-details:" + group.Key, group.Title, sheet =>
+            {
+                sheet.Header(group.Title, group.Entry.ProcessPath, group.Entry.ProcessPath, "App details");
+                if (days.Count == 0) sheet.Card("Observed traffic", new TextBlock { Text = "No usage recorded. Enable usage to start observing traffic.", TextWrapping = TextWrapping.Wrap });
+                else sheet.Table("Observed traffic", ["Day", "↓ Received", "↑ Sent"],
+                    days.Select(x => new[] { x.Day.ToString("ddd, MMM d, yyyy"), UsageLedger.Bytes(x.Received), UsageLedger.Bytes(x.Sent) }).ToList(),
+                    [days.Count == 1 ? "Total · 1 day" : $"Total · {days.Count} days", UsageLedger.Bytes(days.Aggregate(0m, (sum, x) => sum + x.Received)), UsageLedger.Bytes(days.Aggregate(0m, (sum, x) => sum + x.Sent))]);
+                return sheet.Section("Application", ("Package", group.Entry.PackageFamily))
+                    .Note("Snapshot when opened. Totals cover collection time only, include local traffic and can be incomplete. Expand a process and select a connection for IP details.");
+            });
             return Task.CompletedTask;
         }
         var item = row?.Entry;
         if (item is null) { ActionNotice("Select a connection or history event first.", true); return Task.CompletedTask; }
-        windows.Show("connection:" + item.Key, "Connection details", () =>
+        windows.Details("connection:" + item.Key, "Connection details", sheet =>
         {
-            var content = new StackPanel { Spacing = 16 };
-            content.Children.Add(new TextBlock { Text = $"{item.ProcessLabel}\n{item.ProcessPath}\n\n{item.Protocol} · {item.State} · {item.Direction}\nLocal: {item.LocalEndpoint}\nRemote: {item.RemoteEndpoint}\nDomain: {item.DomainDescription}\nNetwork: {item.NetworkDescription}\nCountry: {item.CountryLabel}\nScope: {item.NetworkScope}\n\nSnapshot when opened. A connection snapshot does not establish the firewall decision or the hostname requested by the app.", IsTextSelectionEnabled = true, TextWrapping = TextWrapping.Wrap });
+            sheet.Header(item.Application, item.RemotePort > 0 ? $"{item.DirectionLabel} · {item.DestinationLabel}" : $"{item.Protocol} · {item.LocalEndpoint}", item.ProcessPath, "Connection")
+                .Connection(item);
+            var buttons = new List<Button>();
+            var status = Presentation.DetailSheet.Caption("");
+            status.Visibility = Visibility.Collapsed;
             if (item.ProcessPath.Length > 0)
             {
                 var inspect = new Button { Content = "Inspect executable" };
                 inspect.Click += async (_, _) => await RunRowActionAsync(() => InspectTargetAsync(item.ProcessPath));
-                content.Children.Add(inspect);
+                buttons.Add(inspect);
             }
             if (item.RemotePort > 0)
             {
                 var lookup = new Button { Content = "Reverse DNS lookup" };
-                var status = new TextBlock { TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+                buttons.Add(lookup);
                 lookup.Click += async (_, _) =>
                 {
                     lookup.IsEnabled = false;
+                    status.Visibility = Visibility.Visible;
                     try
                     {
                         var result = await Dns.GetHostEntryAsync(IPAddress.Parse(item.RemoteAddress)).WaitAsync(TimeSpan.FromSeconds(3));
@@ -592,9 +623,9 @@ public sealed partial class MonitoringView : UserControl
                     { status.Text = $"No reverse-DNS result: {ex.Message}"; }
                     finally { lookup.IsEnabled = true; }
                 };
-                content.Children.Add(lookup); content.Children.Add(status);
             }
-            return content;
+            if (buttons.Count > 0) sheet.Actions([.. buttons]).Add(status);
+            return sheet.Note("Snapshot when opened. A connection snapshot does not establish the firewall decision or the hostname requested by the app.");
         });
         return Task.CompletedTask;
     }

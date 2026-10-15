@@ -8,26 +8,41 @@ internal sealed class TrayIcon : IDisposable
     private const uint Callback = 0x8000 + 73;
     private readonly nint window;
     private readonly SubclassProc callback;
-    private readonly Action open, hide, pause, exit;
+    private readonly Action open, hide, pause, exit, save;
     public bool AllowClose { get; set; }
     private readonly uint taskbarCreated = RegisterWindowMessage("TaskbarCreated");
     private NotifyIcon data;
     private bool disposed;
-    public TrayIcon(nint hwnd, Action open, Action hide, Action pause, Action exit)
+    public TrayIcon(nint hwnd, Action open, Action hide, Action pause, Action exit, Action save)
     {
-        window = hwnd; this.open = open; this.hide = hide; this.pause = pause; this.exit = exit;
+        window = hwnd; this.open = open; this.hide = hide; this.pause = pause; this.exit = exit; this.save = save;
         callback = WindowProc;
         data = new() { Size = (uint)Marshal.SizeOf<NotifyIcon>(), Window = hwnd, Id = 1, Flags = 7, CallbackMessage = Callback,
-            Icon = LoadImage(0, Path.Combine(AppContext.BaseDirectory, "Assets", "ZikWall-tray.ico"), 1, 16, 16, 0x10), Tip = "ZikWall · network monitor", Info = "", InfoTitle = "" };
+            Icon = LoadTrayImage(), Tip = "ZikWall · network monitor", Info = "", InfoTitle = "" };
         if (data.Icon == 0 || !SetWindowSubclass(window, callback, 73, 0)) { if (data.Icon != 0) DestroyIcon(data.Icon); throw new Win32Exception(Marshal.GetLastWin32Error()); }
         if (!Shell_NotifyIcon(0, ref data)) { Dispose(); throw new Win32Exception("Could not create ZikWall's tray icon."); }
     }
+    private nint LoadTrayImage()
+    {
+        uint dpi = GetDpiForWindow(window);
+        int size = GetSystemMetricsForDpi(49, dpi == 0 ? 96 : dpi); // SM_CXSMICON
+        return LoadImage(0, Path.Combine(AppContext.BaseDirectory, "Assets", "ZikWall.ico"), 1, size, size, 0x10);
+    }
     private nint WindowProc(nint hwnd, uint message, nuint wparam, nint lparam, nuint id, nuint reference)
     {
+        // Restart Manager (updates), sign-out and shutdown can end the process
+        // without WinUI's Closed event. Flush before acknowledging the request.
+        if (message == 0x11) { save(); return 1; } // WM_QUERYENDSESSION
+        if (message == 0x16 && wparam != 0) { save(); AllowClose = true; } // WM_ENDSESSION
         // WinUI Window.Close/WM_CLOSE does not consistently raise AppWindow.Closing.
         // Intercept the actual native X/Alt+F4 path before WinUI destroys the window.
         if (message == 0x10 && !AllowClose) { hide(); return 0; }
         if (message == taskbarCreated) Shell_NotifyIcon(0, ref data);
+        if (message == 0x2E0) // WM_DPICHANGED: choose a crisp frame for the new display.
+        {
+            nint next = LoadTrayImage();
+            if (next != 0) { nint old = data.Icon; data.Icon = next; Shell_NotifyIcon(1, ref data); DestroyIcon(old); }
+        }
         if (message == Callback)
         {
             if ((uint)lparam is 0x203 or 0x202) open();
@@ -74,6 +89,8 @@ internal sealed class TrayIcon : IDisposable
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern uint RegisterWindowMessage(string name);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern nint LoadImage(nint instance, string name, uint type, int cx, int cy, uint flags);
     [DllImport("user32.dll")] private static extern bool DestroyIcon(nint icon);
+    [DllImport("user32.dll")] private static extern uint GetDpiForWindow(nint window);
+    [DllImport("user32.dll")] private static extern int GetSystemMetricsForDpi(int index, uint dpi);
     [DllImport("user32.dll")] private static extern nint CreatePopupMenu();
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern bool AppendMenu(nint menu, uint flags, nuint id, string text);
     [DllImport("user32.dll")] private static extern int TrackPopupMenu(nint menu, uint flags, int x, int y, int reserved, nint window, nint rect);

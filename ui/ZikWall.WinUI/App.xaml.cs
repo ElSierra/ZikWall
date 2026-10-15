@@ -43,6 +43,7 @@ public partial class App : Application
         }
         var main = new MainWindow(diagnostic && !arguments.Contains("--test-lifecycle"));
         window = main;
+        if (arguments.Contains("--benchmark-map")) main.ShowMapForBenchmark(!arguments.Contains("--benchmark-static-map"));
         if (arguments.SequenceEqual(new[] { "--test-readme-screenshots" }))
         {
             window.Activate();
@@ -81,6 +82,20 @@ public partial class App : Application
             File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "notification-selftest.json"), System.Text.Json.JsonSerializer.Serialize(report, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
             main.Close(); return;
         }
+        if (arguments.Contains("--test-geo"))
+        {
+            window.Activate();
+            try { await Task.Delay(500); await main.ExerciseGeoAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "geo-error.txt"), ex.ToString()); Environment.ExitCode = 1; }
+            window.Close(); return;
+        }
+        if (arguments.Contains("--test-log-scroll"))
+        {
+            window.Activate();
+            try { await Task.Delay(500); await main.ExerciseLogScrollAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "log-scroll-error.txt"), ex.ToString()); Environment.ExitCode = 1; }
+            window.Close(); return;
+        }
         if (arguments.Contains("--test-log-analysis"))
         {
             window.Activate();
@@ -106,6 +121,12 @@ public partial class App : Application
         {
             try { await Task.Delay(500); await main.ExerciseActivityOverviewAsync(); }
             catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "activity-overview-selftest.txt"), ex.ToString()); }
+            window.Close(); return;
+        }
+        if (arguments.SequenceEqual(new[] { "--test-windows-sync-ui" }))
+        {
+            try { await Task.Delay(500); await main.ExerciseWindowsSyncAsync(); }
+            catch (Exception ex) { File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "windows-sync-ui.txt"), ex.ToString()); Environment.ExitCode = 1; }
             window.Close(); return;
         }
         if (arguments.SequenceEqual(new[] { "--test-policy-layout" }))

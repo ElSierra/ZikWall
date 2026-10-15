@@ -55,7 +55,7 @@ public sealed class FirewallClient : IDisposable
         try
         {
             var connection = pipe ?? throw new IOException("Filtering is not enabled.");
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(request.Command == "windows-sync" ? 120 : 10));
             await BrokerWire.WriteAsync(connection, request, timeout.Token);
             return await BrokerWire.ReadAsync<BrokerResponse>(connection, timeout.Token);
         }

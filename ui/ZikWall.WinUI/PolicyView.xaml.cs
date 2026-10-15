@@ -87,6 +87,8 @@ public sealed partial class PolicyView : UserControl
     {
         var rule = Selected.Rules.FirstOrDefault(x => x.Id == id);
         if (rule is null) return "Rule no longer exists in this profile.";
+        if (policy.WindowsSync is { } sync && sync.ProfileId == Selected.Id && sync.Links.Any(x => x.RuleId == id))
+            return "Linked to Windows Firewall. Its last synced version persists independently of ZikWall session filtering. Use Sync Windows Firewall to review edits, disabling, or deletion in either app.";
         if (!client.Connected) return "Saved locally. Filtering is off.";
         if (pending || appliedProfile != Selected.Id) return "Saved changes are not applied. Apply saved policy to update filtering.";
         return !rule.Enabled ? "Disabled. This rule is not applied." : !rule.IsActive(DateTimeOffset.UtcNow) ? "Expired. This rule is not applied." : "Applied to the current WFP session. Rules are evaluated in their saved order.";
@@ -197,12 +199,17 @@ public sealed partial class PolicyView : UserControl
         PolicyRules.ItemsSource = Selected.Rules.ToList(); PolicyRules.SelectedItem = Selected.Rules.FirstOrDefault(x => x.Id == selection);
         PolicyEmpty.Visibility = Selected.Rules.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         NetworkLabel.Text = Selected.NetworkId.Length == 0 ? "No network associated with this profile." : $"Associated Windows network ID: {Selected.NetworkId}";
+        RefreshWindowsSyncStatus();
         refreshing = false;
         RulesChanged?.Invoke();
     }
     private void Saved()
     {
-        try { store.Save(policy); lastSaved = policy; }
+        try
+        {
+            if (syncingWindows || policy.WindowsSync?.Pending is not null) throw new InvalidDataException("Finish or disconnect the pending Windows Firewall sync before editing the policy.");
+            store.Save(policy); lastSaved = policy;
+        }
         catch { policy = lastSaved ?? PolicyDocument.Empty(); Refresh(); throw; }
         pending = client.Connected; Refresh();
         PolicyStatus.Severity = InfoBarSeverity.Informational;
@@ -255,10 +262,10 @@ public sealed partial class PolicyView : UserControl
     }
     private async Task TickAsync()
     {
-        if (busy) return; busy = true;
+        if (busy) { await KeepFilteringAliveDuringWindowsSyncAsync(); return; } busy = true;
         try
         {
-            if (policy.AutoSwitch && !pending && !dialogOpen)
+            if (policy.AutoSwitch && !pending && !dialogOpen && policy.WindowsSync?.Pending is null)
             {
                 var ids = NetworkIdentity.Read().Select(x => x.Id).ToHashSet();
                 var matches = policy.Profiles.Where(x => ids.Contains(x.NetworkId)).ToList();
@@ -276,6 +283,7 @@ public sealed partial class PolicyView : UserControl
                 if (!response.Success) throw new IOException(response.Message);
                 if (!pending && appliedProfile == Selected.Id) PolicyStatus.Message = $"Windows accepted {response.ActiveRules} active rules. Expired rules are removed by the broker.";
             }
+            await AutoSyncWindowsAsync();
             Refresh();
         }
         catch (Exception ex) when (ex is IOException or OperationCanceledException or COMException or UnauthorizedAccessException) { Error(ex.Message); FilteringButton.Content = client.Connected ? "Disable filtering" : "Enable filtering…"; }
@@ -289,6 +297,7 @@ public sealed partial class PolicyView : UserControl
     }
     private async void NewProfileClicked(object sender, RoutedEventArgs args)
     {
+        if (busy || dialogOpen) return;
         var name = new TextBox { Header = "Profile name", MaxLength = 80 };
         var dialog = new ContentDialog { XamlRoot = Owner?.Content.XamlRoot ?? XamlRoot, RequestedTheme = ActualTheme, Title = "New network profile", Content = name, PrimaryButtonText = "Create", CloseButtonText = "Cancel" };
         dialogOpen = true;
@@ -300,6 +309,7 @@ public sealed partial class PolicyView : UserControl
     }
     private async void AssociateClicked(object sender, RoutedEventArgs args)
     {
+        if (busy || dialogOpen) return;
         try
         {
             var networks = NetworkIdentity.Read();
@@ -317,6 +327,7 @@ public sealed partial class PolicyView : UserControl
     private void AutoSwitchChanged(object sender, RoutedEventArgs args)
     {
         if (refreshing || !loaded) return;
+        if (busy || policy.WindowsSync?.Pending is not null) { Refresh(); return; }
         try { var next = policy with { AutoSwitch = AutoSwitch.IsOn }; store.Save(next); policy = next; lastSaved = next; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Error(ex.Message); }
     }

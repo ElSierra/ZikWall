@@ -90,6 +90,10 @@ or change Windows Firewall settings. Startup remains an app Settings option.
 Use `/passive` for progress-only deployment or `/qn` for unattended deployment;
 omit both to see the MSI wizard. `make install` opens the WinUI setup.exe interface.
 
+Activity saving defaults on. Connection logs and usage archives stay on this PC
+until explicitly deleted; live-view limits do not delete archived records.
+See [local data and updates](DATA-STORAGE.md) for paths and recovery behavior.
+
 Monitor choices (filters, grouping, refresh/range, adapter, alerts, history saving,
 system-app visibility and usage sorting) save immediately to
 `%LOCALAPPDATA%\ZikWall\monitor-preferences.json`. Theme and DNS provider fields

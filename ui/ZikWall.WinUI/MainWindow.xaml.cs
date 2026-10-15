@@ -75,11 +75,12 @@ public sealed partial class MainWindow : Window
         MonitorPanel.Owner = this;
         GeoPanel.Owner = this;
         MonitorPanel.SnapshotChanged += GeoPanel.UpdateConnections;
+        MonitorPanel.CountryDataChanged += GeoPanel.SetCountryDataStatus;
         MonitorPanel.ActivityOverviewChanged += () => { if (ActivityPanel is { Visibility: Visibility.Visible }) MonitorPanel.UpdateOverview(ActivityPanel); };
         MonitorPanel.BlockRequested = plan => PolicyPanel.BlockFromMonitorAsync(plan);
         MonitorPanel.ManageRulesRequested += () => Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "policy");
         PolicyPanel.Owner = this;
-        if (diagnostic && Environment.GetCommandLineArgs().Contains("--test-rules"))
+        if (diagnostic && Environment.GetCommandLineArgs().Any(x => x is "--test-rules" or "--test-windows-sync-ui"))
             PolicyPanel.UseDiagnosticStore(Path.Combine(AppContext.BaseDirectory, "rules-diagnostic", Guid.NewGuid().ToString("N")));
         PolicyPanel.RulesChanged += Refresh;
         PrivacyPanel.CopyNetworks += networks => { PolicyPanel.Show(); PolicyPanel.ImportNetworks(networks); Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "policy"); };
@@ -93,7 +94,7 @@ public sealed partial class MainWindow : Window
         AppWindow.Resize(new Windows.Graphics.SizeInt32(Math.Min(1800, area.Width - 80), Math.Min(1150, area.Height - 80)));
         if (!diagnostic)
         {
-            try { tray = new(WinRT.Interop.WindowNative.GetWindowHandle(this), ShowFromTray, HideToTray, MonitorPanel.TogglePause, ExitFromTray); }
+            try { tray = new(WinRT.Interop.WindowNative.GetWindowHandle(this), ShowFromTray, HideToTray, MonitorPanel.TogglePause, ExitFromTray, MonitorPanel.FlushLocalData); }
             catch (System.ComponentModel.Win32Exception ex) { EngineHint.Text = ex.Message; }
         }
         StartupToggle.IsOn = Services.StartupSettings.Enabled;
@@ -222,17 +223,19 @@ public sealed partial class MainWindow : Window
     {
         if (RuleList.SelectedItem is not RuleEntry rule) return;
         bool editable = !imported;
-        Presentation.ToolWindows.For(this).Show("rule:" + (rule.PolicyRuleId?.ToString() ?? rule.Name + rule.Path), rule.Name, () =>
+        Presentation.ToolWindows.For(this).Details("rule:" + (rule.PolicyRuleId?.ToString() ?? rule.Name + rule.Path), rule.Name, sheet =>
         {
-            var content = new StackPanel { Spacing = 16 };
-            content.Children.Add(new TextBlock { Text = $"{rule.State} · {rule.Duration}\n\nRemote: {rule.Destination}\nLocal: {rule.LocalEndpoint}\n\n{rule.Direction} · {rule.Protocol}\n\n{rule.Path}\n{rule.Applications}\n\n{rule.Notes}", TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true });
+            sheet.Header(rule.Name, $"{rule.State} · {rule.Duration}", rule.Path, "Firewall rule")
+                .Section("Match", ("Direction", rule.Direction), ("Protocol", rule.Protocol), ("Remote", rule.Destination), ("Local", rule.LocalEndpoint))
+                .Section("Applications", ("Path", rule.Path), ("Apps", rule.Applications))
+                .Section("Notes", ("Notes", rule.Notes));
             if (editable)
             {
                 var edit = new Button { Content = "Edit rule" };
                 edit.Click += async (_, _) => await EditRule(rule);
-                content.Children.Add(edit);
+                sheet.Actions(edit);
             }
-            return content;
+            return sheet;
         });
     }
 

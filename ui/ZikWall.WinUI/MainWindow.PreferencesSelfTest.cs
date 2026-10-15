@@ -5,7 +5,7 @@ public sealed partial class MainWindow
     internal async Task ExercisePreferencesAsync()
     {
         await MonitorPanel.ExercisePreferencesAsync();
-        using (var icon = new Presentation.TrayIcon(WinRT.Interop.WindowNative.GetWindowHandle(this), () => { }, () => { }, () => { }, () => { })) { }
+        using (var icon = new Presentation.TrayIcon(WinRT.Interop.WindowNative.GetWindowHandle(this), () => { }, () => { }, () => { }, () => { }, () => { })) { }
         string directory = Path.Combine(AppContext.BaseDirectory, "preferences-diagnostic", Guid.NewGuid().ToString("N"));
         var first = new MainWindow(true, directory);
         first.ThemeChoice.SelectedIndex = 2;

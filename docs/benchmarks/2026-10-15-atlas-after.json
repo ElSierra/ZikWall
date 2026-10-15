@@ -1,0 +1,36 @@
+{
+  "Passed": true,
+  "Results": [
+    {
+      "Name": "10k unchanged endpoints / fresh snapshot",
+      "MedianMs": 0.3018,
+      "P95Ms": 1.267,
+      "AllocatedBytesPerRefresh": 80108
+    },
+    {
+      "Name": "10k endpoints / one state change",
+      "MedianMs": 7.8173,
+      "P95Ms": 20.9913,
+      "AllocatedBytesPerRefresh": 3090991
+    },
+    {
+      "Name": "10k endpoints / selected country unchanged",
+      "MedianMs": 0.1719,
+      "P95Ms": 1.7241,
+      "AllocatedBytesPerRefresh": 81450
+    },
+    {
+      "Name": "10k endpoints / hidden",
+      "MedianMs": 0.0001,
+      "P95Ms": 0.0002,
+      "AllocatedBytesPerRefresh": 80042
+    },
+    {
+      "Name": "90 animated updates and country selections",
+      "CpuMs": 4234.375,
+      "Frames": 344,
+      "FrameP95Ms": 37.5553,
+      "LongFrames": 7
+    }
+  ]
+}

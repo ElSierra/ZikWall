@@ -19,6 +19,8 @@ public sealed class AppIcon : Grid
     private static readonly SemaphoreSlim loaders = new(2);
     private readonly Image image = new() { Stretch = Stretch.Uniform };
     private readonly FontIcon fallback = new() { Glyph = "\uE7C3", FontSize = 18 };
+    private string? appliedKey;
+    private int requestVersion;
     public static readonly DependencyProperty ExecutableProperty = DependencyProperty.Register(nameof(Executable), typeof(string), typeof(AppIcon), new PropertyMetadata("", Changed));
     public string Executable { get => (string)GetValue(ExecutableProperty); set => SetValue(ExecutableProperty, value); }
     public AppIcon()
@@ -41,25 +43,30 @@ public sealed class AppIcon : Grid
     {
         var target = this;
         if (target.Executable != path) return;
+        int version = ++requestVersion;
         // No executable means Windows-owned or an exited owner; a page icon reads as a file.
         target.fallback.Glyph = path.Length == 0 ? "" : "";
         if (path.Length == 0 || !Path.IsPathFullyQualified(path) || path.StartsWith(@"\\") || target.XamlRoot is null)
         {
             target.image.Source = null;
+            target.appliedKey = null;
             target.fallback.Visibility = Visibility.Visible;
             return;
         }
         int size = PixelSize(double.IsNaN(target.Width) ? 24 : target.Width, target.XamlRoot.RasterizationScale);
         string key = $"{size}|{path}";
+        if (target.appliedKey == key) return;
         // Cached icons apply in the same frame; clearing first made re-bound rows blink on every refresh.
         if (cache.TryGetValue(key, out var done) && done.IsCompletedSuccessfully)
         {
             target.image.Source = CreateBitmap(done.Result, size);
+            target.appliedKey = key;
             target.fallback.Visibility = done.Result is null ? Visibility.Visible : Visibility.Collapsed;
             return;
         }
         // While a new icon decodes, show nothing rather than the placeholder glyph.
         target.image.Source = null;
+        target.appliedKey = null;
         target.fallback.Visibility = Visibility.Collapsed;
         if (!cache.TryGetValue(key, out var task))
         {
@@ -69,7 +76,8 @@ public sealed class AppIcon : Grid
             cache[key] = task = LoadPixelsAsync(path, size); order.Enqueue(key);
         }
         var pixels = await task;
-        if (target.Executable == path) { target.image.Source = CreateBitmap(pixels, size); target.fallback.Visibility = pixels is null ? Visibility.Visible : Visibility.Collapsed; }
+        if (target.Executable == path && target.requestVersion == version)
+        { target.image.Source = CreateBitmap(pixels, size); target.appliedKey = key; target.fallback.Visibility = pixels is null ? Visibility.Visible : Visibility.Collapsed; }
     }
     // Round up to a few common sizes so rows at the same scale share one decode.
     internal static int PixelSize(double logical, double scale)

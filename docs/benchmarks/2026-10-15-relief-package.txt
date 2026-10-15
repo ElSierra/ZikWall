@@ -1,0 +1,62 @@
+Generated installer dialog/banner artwork and the complete GPLv3 license page.
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ZikWall.WinUI -> C:\Users\Hizik\AppData\Local\Temp\ZikWall-msi-fc288250222c4b20bfa5b1c3f9e58a0f\payload\ZikWall.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.41
+PASS: packaged country/network tables match their provenance; map and color tray assets present.
+
+  ZikWall.Engine.vcxproj -> F:\Projects\simplewall\temp\engine\ZikWall.Engine.dll
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ZikWall.Broker -> F:\Projects\simplewall\engine\ZikWall.Broker\bin\Release\net8.0-windows\win-x64\ZikWall.Broker.dll
+  ZikWall.Broker -> C:\Users\Hizik\AppData\Local\Temp\ZikWall-msi-fc288250222c4b20bfa5b1c3f9e58a0f\payload\
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ZikWall.Service -> F:\Projects\simplewall\engine\ZikWall.Service\bin\Release\net8.0-windows\win-x64\ZikWall.Service.dll
+  ZikWall.Service -> C:\Users\Hizik\AppData\Local\Temp\ZikWall-msi-fc288250222c4b20bfa5b1c3f9e58a0f\payload\
+Built broker and Windows SDK engine in C:\Users\Hizik\AppData\Local\Temp\ZikWall-msi-fc288250222c4b20bfa5b1c3f9e58a0f\payload
+Read 1532 real internal rules without modifying the file.
+PASS: 19 model and profile-reader checks.
+Live Windows TCP/UDP loopback integration passed.
+PASS: 32 monitoring and persistence checks.
+PASS: simultaneous offline country readers locate Internet connections.
+PASS: 59 country, direction, filter and notification checks.
+PASS: 37 event notification checks.
+PASS: 30 system-app visibility, alert suppression and preference checks.
+PASS: 11 preference migration, restart, validation and independent panel update checks.
+PASS: 42 passive domain hint checks.
+PASS: 20 hostname summary and reverse DNS checks.
+PASS: 269 passive DNS parser, transport, cache and enrichment checks.
+PASS: service session allowlist, protocol version, round-trip, malformed/truncated frames and oversized messages.
+PASS: broker survives hibernation, accepts a resume heartbeat, and still expires after 20 awake idle seconds.
+Windows Network List Manager read completed.
+PASS: 31 policy, persistence and IPC checks.
+PASS: 53 two-way Windows Firewall sync, conflict, persistence, and interrupted-write checks.
+PASS: 1,000 mixed disjoint rules: 4,385,008 allocated bytes (budget 8,000,000); unchanged plan = True.
+PASS: 19 rule-analysis checks.
+PASS: 13 subscription/parser and real UDP/TCP DNS tests (no public DNS queries sent).
+PASS: local executable SHA-256 and offline Windows trust inspection completed.
+PASS: 9 subscription download, pin, failure retention and persistence checks.
+PASS: 27 activity grouping and traffic accounting checks.
+PASS: 21 activity overview aggregation and range accounting checks.
+PASS: 17 monitor action scope and stale-target checks.
+PASS: 37 log analysis checks.
+PASS: 10 indefinite archive, upgrade, recovery and explicit deletion checks.
+PASS: saved logs survive restart/cache limits; same-time pagination, complete counts, stable first observations, search, date ranges and read markers.
+PASS: native updater entry points disabled, workflow actions commit-pinned, WinUI dependency hashes recorded.
+PASS: bundled country tables, network owner tables and flag artwork match recorded content hashes.
+PASS: offline Natural Earth relief texture matches its recorded hash.
+Built: C:\Users\Hizik\AppData\Local\Temp\ZikWall-msi-fc288250222c4b20bfa5b1c3f9e58a0f\payload\ZikWall.exe
+C:\Users\Hizik\AppData\Local\Temp\ZikWall-msi-fc288250222c4b20bfa5b1c3f9e58a0f\setup.msi : warning WIX1060: The Wix4CloseApplication table is being decompiled as a custom table.
+PASS: automatic service, transactional start/stop/removal and required Program Files location.
+PASS: Windows Shell resolves the packaged shortcut icon instead of a generic document.
+PASS: MSI version 0.10.21055, upgrade identity, Program Files location, shortcut and 808 extracted file hashes.
+PASS: all-users Start Menu\Programs\ZikWall.lnk targets the app component and uses the ZikWall icon.
+PASS: branded setup/maintenance dialogs and isaacojo.me publisher links.
+PASS: no per-user settings components or cleanup actions; user settings stay outside MSI ownership.
+Built: F:\Projects\simplewall\artifacts\installer\setup.msi (version 0.10.21055; 808 files)

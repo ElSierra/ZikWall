@@ -2,6 +2,8 @@
   <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework><RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>true</SelfContained><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors><AssemblyName>ZikWall.Broker</AssemblyName></PropertyGroup>
   <ItemGroup><Compile Include="../../ui/ZikWall.WinUI/Models/AppUsage.cs" Link="AppUsage.cs" /><Compile Include="../../ui/ZikWall.WinUI/Models/ConnectionEntry.cs" Link="ConnectionEntry.cs" /><Compile Include="../../ui/ZikWall.WinUI/Models/ConnectionContinuity.cs" Link="ConnectionContinuity.cs" /><Compile Include="../../ui/ZikWall.WinUI/Models/FirewallPolicy.cs" Link="FirewallPolicy.cs" /><Compile Include="../../ui/ZikWall.WinUI/Services/BrokerWire.cs" Link="BrokerWire.cs" /></ItemGroup>
   <ItemGroup>
+    <Compile Include="../../ui/ZikWall.WinUI/Models/WindowsFirewallSync.cs" Link="WindowsFirewallSync.cs" />
+    <Compile Include="../../ui/ZikWall.WinUI/Services/WindowsFirewallStore.cs" Link="WindowsFirewallStore.cs" />
     <Compile Include="../../ui/ZikWall.WinUI/Models/KnownApps.cs" Link="KnownApps.cs" />
     <Compile Include="../../ui/ZikWall.WinUI/Services/DnsResponseParser.cs" Link="DnsResponseParser.cs" />
     <Compile Include="../../ui/ZikWall.WinUI/Services/DnsPacketParser.cs" Link="DnsPacketParser.cs" />

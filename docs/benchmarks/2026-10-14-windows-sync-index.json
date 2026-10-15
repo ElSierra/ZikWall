@@ -1,0 +1,77 @@
+{
+  "TimestampUtc": "2026-10-14T13:46:32.0341064+00:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "Runtime": "8.0.27",
+  "NativeRules": 0,
+  "NativeLinkedRules": 0,
+  "Results": [
+    {
+      "Name": "Plan unchanged 10 block rules",
+      "Iterations": 40,
+      "MedianMs": 0.0873,
+      "P95Ms": 0.1497,
+      "MeanCpuMs": 0,
+      "AllocatedBytesPerOperation": 40632
+    },
+    {
+      "Name": "Plan unchanged 10 mixed disjoint rules",
+      "Iterations": 40,
+      "MedianMs": 0.0972,
+      "P95Ms": 0.1192,
+      "MeanCpuMs": 0,
+      "AllocatedBytesPerOperation": 44504
+    },
+    {
+      "Name": "Plan unchanged 100 block rules",
+      "Iterations": 40,
+      "MedianMs": 0.8733,
+      "P95Ms": 2.1398,
+      "MeanCpuMs": 1.171875,
+      "AllocatedBytesPerOperation": 394224
+    },
+    {
+      "Name": "Plan unchanged 100 mixed disjoint rules",
+      "Iterations": 40,
+      "MedianMs": 1.0934,
+      "P95Ms": 1.3506,
+      "MeanCpuMs": 1.171875,
+      "AllocatedBytesPerOperation": 434296
+    },
+    {
+      "Name": "Plan unchanged 1000 block rules",
+      "Iterations": 15,
+      "MedianMs": 12.9891,
+      "P95Ms": 18.7063,
+      "MeanCpuMs": 13.541666666666666,
+      "AllocatedBytesPerOperation": 4000912
+    },
+    {
+      "Name": "Plan 1000 local edits (block)",
+      "Iterations": 10,
+      "MedianMs": 30.0804,
+      "P95Ms": 33.4493,
+      "MeanCpuMs": 32.8125,
+      "AllocatedBytesPerOperation": 6862768
+    },
+    {
+      "Name": "Plan unchanged 1000 mixed disjoint rules",
+      "Iterations": 15,
+      "MedianMs": 15.886,
+      "P95Ms": 31.0053,
+      "MeanCpuMs": 19.791666666666668,
+      "AllocatedBytesPerOperation": 4409008
+    },
+    {
+      "Name": "Plan 1000 local edits (mixed disjoint)",
+      "Iterations": 10,
+      "MedianMs": 20.9991,
+      "P95Ms": 23.0918,
+      "MeanCpuMs": 23.4375,
+      "AllocatedBytesPerOperation": 7310064
+    }
+  ],
+  "Polling": null,
+  "Budget": "Unchanged 1000-rule planner: median \u003C= 50 ms and managed allocations \u003C= 8 MB per operation",
+  "Passed": true,
+  "Scope": "Read-only native access. CPU/memory belong to this process, not the Windows firewall service. No firewall writes or traffic throughput measurement."
+}

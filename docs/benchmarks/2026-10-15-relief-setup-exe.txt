@@ -1,0 +1,22 @@
+F:\Projects\simplewall\artifacts\installer\setup.msi : warning WIX1060: The Wix4CloseApplication table is being decompiled as a custom table.
+PASS: automatic service, transactional start/stop/removal and required Program Files location.
+PASS: Windows Shell resolves the packaged shortcut icon instead of a generic document.
+PASS: MSI version 0.10.21055, upgrade identity, Program Files location, shortcut and 808 extracted file hashes.
+PASS: all-users Start Menu\Programs\ZikWall.lnk targets the app component and uses the ZikWall icon.
+PASS: branded setup/maintenance dialogs and isaacojo.me publisher links.
+PASS: no per-user settings components or cleanup actions; user settings stay outside MSI ownership.
+  Determining projects to restore...
+  Restored F:\Projects\simplewall\ui\ZikWall.Setup\ZikWall.Setup.csproj (in 2.11 sec).
+  ZikWall.Setup -> C:\Users\Hizik\AppData\Local\Temp\ZikWall-setup-exe-7a9c050e333246bc947ee7f43cb551fb\payload\ZikWall.Setup.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.60
+  Determining projects to restore...
+  Restored F:\Projects\simplewall\tools\ZikWall.SetupLauncher\ZikWall.SetupLauncher.csproj (in 262 ms).
+  ZikWall.SetupLauncher -> F:\Projects\simplewall\tools\ZikWall.SetupLauncher\bin\Release\net8.0-windows\win-x64\setup.dll
+  ZikWall.SetupLauncher -> C:\Users\Hizik\AppData\Local\Temp\ZikWall-setup-exe-7a9c050e333246bc947ee7f43cb551fb\launcher\
+PASS: self-contained setup.exe extraction, MSI integrity, native WinUI screens and 35 diagnostic checks. No installation performed.
+Built: F:\Projects\simplewall\artifacts\installer\setup.exe

@@ -52,7 +52,7 @@ selection, enabling/disabling the column and visible number updates.
 
 **Enable usage** starts a session-owned collector through the installed background service; portable builds request Windows UAC. It does not enable filtering. The UI remains unelevated. The collector uses the installed Windows SDK ETW APIs and Microsoft-Windows-Kernel-Network metadata; it records no packet payload or ETL file and contacts no external service. It aggregates packet-size events before returning counters through the existing authenticated parent/child pipe. A separate collector process does not open a WFP session unless a policy is applied.
 
-The first snapshot establishes rates; subsequent samples calculate upload and download per second. Daily totals are saved under `%LOCALAPPDATA%\ZikWall\daily-usage.json`, retaining today and 29 previous local calendar days. Details shows an app's retained days; Options → All app usage includes apps without current connections. A cumulative-counter session ID prevents duplicate samples and restarts from double-counting. A sample spanning midnight is assigned to the local day at its end, so boundary totals can shift by one polling interval.
+The first snapshot establishes rates; subsequent samples calculate upload and download per second. Daily totals are saved under `%LOCALAPPDATA%\ZikWall\daily-usage.json`, showing today and 29 previous local calendar days. Older totals stay in `SavedHistory\Usage` until explicitly deleted. Details shows an app's recent days; Options → All app usage includes apps without current connections. A cumulative-counter session ID prevents duplicate samples and restarts from double-counting. A sample spanning midnight is assigned to the local day at its end, so boundary totals can shift by one polling interval. See [local data and updates](DATA-STORAGE.md).
 
 These are **partial observed network bytes**, including local/loopback traffic, not ISP-billed bytes or guaranteed application payload counts. Collection gaps, denied/exited process identity, ETW losses, offloading, proxies and VPNs affect coverage and attribution. The status reports lost events, unsupported events, unattributed bytes and actual allocated trace buffers. Unknown identity never gets silently charged to the next process reusing that PID. No event coverage is claimed merely because a provider starts successfully.
 
@@ -78,6 +78,25 @@ Final setup verified real native WM_CLOSE hiding, a quiet duplicate launch, rest
 
 
 ## Right-click actions
+
+Log analysis keeps one log detail window open: selecting another log replaces
+the previous detail, while unrelated tool windows stay open. Details offer
+**Block application**, **Block this connection**, and **More actions** near the
+top. Right-click a log (or use Shift+F10 on the selected row) for the same block,
+rule-management, executable inspection, file-location and copy actions.
+Historical actions match the recorded executable path and endpoint. Opening
+the menu does not mark a log read; opening its details does. Results and errors
+appear on the log page, with detail-button feedback also shown in that window.
+
+The October 15 log-action checks passed the model/service suite and native UI
+suite, including replacing details without closing unrelated tools, pinned
+historical targets, disabled unavailable actions, error feedback and block-review
+cancellation. No firewall rules were applied by these tests. The 1,000-event
+scroll fixture completed 180 steps with an 11.49 ms p95 UI step, 43 maximum
+realized children and less than 0.001 pixel visible-row drift after refresh.
+These are local fixture measurements, not a frame-rate guarantee. Raw results:
+[native log actions](benchmarks/2026-10-15-log-actions-native.txt) and
+[scroll benchmark](benchmarks/2026-10-15-log-actions-scroll.json).
 
 Right-click an app, subprocess or connection in Connections (or an event in
 Activity). Shift+F10 / the keyboard context-menu key opens actions for the selected

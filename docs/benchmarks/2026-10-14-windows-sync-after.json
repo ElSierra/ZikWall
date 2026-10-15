@@ -1,0 +1,117 @@
+{
+  "TimestampUtc": "2026-10-14T13:53:47.836158+00:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "Runtime": "8.0.27",
+  "NativeRules": 1003,
+  "NativeLinkedRules": 10,
+  "Results": [
+    {
+      "Name": "Plan unchanged 10 block rules",
+      "Iterations": 40,
+      "MedianMs": 0.0693,
+      "P95Ms": 0.0856,
+      "MeanCpuMs": 0,
+      "AllocatedBytesPerOperation": 40632
+    },
+    {
+      "Name": "Plan unchanged 10 mixed disjoint rules",
+      "Iterations": 40,
+      "MedianMs": 0.0808,
+      "P95Ms": 0.1033,
+      "MeanCpuMs": 0.390625,
+      "AllocatedBytesPerOperation": 44504
+    },
+    {
+      "Name": "Plan unchanged 100 block rules",
+      "Iterations": 40,
+      "MedianMs": 0.7099,
+      "P95Ms": 1.0261,
+      "MeanCpuMs": 0.78125,
+      "AllocatedBytesPerOperation": 394224
+    },
+    {
+      "Name": "Plan unchanged 100 mixed disjoint rules",
+      "Iterations": 40,
+      "MedianMs": 0.8069,
+      "P95Ms": 1.0297,
+      "MeanCpuMs": 0.78125,
+      "AllocatedBytesPerOperation": 434296
+    },
+    {
+      "Name": "Plan unchanged 1000 block rules",
+      "Iterations": 15,
+      "MedianMs": 9.4451,
+      "P95Ms": 11.6229,
+      "MeanCpuMs": 10.416666666666666,
+      "AllocatedBytesPerOperation": 4000912
+    },
+    {
+      "Name": "Plan 1000 local edits (block)",
+      "Iterations": 10,
+      "MedianMs": 15.0986,
+      "P95Ms": 18.0046,
+      "MeanCpuMs": 18.75,
+      "AllocatedBytesPerOperation": 6862768
+    },
+    {
+      "Name": "Plan unchanged 1000 mixed disjoint rules",
+      "Iterations": 15,
+      "MedianMs": 13.2267,
+      "P95Ms": 30.8649,
+      "MeanCpuMs": 21.875,
+      "AllocatedBytesPerOperation": 4409008
+    },
+    {
+      "Name": "Plan 1000 local edits (mixed disjoint)",
+      "Iterations": 10,
+      "MedianMs": 12.0604,
+      "P95Ms": 13.2964,
+      "MeanCpuMs": 10.9375,
+      "AllocatedBytesPerOperation": 7326864
+    },
+    {
+      "Name": "Native full inventory read",
+      "Iterations": 15,
+      "MedianMs": 22.2633,
+      "P95Ms": 26.0435,
+      "MeanCpuMs": 25,
+      "AllocatedBytesPerOperation": 1217822
+    },
+    {
+      "Name": "Native targeted read (10 names)",
+      "Iterations": 15,
+      "MedianMs": 10.9086,
+      "P95Ms": 13.4247,
+      "MeanCpuMs": 5.208333333333333,
+      "AllocatedBytesPerOperation": 543487
+    },
+    {
+      "Name": "Automatic read \u002B plan (10 linked native rules)",
+      "Iterations": 15,
+      "MedianMs": 12.9412,
+      "P95Ms": 13.9856,
+      "MeanCpuMs": 8.333333333333334,
+      "AllocatedBytesPerOperation": 798126
+    },
+    {
+      "Name": "Native linked scan (10 names plus absent marker)",
+      "Iterations": 15,
+      "MedianMs": 13.1849,
+      "P95Ms": 16.293,
+      "MeanCpuMs": 12.5,
+      "AllocatedBytesPerOperation": 766471
+    },
+    {
+      "Name": "Native converged retry (10 rules, writes forbidden)",
+      "Iterations": 8,
+      "MedianMs": 28.8229,
+      "P95Ms": 45.6859,
+      "MeanCpuMs": 37.109375,
+      "AllocatedBytesPerOperation": 1120157
+    }
+  ],
+  "Polling": null,
+  "Budget": "Unchanged 1000-rule planner: median \u003C= 50 ms and managed allocations \u003C= 8 MB per operation",
+  "Passed": true,
+  "Scope": "Read-only native access. CPU/memory belong to this process, not the Windows firewall service. No firewall writes or traffic throughput measurement."
+}

@@ -45,23 +45,24 @@ public sealed partial class MonitoringView
         else menu.ShowAt(list.ContainerFromItem(item) as FrameworkElement ?? list);
     }
 
-    internal MenuFlyout CreateRowMenu(MonitorActionTarget target)
+    internal MenuFlyout CreateRowMenu(MonitorActionTarget target, Func<Task>? details = null,
+        Action<string, bool>? notice = null, string? applicationBlockLabel = null)
     {
         var menu = new MenuFlyout();
         void Add(string text, Func<Task> action, bool enabled = true, string? hint = null)
         {
             var item = new MenuFlyoutItem { Text = text, IsEnabled = enabled };
             if (hint is not null) ToolTipService.SetToolTip(item, hint);
-            item.Click += async (_, _) => { menu.Hide(); await RunRowActionAsync(action); };
+            item.Click += async (_, _) => { menu.Hide(); await RunRowActionAsync(action, notice); };
             menu.Items.Add(item);
         }
         void Block(bool connection)
         {
-            string label = connection ? "Block this connection…" : target.IsApp ? "Block this app…" : "Block this executable…";
+            string label = connection ? "Block this connection…" : applicationBlockLabel ?? (target.IsApp ? "Block this app…" : "Block this executable…");
             try
             {
                 var plan = target.Block(connection);
-                Add(label, () => SubmitBlockAsync(plan), BlockRequested is not null);
+                Add(label, () => SubmitBlockAsync(plan, notice), BlockRequested is not null);
             }
             catch (InvalidDataException ex) { Add(label, () => Task.CompletedTask, false, ex.Message); }
         }
@@ -78,9 +79,9 @@ public sealed partial class MonitoringView
         }
         if (target.IsConnection) Block(true);
         Block(false);
-        Add("Manage firewall rules", () => { ManageRulesRequested?.Invoke(); return Task.CompletedTask; });
+        Add("Manage firewall rules", () => { Owner?.Activate(); ManageRulesRequested?.Invoke(); return Task.CompletedTask; });
         menu.Items.Add(new MenuFlyoutSeparator());
-        Add(row.Expandable ? "Details and app usage" : "Connection details", () => ShowDetailsAsync(row));
+        Add(details is not null ? "Log details" : row.Expandable ? "Details and app usage" : "Connection details", details ?? (() => ShowDetailsAsync(row)));
         Add("Inspect executable…", () => InspectTargetAsync(row.Entry.ProcessPath), row.Entry.ProcessPath.Length > 0);
         Add("Open file location", async () =>
         {
@@ -95,8 +96,8 @@ public sealed partial class MonitoringView
             item.Click += async (_, _) => { menu.Hide(); await RunRowActionAsync(() =>
             {
                 var data = new DataPackage(); data.SetText(value); Clipboard.SetContent(data);
-                ActionNotice($"Copied {label.ToLowerInvariant()}."); return Task.CompletedTask;
-            }); };
+                (notice ?? ActionNotice)($"Copied {label.ToLowerInvariant()}.", false); return Task.CompletedTask;
+            }, notice); };
             copy.Items.Add(item);
         }
         if (target.IsConnection)
@@ -112,25 +113,28 @@ public sealed partial class MonitoringView
     }
 
     private async Task BlockTargetAsync(MonitorActionTarget target, bool connection) => await SubmitBlockAsync(target.Block(connection));
-    private async Task SubmitBlockAsync(MonitorBlockPlan plan)
+    private async Task SubmitBlockAsync(MonitorBlockPlan plan, Action<string, bool>? notice = null)
     {
         if (BlockRequested is null) throw new InvalidOperationException("The firewall action is unavailable.");
-        if (await BlockRequested(plan) is { } message) ActionNotice(message);
+        if (notice is not null) Owner?.Activate(); // Bring the existing block-review dialog in front of a detail window.
+        if (await BlockRequested(plan) is { } message) (notice ?? ActionNotice)(message, false);
     }
     private async Task InspectTargetAsync(string path)
     {
         var identity = await ExecutableIdentity.InspectAsync(path);
-        if (!closed && Owner is not null) Presentation.ToolWindows.For(Owner).Text("identity:" + path, "Executable identity",
-            $"{identity.Path}\n\n{identity.TrustDescription}\n\nSHA-256: {identity.Sha256}\n\nThis describes the file at inspection time. Firewall rules match paths, not signatures or hashes.");
+        if (!closed && Owner is not null) Presentation.ToolWindows.For(Owner).Details("identity:" + path, "Executable identity", sheet => sheet
+            .Header(Path.GetFileName(identity.Path), identity.Path, identity.Path, "Executable identity")
+            .Section("File", ("Signature", identity.TrustDescription), ("SHA-256", identity.Sha256))
+            .Note("This describes the file at inspection time. Firewall rules match paths, not signatures or hashes."), height: 460);
     }
-    private async Task RunRowActionAsync(Func<Task> action)
+    private async Task RunRowActionAsync(Func<Task> action, Action<string, bool>? notice = null)
     {
         if (rowActionBusy) return;
         rowActionBusy = true;
         try { await action(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or
             System.Runtime.InteropServices.COMException or System.Security.Cryptography.CryptographicException)
-        { ActionNotice(ex.Message, true); }
+        { (notice ?? ActionNotice)(ex.Message, true); }
         finally { rowActionBusy = false; }
     }
     private void ActionNotice(string message, bool failed = false)

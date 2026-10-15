@@ -1,0 +1,29 @@
+{
+  "Passed": true,
+  "Results": [
+    {
+      "Name": "10k unchanged endpoints / fresh snapshot",
+      "MedianMs": 14.3485,
+      "P95Ms": 24.8001,
+      "AllocatedBytesPerRefresh": 5962915
+    },
+    {
+      "Name": "10k endpoints / one state change",
+      "MedianMs": 7.8705,
+      "P95Ms": 19.6649,
+      "AllocatedBytesPerRefresh": 5807340
+    },
+    {
+      "Name": "10k endpoints / selected country unchanged",
+      "MedianMs": 7.8632,
+      "P95Ms": 18.3509,
+      "AllocatedBytesPerRefresh": 5923282
+    },
+    {
+      "Name": "10k endpoints / hidden",
+      "MedianMs": 0.0001,
+      "P95Ms": 0.0001,
+      "AllocatedBytesPerRefresh": 80042
+    }
+  ]
+}

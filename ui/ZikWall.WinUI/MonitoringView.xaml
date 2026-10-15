@@ -127,15 +127,16 @@
                     <StackPanel Spacing="4">
                         <TextBlock Text="History" Style="{StaticResource SectionTitle}" />
                         <Grid x:Name="HistoryOptionsGrid" ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
-                            <ToggleSwitch x:Name="SaveHistory" Header="Save activity on this PC" Toggled="SaveHistoryChanged" />
+                            <ToggleSwitch x:Name="SaveHistory" Header="Save activity on this PC" IsOn="True" Toggled="SaveHistoryChanged" />
                             <Button Grid.Column="1" Content="Clear history…" Click="ClearHistoryClicked" VerticalAlignment="Bottom" Margin="0,0,0,6" />
                             <ToggleSwitch x:Name="TcpDetails" Grid.Row="1" Header="Show TCP details in history" Toggled="TcpDetailsChanged" ToolTipService.ToolTip="Include TCP state changes, connection teardown and sockets whose app already exited." />
+                            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="Saved history stays on this PC until you clear it. Open saved logs in Log analysis to access older records." TextWrapping="Wrap" Style="{StaticResource StatLabel}" />
                         </Grid>
                     </StackPanel>
                     <StackPanel Spacing="8">
                         <TextBlock Text="Per-app usage" Style="{StaticResource SectionTitle}" />
                         <Grid x:Name="UsageOptionsGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8"><Button x:Name="UsageButton" Content="Enable usage" Click="UsageClicked" /><Button Grid.Column="1" Content="All app usage…" Click="AllUsageClicked" /></Grid>
-                        <TextBlock x:Name="UsageStatus" Text="Usage is off. Enabled usage resumes after a restart with a Windows permission prompt. Daily totals retain 30 days; network traffic includes local connections." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="UsageStatus" Text="Usage is off. Enabled usage resumes after a restart with a Windows permission prompt. The view shows 30 days; older daily totals stay saved on this PC. Network traffic includes local connections." Style="{StaticResource StatLabel}" TextWrapping="Wrap" />
                     </StackPanel>
                     <StackPanel Spacing="6">
                         <TextBlock Text="About this data" Style="{StaticResource SectionTitle}" />

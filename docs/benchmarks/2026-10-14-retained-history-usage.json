@@ -1,0 +1,31 @@
+{
+  "TimestampUtc": "2026-10-14T16:11:44.0391873+00:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "LogicalProcessors": 28,
+  "Results": [
+    {
+      "Name": "Read usage labels for 512 apps from 30-day history",
+      "MedianMs": 0.3206,
+      "P95Ms": 0.4146,
+      "AllocatedBytesPerOperation": 106416
+    },
+    {
+      "Name": "Rebuild 10,000 connections with 512 app usage labels",
+      "MedianMs": 13.3362,
+      "P95Ms": 19.1722,
+      "AllocatedBytesPerOperation": 10500619
+    },
+    {
+      "Name": "Refresh and sort 512 usage cells without regrouping 10,000 connections",
+      "MedianMs": 0.3972,
+      "P95Ms": 0.4545,
+      "AllocatedBytesPerOperation": 292104
+    },
+    {
+      "Name": "Observe 512 apps with 30-day history",
+      "MedianMs": 3.0512,
+      "P95Ms": 3.977,
+      "AllocatedBytesPerOperation": 2137061
+    }
+  ]
+}

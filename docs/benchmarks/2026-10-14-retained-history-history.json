@@ -1,0 +1,50 @@
+{
+  "TimestampUtc": "2026-10-14T16:11:50.5133326+00:00",
+  "FixtureOnly": true,
+  "JournalBytes": 7771918,
+  "Results": [
+    {
+      "Scenario": "Append unchanged 10k-event / 15k-sample window",
+      "Iterations": 100,
+      "MedianMs": 3.3072,
+      "P95Ms": 6.2966,
+      "AllocatedBytesPerOperation": 1448
+    },
+    {
+      "Scenario": "Append and flush 100 new events with a full live window",
+      "Iterations": 30,
+      "MedianMs": 5.1221,
+      "P95Ms": 9.0982,
+      "AllocatedBytesPerOperation": 17592
+    },
+    {
+      "Scenario": "Checkpoint full live window with durable flush",
+      "Iterations": 20,
+      "MedianMs": 29.6056,
+      "P95Ms": 41.5654,
+      "AllocatedBytesPerOperation": 206914
+    },
+    {
+      "Scenario": "Restart from full checkpoint and daily journal",
+      "Iterations": 10,
+      "MedianMs": 118.9965,
+      "P95Ms": 132.8865,
+      "AllocatedBytesPerOperation": 54949185
+    },
+    {
+      "Scenario": "Rebuild missing cache from 13,300 archived events",
+      "Iterations": 10,
+      "MedianMs": 66.8817,
+      "P95Ms": 89.8028,
+      "AllocatedBytesPerOperation": 41067300
+    },
+    {
+      "Scenario": "Save 512 apps across 30 usage days, update today\u0027s totals",
+      "Iterations": 10,
+      "MedianMs": 40.8316,
+      "P95Ms": 52.4151,
+      "AllocatedBytesPerOperation": 16131033
+    }
+  ],
+  "CorrectnessChecksPassed": true
+}

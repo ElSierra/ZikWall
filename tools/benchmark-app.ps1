@@ -6,6 +6,8 @@ param(
     [ValidateRange(1, 4096)][double]$PrivateMemoryBudgetMiB = 200,
     [switch]$EnforceBudgets,
     [switch]$Background,
+    [switch]$Map,
+    [switch]$NoMapMotion,
     [string]$ExecutablePath = (Join-Path $PSScriptRoot '..\artifacts\ZikWall\ZikWall.exe'),
     [string]$OutputPath = (Join-Path $PSScriptRoot '..\artifacts\benchmarks\app.json')
 )
@@ -44,7 +46,10 @@ public static class ZikWallBenchmarkWindow {
 }
 $ownedWindow = [IntPtr]::Zero
 $launch = [Diagnostics.Stopwatch]::StartNew()
-$process = Start-Process -FilePath $app -WorkingDirectory (Split-Path $app) -ArgumentList '--benchmark' -WindowStyle Hidden -PassThru
+$launchArguments = @('--benchmark')
+if ($Map) { $launchArguments += '--benchmark-map' }
+if ($NoMapMotion) { $launchArguments += '--benchmark-static-map' }
+$process = Start-Process -FilePath $app -WorkingDirectory (Split-Path $app) -ArgumentList $launchArguments -WindowStyle Hidden -PassThru
 try {
     $windowReadyMs = $null
     while ($launch.Elapsed.TotalSeconds -lt $WarmupSeconds) {
@@ -109,7 +114,7 @@ try {
         LogicalProcessors = [Environment]::ProcessorCount
         CpuModel = $cpuModel
         PhysicalMemoryGiB = $memoryGiB
-        Scenario = $(if ($Background) { 'Hidden window; 15-second background monitoring; collector/filtering/DNS off' } else { 'Fresh grouped Connections page; normal host traffic; collector/filtering/DNS off; no interactions' })
+        Scenario = $(if ($Background) { 'Hidden window; 15-second background monitoring; collector/filtering/DNS off' } elseif ($Map) { "Connection atlas; live host traffic; motion $(-not $NoMapMotion); collector/filtering/DNS off" } else { 'Fresh grouped Connections page; normal host traffic; collector/filtering/DNS off; no interactions' })
         WindowVisibilityVerified = $true
         WarmupSeconds = $WarmupSeconds
         MeasuredSeconds = [Math]::Round($previousMs / 1000, 2)

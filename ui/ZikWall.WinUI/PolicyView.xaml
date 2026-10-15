@@ -19,6 +19,8 @@
                 <Button x:Name="FilteringButton" Grid.Column="3" Content="Enable filtering…" VerticalAlignment="Bottom" Click="FilteringClicked" Style="{ThemeResource AccentButtonStyle}" />
             </Grid>
             <TextBlock x:Name="NetworkLabel" Text="No network association" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            <Button Content="Sync Windows Firewall…" Click="WindowsSyncClicked" />
+            <TextBlock x:Name="WindowsSyncStatus" TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             <TextBlock Text="First matching rule wins within ZikWall. Other firewall providers can still block traffic. Rules apply only while the broker is running; closing ZikWall removes its session filters." TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel>
         <CommandBar Grid.Row="2" Background="Transparent" HorizontalAlignment="Left" DefaultLabelPosition="Right"><AppBarButton Icon="Add" Label="New rule" Click="NewRuleClicked" /><AppBarButton Icon="Edit" Label="Edit" Click="EditClicked" /><AppBarButton Icon="Delete" Label="Remove" Click="RemoveClicked" /><AppBarButton Icon="Up" Label="Move up" Click="UpClicked" /><AppBarButton Icon="Find" Label="Check rules" Click="CheckRulesClicked" /><AppBarButton Icon="Save" Label="Apply saved policy" Click="ApplyClicked" /></CommandBar>

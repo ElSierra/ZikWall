@@ -1,0 +1,34 @@
+{
+  "Results": [
+    {
+      "Scenario": "Important",
+      "ReadMarkersEnabled": true,
+      "MedianMs": 1.5148,
+      "P95Ms": 3.5334,
+      "AllocatedBytesPerOperation": 1771289,
+      "EnrichmentCalls": 100,
+      "ExpectedEnrichmentCalls": 100,
+      "BudgetPassed": true
+    },
+    {
+      "Scenario": "Today with older history",
+      "ReadMarkersEnabled": true,
+      "MedianMs": 1.693,
+      "P95Ms": 2.8139,
+      "AllocatedBytesPerOperation": 1734824,
+      "EnrichmentCalls": 0,
+      "ExpectedEnrichmentCalls": 0,
+      "BudgetPassed": true
+    },
+    {
+      "Scenario": "All with display cap",
+      "ReadMarkersEnabled": true,
+      "MedianMs": 2.703,
+      "P95Ms": 5.973,
+      "AllocatedBytesPerOperation": 2870360,
+      "EnrichmentCalls": 1000,
+      "ExpectedEnrichmentCalls": 1000,
+      "BudgetPassed": true
+    }
+  ]
+}

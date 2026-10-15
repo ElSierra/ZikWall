@@ -11,6 +11,12 @@ namespace ZikWall.WinUI;
 
 public sealed partial class MainWindow
 {
+    internal async Task ExerciseWindowsSyncAsync()
+    {
+        Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "policy");
+        await PolicyPanel.ExerciseWindowsSyncCancelAsync();
+        File.WriteAllText(Path.Combine(AppContext.BaseDirectory, "windows-sync-ui.txt"), "PASS: native Windows sync preview, compatible-rule plan, and cancellation without policy changes or filtering.\n");
+    }
     internal async Task ExercisePolicyLayoutAsync()
     {
         Navigation.SelectedItem = Navigation.MenuItems.OfType<NavigationViewItem>().First(x => x.Tag?.ToString() == "policy");

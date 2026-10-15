@@ -38,7 +38,7 @@ The self-contained x64 output is `artifacts\ZikWall\ZikWall.exe`. Keep its outpu
 | Search by app/path/address/protocol/comment | Implemented |
 | Rule editor and time-limited permissions | Saved to the shared policy store; apply through the WFP broker with expiry enforcement |
 | Open legacy XML profile | Implemented, read-only, bounded parser |
-| Live connections and activity | Live TCP IPv4/IPv6 endpoints, UDP local endpoints, app logos, process/PID, TCP direction, offline country flags, Internet/direction filters, recent observation alerts, search, pause, CSV export and optional local history |
+| Live connections and activity | Live TCP IPv4/IPv6 endpoints, UDP local endpoints, app logos, process/PID, TCP direction, offline country flags, Internet/direction filters, recent observation alerts, search, pause, CSV export and local history saved by default |
 | Bandwidth chart | Per-adapter download/upload rates; not per-app accounting |
 | Reverse DNS | On-demand lookup, explicitly a hint rather than proof of the app-requested hostname |
 | Executable inspection | SHA-256 and offline Windows signature trust status; no signature-bound rules |
@@ -53,11 +53,17 @@ Monitor options, host lists, usage history, connection/executable details, log d
 
 The app opens on live Connections. **Firewall rules** shows the selected profile from **Firewall policy**, with no sample entries. Create, edit, disable, remove, and search saved rules here. **Enable filtering** applies the selected profile through the installed background service (portable builds request Windows elevation); after editing, **Apply saved policy** updates the active session. The banner and inspector distinguish saved/pending rules from applied rules. System and blocklist groups are saved with each rule; subscription IP imports use the Blocklists group. Rule order and profile selection are managed in Firewall policy. Session rules end when ZikWall closes; saved definitions survive restart. **Open profile** can inspect a plain XML `profile.xml` export or the repository's `bin\profile_internal.xml`. Disabled application blanket permissions are shown as Disabled, not falsely labeled explicit Block rules. Imported profiles cannot be edited. Unsupported profile formats produce an error without replacing the current data.
 
-After opening a legacy XML profile, **Saved rules** returns to the working policy without changing it. Imported XML entries are never automatically enforced. Settings changes the UI theme for this session and supports current-user sign-in startup. All UI strings introduced here are currently English.
+After opening a legacy XML profile, **Saved rules** returns to the working policy without changing it. Imported XML entries are never automatically enforced. Settings saves the UI theme across restarts and supports current-user sign-in startup. Logs and usage archives stay on this PC until explicitly deleted; see [local data and updates](../docs/DATA-STORAGE.md). All UI strings introduced here are currently English.
 
 Current output is `artifacts\ZikWall\ZikWall.exe`, accompanied by the WFP broker, engine DLL, runtime and assets. Keep this folder together. [Current implementation status](../docs/FEATURE-STATUS.md) distinguishes tested features from the privileged runtime gate and remaining parity work. The screenshot gallery shows the current Connections, My activity, and Log analysis pages.
 
 ## Firewall integration
+
+**Firewall policy → Sync Windows Firewall…** provides optional two-way sync for
+one profile, selectable native-rule imports, a change preview, conflict choices,
+and automatic sync every 30 seconds while the app is open. Native rules persist
+after closing ZikWall. Unsupported conditions are listed rather than discarded.
+See [scope, recovery, and diagnostics](../docs/WINDOWS-FIREWALL-SYNC.md).
 
 The public `henrypp/routine` HEAD is incompatible with the reviewed upstream source revision; this was reproduced in an unmodified baseline. The prior Win32 redesign experiment was removed when the requested design changed to Windows 11/WinUI. The production C project only retains the updater hardening changes; it does not pretend to host this WinUI shell.
 

@@ -36,3 +36,8 @@ foreach ($entry in $hashes.PSObject.Properties) {
     if ((Get-FileHash -LiteralPath (Join-Path $flags $entry.Name) -Algorithm SHA256).Hash -ne $entry.Value) { throw "Flag asset changed: $($entry.Name)" }
 }
 Write-Host 'PASS: bundled country tables, network owner tables and flag artwork match recorded content hashes.'
+$relief = Join-Path $root 'ui\ZikWall.WinUI\Assets\EarthRelief.png'
+if ((Get-FileHash -LiteralPath $relief -Algorithm SHA256).Hash -ne 'C326AB2B4EC75E792E118EBB16A7ABD3E4A80CBC36E42534A2410B2FBE17290D') {
+    throw 'Offline Natural Earth relief texture changed; regenerate and review its provenance.'
+}
+Write-Host 'PASS: offline Natural Earth relief texture matches its recorded hash.'

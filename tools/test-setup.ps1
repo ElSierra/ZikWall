@@ -146,6 +146,10 @@ foreach ($dialog in @('ZikWelcome','ZikFinish')) {
 }
 $expected = @{}
 foreach ($entry in $manifest.files) { $expected[$entry.path] = $entry.sha256 }
+foreach ($required in @('Assets\Countries\ipv4.zwc', 'Assets\Countries\ipv6.zwc', 'Assets\Countries\centroids.json',
+    'Assets\Networks\ipv4.zwn', 'Assets\Networks\ipv6.zwn', 'Assets\Networks\names.zwn', 'Assets\EarthRelief.png')) {
+    if (!$expected.ContainsKey($required)) { throw "MSI is missing required offline map data: $required" }
+}
 $files = @($xml.SelectNodes('//w:File', $ns))
 if ($files.Count -ne $expected.Count) { throw 'MSI file count mismatch.' }
 foreach ($file in $files) {

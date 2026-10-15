@@ -1,0 +1,12 @@
+{
+  "Version": "0.10.19696",
+  "AssemblySha256": "A2D34B7FE8A0E9CE3AF32CB45844545B8A82890137562150FB0450416C339487",
+  "SetupExeSha256": "6CC5D2840049E00E975AA32DE92E0AE9D153B5CD0DA246CD3D3EEB8275BB76A1",
+  "MsiSha256": "AD77941872F06D4204143D6FC67F4D8109FCAC3F9C7238862349D6B0B2AC25A0",
+  "ExtractedFileCount": 807,
+  "InstallerDiagnosticCount": 35,
+  "InstallationPerformed": false,
+  "ForegroundBudgetsPassed": true,
+  "BackgroundBudgetsPassed": true,
+  "VerifiedUtc": "2026-10-14T16:23:58.3487192+00:00"
+}

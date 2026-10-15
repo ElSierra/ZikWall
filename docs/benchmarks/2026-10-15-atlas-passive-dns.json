@@ -1,0 +1,60 @@
+{
+  "TimestampUtc": "2026-10-15T11:11:42.2216069+00:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "LogicalProcessors": 28,
+  "Scenario": "Warmed synthetic parser/cache workloads; no capture session, packets sent, native callback, IPC or UI rendering. Full-cache retained memory is an approximate managed-heap delta, not total process memory.",
+  "FullCacheEntries": 8192,
+  "ApproximateFullCacheRetainedBytes": 2261664,
+  "Results": [
+    {
+      "Name": "Reject non-DNS UDP packets",
+      "Iterations": 25,
+      "OperationsPerIteration": 1000000,
+      "MedianMs": 9.5507,
+      "P95Ms": 9.7318,
+      "NanosecondsPerOperation": 9.5507,
+      "AllocatedBytesPerOperation": 3.904E-05,
+      "MeanCpuMsPerIteration": 9.375
+    },
+    {
+      "Name": "Parse complete Ethernet/IPv4 DNS responses",
+      "Iterations": 30,
+      "OperationsPerIteration": 10000,
+      "MedianMs": 4.2461,
+      "P95Ms": 4.9252,
+      "NanosecondsPerOperation": 424.61,
+      "AllocatedBytesPerOperation": 1632.00096,
+      "MeanCpuMsPerIteration": 4.166666666666667
+    },
+    {
+      "Name": "Parse and cache repeated DNS responses",
+      "Iterations": 30,
+      "OperationsPerIteration": 10000,
+      "MedianMs": 6.509,
+      "P95Ms": 7.0137,
+      "NanosecondsPerOperation": 650.9,
+      "AllocatedBytesPerOperation": 2072.00096,
+      "MeanCpuMsPerIteration": 6.770833333333333
+    },
+    {
+      "Name": "Read 2048 IPs from full 8192-entry cache",
+      "Iterations": 50,
+      "OperationsPerIteration": 1,
+      "MedianMs": 0.3128,
+      "P95Ms": 0.3351,
+      "NanosecondsPerOperation": 312800,
+      "AllocatedBytesPerOperation": 517749.76,
+      "MeanCpuMsPerIteration": 0.3125
+    },
+    {
+      "Name": "Insert new names into full cache (eviction stress)",
+      "Iterations": 20,
+      "OperationsPerIteration": 256,
+      "MedianMs": 0.2124,
+      "P95Ms": 0.2342,
+      "NanosecondsPerOperation": 829.6875,
+      "AllocatedBytesPerOperation": 632.05625,
+      "MeanCpuMsPerIteration": 0
+    }
+  ]
+}

@@ -3,30 +3,76 @@
         <Style x:Key="SecondaryText" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
             <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
         </Style>
-        <!-- Map markers: a plain dot sized by remote IP count. Selection changes the fill. -->
+        <!-- The hit target is separate from its animated activity halo. -->
         <Style x:Key="MarkerStyle" TargetType="Button">
+            <Setter Property="UseSystemFocusVisuals" Value="True" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="BorderBrush" Value="White" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="FontSize" Value="9" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
-                <Grid><Ellipse Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1" /><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></Grid>
+                <Grid><Ellipse Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1.5" /><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></Grid>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
-        <StackPanel Spacing="2">
-            <TextBlock x:Name="GeoStatus" Text="Waiting for connections…" Style="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock Text="Live Internet connections by approximate country. Select a dot or a country to see apps and IP addresses." Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
-        </StackPanel>
-        <Grid x:Name="MapLayout" Grid.Row="1" ColumnDefinitions="*,340" RowDefinitions="*,0" ColumnSpacing="12" SizeChanged="LayoutChanged">
-            <Border Background="{ThemeResource LayerFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
-                <Viewbox Stretch="Uniform"><Grid Width="720" Height="360"><Image Opacity="0.45"><Image.Source><SvgImageSource UriSource="ms-appx:///Assets/World.svg" /></Image.Source></Image><Canvas x:Name="Markers" /></Grid></Viewbox>
-            </Border>
-            <Border x:Name="SidePanel" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
-                <Grid RowDefinitions="Auto,*">
-                    <Grid Padding="12,12,12,10" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
+    <Grid x:Name="AtlasLayout" RowDefinitions="Auto,*,Auto" RowSpacing="8">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <TextBlock x:Name="GeoStatus" Text="Reading connections…" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" TextTrimming="CharacterEllipsis" />
+            <ToggleButton x:Name="MotionToggle" Grid.Column="1" IsChecked="True" Click="MotionClicked" Padding="10,5" AutomationProperties.Name="Animate map activity" ToolTipService.ToolTip="Brief animation when destinations change. Respects Windows animation settings.">
+                <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE768;" FontSize="11" /><TextBlock Text="Motion" FontSize="12" /></StackPanel>
+            </ToggleButton>
+        </Grid>
+        <Grid x:Name="MapLayout" Grid.Row="1" ColumnDefinitions="200,*,260" RowDefinitions="*,0" SizeChanged="LayoutChanged" Background="#102D47" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="6">
+            <Grid x:Name="AppsPanel" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" RowDefinitions="Auto,Auto,*">
+                <TextBlock Text="Applications" FontWeight="SemiBold" Margin="12,14,12,10" />
+                <Button Grid.Row="1" Content="All applications" Click="AllAppsClicked" Margin="8,0,8,8" HorizontalAlignment="Stretch" />
+                <ListView x:Name="MapApps" Grid.Row="2" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="AppClicked" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Filter map by application">
+                    <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
+                    <ListView.ItemTemplate><DataTemplate x:DataType="local:MapAppDisplayRow">
+                        <Grid ColumnDefinitions="24,*" ColumnSpacing="8" Padding="0,7">
+                            <presentation:AppIcon Executable="{x:Bind Path, Mode=OneWay}" Width="24" Height="24" />
+                            <StackPanel Grid.Column="1"><TextBlock Text="{x:Bind Name, Mode=OneWay}" TextTrimming="CharacterEllipsis" FontSize="12" /><TextBlock Text="{x:Bind Detail, Mode=OneWay}" Style="{StaticResource SecondaryText}" FontSize="11" /></StackPanel>
+                        </Grid>
+                    </DataTemplate></ListView.ItemTemplate>
+                </ListView>
+            </Grid>
+            <Grid x:Name="MapFrame" Grid.Column="1">
+                <ScrollViewer x:Name="MapViewport" PointerPressed="MapPressed" PointerMoved="MapMoved" PointerReleased="MapReleased" PointerCaptureLost="MapReleased" ZoomMode="Enabled" MinZoomFactor="1" MaxZoomFactor="4" HorizontalScrollMode="Enabled" VerticalScrollMode="Enabled" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" SizeChanged="ViewportChanged" AutomationProperties.Name="Connection map, pinch or use controls to zoom, drag to pan">
+                    <Viewbox x:Name="MapBox" Stretch="Uniform"><Grid x:Name="MapSurface" Width="720" Height="360">
+                        <Image Width="720" Height="360" Source="ms-appx:///Assets/EarthRelief.png" IsHitTestVisible="False" />
+                        <Rectangle Fill="#330B223B" IsHitTestVisible="False" />
+                        <Canvas x:Name="Graticule" IsHitTestVisible="False" />
+                        <Canvas x:Name="LinkLayer" IsHitTestVisible="False" />
+                        <Canvas x:Name="FocusLayer" IsHitTestVisible="False" />
+                        <Canvas x:Name="Markers" />
+                        <Canvas x:Name="TravelLayer" IsHitTestVisible="False" />
+                        <Canvas IsHitTestVisible="False">
+                            <Ellipse x:Name="HubPulse" Canvas.Left="284" Canvas.Top="164" Width="32" Height="32" Stroke="#D7EDFF" StrokeThickness="1.5" />
+                            <Border Canvas.Left="284" Canvas.Top="164" Width="32" Height="32" Background="#D3E4EB" CornerRadius="16"><FontIcon Glyph="&#xE770;" FontSize="17" Foreground="#163348" /></Border>
+                            <Border Canvas.Left="262" Canvas.Top="201" Padding="6,3" Background="#D910293E" CornerRadius="4"><TextBlock Text="This device" FontSize="10" Foreground="#E3F3FF" /></Border>
+                        </Canvas>
+                    </Grid></Viewbox>
+                </ScrollViewer>
+                <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12" Background="#DC0D2339" CornerRadius="4" Padding="8,5" IsHitTestVisible="False"><TextBlock x:Name="OfflineLabel" Text="LIVE CONNECTIONS · OFFLINE MAP" Foreground="#C6DDEB" FontSize="10" CharacterSpacing="70" /></Border>
+                <Grid VerticalAlignment="Bottom" Margin="10" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Border Background="#E610293E" CornerRadius="4" Padding="8,6" VerticalAlignment="Bottom"><TextBlock x:Name="MapHint" Text="Select a destination" Foreground="#D4E8F6" FontSize="11" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" /></Border>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="3" VerticalAlignment="Bottom">
+                        <Button Content="−" Tag="out" Click="ZoomClicked" Width="30" Height="30" Padding="0" Foreground="#E3F3FF" Background="#E610293E" AutomationProperties.Name="Zoom out" />
+                        <Button Content="+" Tag="in" Click="ZoomClicked" Width="30" Height="30" Padding="0" Foreground="#E3F3FF" Background="#E610293E" AutomationProperties.Name="Zoom in" />
+                        <Button Content="Fit" Tag="fit" Click="ZoomClicked" Height="30" Padding="8,0" Foreground="#E3F3FF" Background="#E610293E" AutomationProperties.Name="Fit world map" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+            <Border x:Name="SidePanel" Grid.Column="2" Background="{ThemeResource SolidBackgroundFillColorBaseBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="0">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <Grid x:Name="SummaryCards" Padding="12,10" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="8" ColumnSpacing="8">
+                        <StackPanel><TextBlock x:Name="CountryCount" Text="0" FontSize="19" FontWeight="SemiBold" /><TextBlock Text="Countries" Style="{StaticResource SecondaryText}" /></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock x:Name="IpCount" Text="0" FontSize="19" FontWeight="SemiBold" /><TextBlock Text="Remote IPs" Style="{StaticResource SecondaryText}" /></StackPanel>
+                        <StackPanel Grid.Row="1"><TextBlock x:Name="AppCount" Text="0" FontSize="19" FontWeight="SemiBold" /><TextBlock Text="Apps" Style="{StaticResource SecondaryText}" /></StackPanel>
+                        <StackPanel Grid.Row="1" Grid.Column="1"><TextBlock x:Name="Coverage" Text="—" FontSize="19" FontWeight="SemiBold" /><TextBlock Text="Located" Style="{StaticResource SecondaryText}" /></StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="1" Padding="12,12,12,10" ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
                         <Button x:Name="BackButton" Click="BackClicked" Visibility="Collapsed" Width="32" Height="32" Padding="0" Background="Transparent" BorderThickness="0" VerticalAlignment="Center" ToolTipService.ToolTip="All countries (Esc)" AutomationProperties.Name="Back to all countries">
                             <FontIcon Glyph="&#xE72B;" FontSize="14" />
                             <Button.KeyboardAccelerators><KeyboardAccelerator Key="Escape" /></Button.KeyboardAccelerators>
@@ -37,16 +83,18 @@
                             <TextBlock x:Name="DestinationSubtitle" Text="Most remote IPs first" Style="{StaticResource SecondaryText}" TextTrimming="CharacterEllipsis" />
                         </StackPanel>
                     </Grid>
-                    <ListView x:Name="CountryList" Grid.Row="1" SelectionMode="None" IsItemClickEnabled="True" ItemClick="CountryClicked" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Countries with live connections">
+                    <ListView x:Name="CountryList" Grid.Row="2" SelectionMode="None" IsItemClickEnabled="True" ItemClick="CountryClicked" HorizontalContentAlignment="Stretch" AutomationProperties.Name="Countries with live connections">
                         <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
-                        <ListView.ItemTemplate><DataTemplate x:DataType="local:CountryRow"><Grid Padding="0,8" ColumnDefinitions="28,*,Auto" ColumnSpacing="10" RowDefinitions="Auto,Auto" AutomationProperties.Name="{x:Bind Label}">
-                            <Image Grid.RowSpan="2" Source="{x:Bind Flag}" Width="22" Height="16" VerticalAlignment="Center" />
-                            <StackPanel Grid.Column="1"><TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{x:Bind AppsLabel}" Style="{StaticResource SecondaryText}" /></StackPanel>
-                            <TextBlock Grid.Column="2" Text="{x:Bind IpsLabel}" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" />
-                            <ProgressBar Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Value="{x:Bind Share}" Maximum="1" Margin="0,6,0,0" IsHitTestVisible="False" />
+                        <ListView.ItemTemplate><DataTemplate x:DataType="local:CountryDisplayRow"><Grid Padding="0,8" ColumnDefinitions="28,*,Auto" ColumnSpacing="10" RowDefinitions="Auto,Auto" AutomationProperties.Name="{x:Bind Label, Mode=OneWay}">
+                            <Image Grid.RowSpan="2" Source="{x:Bind Flag, Mode=OneWay}" Width="22" Height="16" VerticalAlignment="Center" />
+                            <StackPanel Grid.Column="1"><TextBlock Text="{x:Bind Name, Mode=OneWay}" TextTrimming="CharacterEllipsis" /><TextBlock Text="{x:Bind AppsLabel, Mode=OneWay}" Style="{StaticResource SecondaryText}" /></StackPanel>
+                            <TextBlock Grid.Column="2" Text="{x:Bind IpsLabel, Mode=OneWay}" VerticalAlignment="Center" Style="{StaticResource SecondaryText}" />
+                            <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Height="3" Margin="0,6,0,0" Background="{ThemeResource ControlFillColorSecondaryBrush}" IsHitTestVisible="False">
+                                <Rectangle Fill="{ThemeResource AccentFillColorDefaultBrush}"><Rectangle.RenderTransform><ScaleTransform ScaleX="{x:Bind Share, Mode=OneWay}" /></Rectangle.RenderTransform></Rectangle>
+                            </Grid>
                         </Grid></DataTemplate></ListView.ItemTemplate>
                     </ListView>
-                    <ListView x:Name="Destinations" Grid.Row="1" SelectionMode="None" HorizontalContentAlignment="Stretch" Visibility="Collapsed" AutomationProperties.Name="Connections in the selected country">
+                    <ListView x:Name="Destinations" Grid.Row="2" SelectionMode="None" HorizontalContentAlignment="Stretch" Visibility="Collapsed" AutomationProperties.Name="Connections in the selected country">
                         <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
                         <ListView.ItemTemplate><DataTemplate x:DataType="models:ConnectionEntry"><Grid ColumnDefinitions="32,*" ColumnSpacing="10" Padding="0,8">
                             <presentation:AppIcon Executable="{x:Bind ProcessPath}" VerticalAlignment="Top" />
@@ -57,13 +105,13 @@
                             </StackPanel>
                         </Grid></DataTemplate></ListView.ItemTemplate>
                     </ListView>
-                    <StackPanel x:Name="EmptyCountries" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="24">
+                    <StackPanel x:Name="EmptyCountries" Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8" Margin="24">
                         <FontIcon Glyph="&#xE909;" FontSize="28" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <TextBlock Text="No located Internet connections yet" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Style="{StaticResource SecondaryText}" />
+                        <TextBlock x:Name="EmptyCountryMessage" Text="No Internet connections" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Style="{StaticResource SecondaryText}" />
                     </StackPanel>
                 </Grid>
             </Border>
         </Grid>
-        <TextBlock Grid.Row="2" Text="Dots mark approximate country centers, not server or city locations. VPNs and shared hosting affect accuracy. Country data: DB-IP (CC BY 4.0). Map and positions: Natural Earth (public domain)." Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+        <TextBlock Grid.Row="2" Text="Approximate country locations · Device hub is schematic · Lines show connections, not routes · DB-IP (CC BY 4.0) / Natural Earth" Style="{StaticResource SecondaryText}" FontSize="10" TextWrapping="Wrap" />
     </Grid>
 </UserControl>

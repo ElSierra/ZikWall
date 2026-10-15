@@ -21,8 +21,9 @@ internal sealed class ToolWindows
 
     internal static ToolWindows For(Window owner) => owners.GetValue(owner, value => new(value));
     internal int Count => windows.Count;
+    internal IReadOnlyCollection<Window> Open => windows.Values;
 
-    internal Window Show(string key, string title, Func<UIElement> content, bool scroll = true, Action? closed = null)
+    internal Window Show(string key, string title, Func<UIElement> content, bool scroll = true, Action? closed = null, int width = 760, int height = 850)
     {
         if (windows.TryGetValue(key, out var existing))
         {
@@ -59,8 +60,8 @@ internal sealed class ToolWindows
         ApplyTheme(source, EventArgs.Empty);
         var area = DisplayArea.GetFromWindowId(owner.AppWindow.Id, DisplayAreaFallback.Primary).WorkArea;
         double scale = source.XamlRoot?.RasterizationScale ?? 1;
-        int width = Math.Min((int)(760 * scale), area.Width), height = Math.Min((int)(850 * scale), area.Height);
-        window.AppWindow.MoveAndResize(new(area.X + (area.Width - width) / 2, area.Y + (area.Height - height) / 2, width, height));
+        int physicalWidth = Math.Min((int)(width * scale), area.Width), physicalHeight = Math.Min((int)(height * scale), area.Height);
+        window.AppWindow.MoveAndResize(new(area.X + (area.Width - physicalWidth) / 2, area.Y + (area.Height - physicalHeight) / 2, physicalWidth, physicalHeight));
         windows.Add(key, window);
         window.Closed += (_, _) =>
         {
@@ -77,6 +78,10 @@ internal sealed class ToolWindows
 
     internal Window Text(string key, string title, string text) => Show(key, title, () => new TextBlock
     { Text = text, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true });
+
+    // Detail sheets are short; a compact window keeps them from floating in empty space.
+    internal Window Details(string key, string title, Func<DetailSheet, DetailSheet> build, int height = 640) =>
+        Show(key, title, () => build(new DetailSheet()).Build(), width: 640, height: height);
 
     internal Task<bool> EditAsync(string key, string title, UIElement form, Action<Window> opened)
     {

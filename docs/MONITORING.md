@@ -67,7 +67,7 @@ In-app recent alerts default on. Windows notifications are separately opt-in und
 
 Notifications use a compact three-line layout: "Network activity" (or "First network activity" for the new-app notification mode), app name, and remote IP. Additional batched connections appear as "+N more" on the address line. The bundled country flag remains beside the content, with an accessible country description and a neutral globe for unknown countries. Ports, hostname explanations and country prose remain in connection details. Windows controls the native toast frame and app attribution. Formatting uses existing snapshot data and local images; it makes no DNS, signature or image requests and does not invent an unsigned badge.
 
-Activity remains the detailed record. Saved history stays opt-in; notification settings are saved with monitor preferences. Notifications can contain app names, cached domain hints and IPs, including in Windows Notification Center when enabled.
+Activity remains the detailed record. History saving defaults on, with older records kept in the local archive until explicitly deleted; notification settings are saved with monitor preferences. See [local data and updates](DATA-STORAGE.md). Notifications can contain app names, cached domain hints and IPs, including in Windows Notification Center when enabled.
 
 Monitor options → Notifications → **Notify me about** selects all new Internet
 connections, **New apps only**, outgoing only, or incoming only. The selection

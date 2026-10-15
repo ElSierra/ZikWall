@@ -48,6 +48,9 @@ internal static class BrokerSelfTest
             using var client = new FirewallClient();
             await client.StartAsync();
             Check(client.Connected, "Unelevated client to elevated broker handshake");
+            var empty = await client.SendAsync(new("apply", []));
+            Check(empty.Success && empty.ActiveRules == 0, "Enable filtering with an empty profile");
+            await ExpectAsync(true, "Empty initial profile preserves loopback");
             var rule = new FirewallRule(Guid.NewGuid(), "ZikWall isolated broker test", Environment.ProcessPath!,
                 "127.0.0.1/32", 6, port, 1, true, true, null);
             var applied = await client.SendAsync(new("apply", [rule]));

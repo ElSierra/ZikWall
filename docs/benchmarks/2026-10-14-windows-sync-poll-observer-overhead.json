@@ -1,0 +1,35 @@
+{
+  "TimestampUtc": "2026-10-14T13:43:51.7746281+00:00",
+  "OS": "Microsoft Windows NT 10.0.28120.0",
+  "Runtime": "8.0.27",
+  "NativeRules": 1003,
+  "NativeLinkedRules": 10,
+  "Results": [],
+  "Polling": {
+    "Off": {
+      "Enabled": false,
+      "ElapsedSeconds": 65.0441129,
+      "Polls": 0,
+      "CpuMs": 562.5,
+      "PercentOneCore": 0.8647977117695458,
+      "AllocatedBytes": 203480,
+      "MeanPrivateMiB": 25.13780048076923,
+      "PeakPrivateMiB": 25.765625,
+      "MeanWorkingSetMiB": 56.29771634615385
+    },
+    "On": {
+      "Enabled": true,
+      "ElapsedSeconds": 65.0245247,
+      "Polls": 3,
+      "CpuMs": 843.75,
+      "PercentOneCore": 1.297587339381198,
+      "AllocatedBytes": 4114736,
+      "MeanPrivateMiB": 25.58701923076923,
+      "PeakPrivateMiB": 28.75,
+      "MeanWorkingSetMiB": 58.96219951923077
+    }
+  },
+  "Budget": "Unchanged 1000-rule planner: median \u003C= 50 ms and managed allocations \u003C= 8 MB per operation",
+  "Passed": true,
+  "Scope": "Read-only native access. CPU/memory belong to this process, not the Windows firewall service. No firewall writes or traffic throughput measurement."
+}

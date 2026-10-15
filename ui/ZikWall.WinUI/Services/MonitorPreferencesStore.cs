@@ -4,7 +4,7 @@ namespace ZikWall.WinUI.Services;
 
 public sealed record MonitorPreferences(bool HideWindowsSystemApps = false,
     int Group = 0, int Direction = 0, int Scope = 1, int Refresh = 1, int HistoryRange = 0,
-    bool RecentAlerts = true, bool DesktopAlerts = false, bool SaveHistory = false,
+    bool RecentAlerts = true, bool DesktopAlerts = false, bool SaveHistory = true,
     string? AdapterId = null, int UsageSort = 0, bool UsageCollection = false, bool DomainAccess = false, bool TcpDetails = false,
     int NotificationType = 0, bool ReverseDns = false)
 {

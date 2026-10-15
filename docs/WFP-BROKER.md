@@ -10,12 +10,26 @@ Rules support a local executable path, remote address/CIDR, TCP/UDP/any protocol
 
 Saved policy profiles are separate from the imported simplewall XML viewer. Network associations use Windows Network List Manager GUIDs. Switching is opt-in; multiple matching networks pause automatic selection. Pending edits also pause switching. Rules are applied only after the broker acknowledges acceptance; failed transactions retain the previous filters. Review the selected profile and click Apply after editing it.
 
+The firewall broker's 20-second idle timeout counts awake time using Windows
+`QueryUnbiasedInterruptTime`. Sleep, hibernation and wall-clock corrections do
+not expire an otherwise live connection. Rule expiration still uses UTC, so
+temporary rules that expire while asleep are removed after resume. The clock
+regression can be run without suspending the machine:
+`dotnet run --project tests/WinUI.Models.Tests -c Release -- --broker-lifetime-only`.
+
 ## Privilege boundary
+
+Optional [two-way Windows Firewall sync](WINDOWS-FIREWALL-SYNC.md) uses a separate
+authenticated broker connection and the `windows-sync` request. It validates
+representable native snapshots and expected current values, then writes through
+the Windows Firewall COM API. These rules persist after the WFP session closes.
+The UI saves a recovery journal before requesting writes. Firewall defaults and
+unrelated rules remain unchanged.
 
 - A new unpredictable pipe name is used for each session; first-instance creation prevents pipe-name takeover.
 - The pipe denies remote clients, grants the launching UI user's SID and SYSTEM access, and permits that user's medium-integrity UI to communicate with the elevated broker.
 - The broker verifies the parent PID, creation time, sibling executable path and connecting pipe client's PID. The UI verifies the server PID against the helper returned by the authenticated service (or started by Windows elevation for a portable build).
-- IPC is length-framed and limited to 2 MB. The broker independently validates every rule and supports only status/apply/stop.
+- IPC is length-framed and limited to 2 MB. The broker independently validates rules and Windows sync batches; requests cover status, session apply/stop, usage collection, and Windows sync.
 - No caller-selected DLL, shell command, executable launch, registry edit or privileged file write is exposed.
 - The engine DLL is loaded by an absolute path from the broker's own directory.
 
@@ -47,7 +61,9 @@ are not applied automatically. Open **Firewall policy → Enable filtering** (or
 confirm **Block now** from a connection menu) to apply rules. Portable builds
 request Windows UAC approval for their helpers. Without saved rules there is no ZikWall block policy to
 apply. Session filters end on app/broker exit; the sign-in tray entry does not
-make them persistent. Windows Firewall configuration is unchanged.
+make them persistent. Optional Windows Firewall sync is independent: previously
+synced native rules persist, and automatic sync resumes at startup only when
+the user has enabled it. Diagnostic modes never run automatic Windows sync.
 
 `ZikWall.exe --test-throughput` uses the production broker with only self-scoped
 loopback fixtures. The 2-rule and 1,000-rule allowed TCP comparisons passed their

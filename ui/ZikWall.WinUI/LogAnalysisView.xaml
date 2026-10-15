@@ -10,14 +10,14 @@
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         </Style>
     </UserControl.Resources>
-    <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="12">
         <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="8">
             <ComboBox x:Name="CategoryChoice" SelectedIndex="0" SelectionChanged="FilterChanged" VerticalAlignment="Center" AutomationProperties.Name="Event type" MinWidth="170">
                 <ComboBoxItem Content="Important" /><ComboBoxItem Content="All events" /><ComboBoxItem Content="First app observation" />
                 <ComboBoxItem Content="Connection observed" /><ComboBoxItem Content="Connection state" /><ComboBoxItem Content="No longer observed" />
             </ComboBox>
             <ComboBox x:Name="RangeChoice" Grid.Column="1" SelectedIndex="0" SelectionChanged="FilterChanged" VerticalAlignment="Center" AutomationProperties.Name="Event time range" MinWidth="140">
-                <ComboBoxItem Content="All retained history" /><ComboBoxItem Content="Today" /><ComboBoxItem Content="Last 24 hours" /><ComboBoxItem Content="Last 7 days" />
+                <ComboBoxItem Content="All saved history" /><ComboBoxItem Content="Today" /><ComboBoxItem Content="Last 24 hours" /><ComboBoxItem Content="Last 7 days" />
             </ComboBox>
             <AutoSuggestBox x:Name="LogSearch" Grid.Column="2" PlaceholderText="Search events" QueryIcon="Find" TextChanged="SearchChanged" VerticalAlignment="Center" AutomationProperties.Name="Search log analysis" />
             <CheckBox x:Name="UnreadOnly" Grid.Column="3" Content="Unread only" MinWidth="0" Margin="8,0,0,0" VerticalAlignment="Center" Checked="UnreadChanged" Unchecked="UnreadChanged" />
@@ -25,13 +25,16 @@
                 <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8FB;" FontSize="14" /><TextBlock Text="Mark all as read" /></StackPanel>
             </Button>
         </Grid>
-        <Grid Grid.Row="1">
-            <ListView x:Name="EventList" ItemsSource="{Binding Source={StaticResource GroupedEvents}}" HorizontalContentAlignment="Stretch" SelectionMode="None" Padding="0,0,14,0"
-                IsItemClickEnabled="True" ItemClick="EventClicked" AutomationProperties.Name="Network event timeline">
+        <InfoBar x:Name="LogActionBanner" Grid.Row="1" IsOpen="False" IsClosable="True" />
+        <Grid Grid.Row="2">
+            <ListView x:Name="EventList" ItemsSource="{Binding Source={StaticResource GroupedEvents}}" HorizontalContentAlignment="Stretch" SelectionMode="Single" Padding="0,0,14,0"
+                IsItemClickEnabled="True" ItemClick="EventClicked" ContextRequested="LogContextRequested" AutomationProperties.Name="Network event timeline">
+                <ListView.ItemsPanel><ItemsPanelTemplate><ItemsStackPanel ItemsUpdatingScrollMode="KeepItemsInView" /></ItemsPanelTemplate></ListView.ItemsPanel>
                 <ListView.ItemContainerTransitions><TransitionCollection /></ListView.ItemContainerTransitions>
                 <ListView.ItemContainerStyle><Style TargetType="ListViewItem">
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" /><Setter Property="Padding" Value="0" />
-                    <Setter Property="Margin" Value="0,0,0,2" /><Setter Property="CornerRadius" Value="4" /><Setter Property="MinHeight" Value="0" />
+                    <Setter Property="Margin" Value="0" /><Setter Property="CornerRadius" Value="0" /><Setter Property="MinHeight" Value="64" />
+                    <Setter Property="BorderBrush" Value="{ThemeResource DividerStrokeColorDefaultBrush}" /><Setter Property="BorderThickness" Value="0,0,0,1" />
                 </Style></ListView.ItemContainerStyle>
                 <ListView.GroupStyle><GroupStyle>
                     <GroupStyle.HeaderContainerStyle><Style TargetType="ListViewHeaderItem">
@@ -43,27 +46,17 @@
                     </DataTemplate></GroupStyle.HeaderTemplate>
                 </GroupStyle></ListView.GroupStyle>
                 <ListView.ItemTemplate><DataTemplate x:DataType="models:LogEntry">
-                    <!-- One compact row per event: unread dot, app icon, two text lines, then time and category. -->
-                    <Border Padding="14,10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
-                        <Grid ColumnDefinitions="6,24,*,Auto" ColumnSpacing="12">
+                    <!-- Fixed-height, lightweight rows avoid repeated SVG decoding and nested auto layout during scrolling. -->
+                        <Grid Height="64" Padding="12,0" ColumnDefinitions="6,24,*,150,80" ColumnSpacing="12">
                             <Ellipse Width="6" Height="6" VerticalAlignment="Center" Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{x:Bind presentation:Ui.Opacity(IsUnread)}" ToolTipService.ToolTip="Unread" />
                             <presentation:AppIcon Grid.Column="1" Executable="{x:Bind Connection.ProcessPath}" VerticalAlignment="Center" />
                             <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
-                                <TextBlock TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"><Run Text="{x:Bind Connection.Application}" FontWeight="SemiBold" /><Run Text=" " /><Run Text="{x:Bind Message}" /></TextBlock>
-                                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="6">
-                                    <Image Width="16" Height="12" VerticalAlignment="Center"><Image.Source><SvgImageSource UriSource="{x:Bind Connection.CountryFlag}" RasterizePixelWidth="64" RasterizePixelHeight="48" /></Image.Source></Image>
-                                    <TextBlock Grid.Column="1" Text="{x:Bind Host}" MaxWidth="360" Style="{StaticResource QuietLine}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" ToolTipService.ToolTip="{x:Bind Host}" />
-                                    <TextBlock Grid.Column="2" Text="{x:Bind Context}" Style="{StaticResource QuietLine}" />
-                                </Grid>
+                                <TextBlock Text="{x:Bind Headline}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTipService.ToolTip="{x:Bind Headline}" />
+                                <TextBlock Text="{x:Bind DetailLine}" Style="{StaticResource QuietLine}" ToolTipService.ToolTip="{x:Bind DetailLine}" />
                             </StackPanel>
-                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
-                                <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}" CornerRadius="4" Padding="6,1,6,2" VerticalAlignment="Center">
-                                    <TextBlock Text="{x:Bind CategoryLabel}" Style="{StaticResource QuietLine}" />
-                                </Border>
-                                <TextBlock Text="{x:Bind TimeLabel}" MinWidth="56" TextAlignment="Right" VerticalAlignment="Center" ToolTipService.ToolTip="{x:Bind FullTime}" Style="{StaticResource QuietLine}" />
-                            </StackPanel>
+                            <TextBlock Grid.Column="3" Text="{x:Bind CategoryLabel}" VerticalAlignment="Center" Style="{StaticResource QuietLine}" />
+                            <TextBlock Grid.Column="4" Text="{x:Bind TimeLabel}" TextAlignment="Right" VerticalAlignment="Center" ToolTipService.ToolTip="{x:Bind FullTime}" Style="{StaticResource QuietLine}" />
                         </Grid>
-                    </Border>
                 </DataTemplate></ListView.ItemTemplate>
             </ListView>
             <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10" Visibility="Collapsed">
@@ -72,7 +65,13 @@
                 <TextBlock Text="Try All events, a wider time range or a different search." TextWrapping="Wrap" TextAlignment="Center" MaxWidth="360" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
         </Grid>
-        <StackPanel Grid.Row="2" Spacing="2">
+        <StackPanel Grid.Row="3" Spacing="2">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="NewerButton" Content="Newer events" Click="NewerClicked" IsEnabled="False" />
+                <Button x:Name="OlderButton" Content="Older events" Click="OlderClicked" IsEnabled="False" />
+                <Button Content="Refresh" Click="RefreshClicked" />
+                <Button Content="Open saved logs" Click="OpenSavedLogsClicked" ToolTipService.ToolTip="Open all saved activity and usage files, including older history, on this PC." />
+            </StackPanel>
             <TextBlock x:Name="LogStatus" TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             <TextBlock Text="Important shows each app's first observation in retained history. Snapshots may miss short connections; these events do not indicate threats or firewall decisions." TextWrapping="Wrap" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel>

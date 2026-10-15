@@ -19,6 +19,11 @@ are retained in `docs/upstream`; they describe upstream behavior, not this app.
 
 ## Native source references
 
+The offline connection map includes Natural Earth I shaded relief (public
+domain), resized and styled with a dark cartographic palette. Source and hashes:
+[Map data](MAP-DATA.md). Terms: https://www.naturalearthdata.com/about/terms-of-use/.
+
+
 These original source/issue links were moved out of active code during renaming:
 
 - `src/main.c`: https://github.com/henrypp/simplewall/issues/1698#issuecomment-4532518363

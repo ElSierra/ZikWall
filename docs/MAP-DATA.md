@@ -1,5 +1,25 @@
 # Map and location data
 
+## Offline shaded relief (October 2026 map redesign)
+
+The viewport uses a 2048 × 1024 Natural Earth I shaded-relief texture, with a
+dark cartographic palette applied at build time. It is bundled locally; panning
+and zooming never fetch tiles or disclose connection IPs. This is geographic
+relief, not live satellite imagery. Country markers remain approximate country
+centers, not city or server positions. The device hub is schematic.
+
+Source (public domain): https://naturalearth.s3.amazonaws.com/50m_raster/NE1_50M_SR_W.zip
+
+Archive SHA-256: `9e85417223414bbed425aea5dca0f0b4c5661fc94d4f14494140a21a08dfa450`
+
+Generated `Assets/EarthRelief.png` SHA-256:
+`c326ab2b4ec75e792e118ebb16a7abd3e4a80cbc36e42534a2410b2fbe17290d`
+
+Reproduce with `python tools/build-map-relief.py temp/natural-earth-relief.zip`
+(Pillow required). Natural Earth terms: https://www.naturalearthdata.com/about/terms-of-use/
+
+## Original vector outline
+
 The static equirectangular land outline uses Natural Earth 1:110m land polygons, version 5.1.2. Natural Earth data is public domain: https://www.naturalearthdata.com/about/terms-of-use/ .
 
 Source: https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_110m_land.geojson

@@ -1,0 +1,36 @@
+monitor-churn.txt
+PASS: 500 native row churn and notification-layout iterations.
+
+context-menu-selftest.txt
+PASS: 8 native context-menu routing, invocation and stale-target checks.
+PASS: native block-review cancellation leaves policy and filtering unchanged.
+
+monitor-options-selftest.txt
+PASS: separate native options window fits 600/440/360 DIP, controls fit, bottom reachable, repeat clicks reuse the window, close releases it, reopen preserves settings, themes synchronize, owner exit closes children. Unchanged history retains its native list; changed history refreshes. Async website hints display and search without entering saved activity. Host windows bind current snapshots, are lazy and release their lists on close; live row bindings preserve containers and flag images.
+
+usage-view-selftest.txt
+PASS: native usage column enable/disable, two heading clicks, numeric order, selection preservation and expanded rows. Fixture only; no collector or saved usage changes.
+
+system-apps-selftest.txt
+PASS: native toggle hides/restores connections, counts, history and map snapshots, clears banner and preserves captured data. Preferences untouched in diagnostic mode.
+
+preferences-selftest.txt
+PASS: monitor settings save immediately and survive a fresh view; history defaults on, survives replacement views, and unopened/corrupt histories cannot be overwritten. Theme and DNS provider choices also survive native view recreation. Separate tray icon loads and registers with Windows.
+
+policy-layout-selftest.txt
+PASS: profile control alignment and bounds at 1800 DIP.
+PASS: profile control alignment and bounds at 1000 DIP.
+PASS: profile control alignment and bounds at 720 DIP.
+PASS: profile control alignment and bounds at 480 DIP.
+
+activity-overview-selftest.txt
+PASS: activity columns fit 1280 DIP; native rank lists, byte bars and country flags rendered.
+PASS: activity columns fit 800 DIP; native rank lists, byte bars and country flags rendered.
+PASS: selected time range, search and empty state change the actual rankings.
+
+log-analysis-selftest.txt
+PASS: native row invocation opens the event details and marks only the clicked event read, saved read state reloads, mark-all persists, date grouping, realized rows, app search, today range, unread filtering and timeline render.
+PASS: the native saved-history query restores yesterday beyond the live cache and pages older/newer events without repeats; reading pauses automatic scans and scrolling cancels pending scans while retaining usable paging controls.
+
+rules-selftest.txt
+PASS: empty policy, saved-rule synchronization, scope filters, search, editor cancellation, removal and native render. Isolated diagnostic policy; filtering remained off.

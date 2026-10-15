@@ -14,15 +14,15 @@ public sealed record WindowsFirewallEntry(string Name, string Description, strin
     public static WindowsFirewallEntry Create(string name, string description, string group, FirewallRule rule)
     {
         rule = rule with { RemoteNetwork = WindowsFirewallSync.NormalizeNetwork(rule.RemoteNetwork) };
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(new { name, description, group, rule.Name,
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new { NativeName = name, description, group, LocalName = rule.Name,
             Application = rule.Application.ToUpperInvariant(), rule.RemoteNetwork, rule.Protocol,
             rule.RemotePort, rule.Direction, rule.Block, rule.Enabled });
         return new(name, description, group, rule, Convert.ToHexString(SHA256.HashData(bytes)));
     }
     public void ValidateWritable()
     {
-        if (Rule is null || Problem.Length != 0 || Name.Length is < 1 or > 256 || Name.Any(char.IsControl)
-            || Description.Length > 1024 || Group.Length > 256) throw new InvalidDataException("Unsupported Windows Firewall rule.");
+        if (Rule is null || Problem is not "" || Name is null || Name.Length is < 1 or > 256 || Name.Any(char.IsControl)
+            || Description is null || Description.Length > 1024 || Group is null || Group.Length > 256 || Fingerprint is null) throw new InvalidDataException("Unsupported Windows Firewall rule.");
         Rule.Validate();
         if (Rule.Expires is not null || Rule.Direction == 3) throw new InvalidDataException("Windows rules require one direction and no expiry.");
         if (Create(Name, Description, Group, Rule).Fingerprint != Fingerprint) throw new InvalidDataException("Invalid Windows rule snapshot.");
@@ -33,12 +33,12 @@ public sealed record WindowsFirewallChange(WindowsFirewallEntry? Before, Windows
 public sealed record WindowsFirewallBatch(List<WindowsFirewallChange> Changes, bool Resume = false);
 public sealed record WindowsFirewallLink(Guid RuleId, FirewallRule Local, List<WindowsFirewallEntry> Windows);
 public sealed record WindowsFirewallPending(List<FirewallRule> Rules, List<WindowsFirewallLink> Links, List<WindowsFirewallChange> Changes);
-public sealed record WindowsFirewallSyncState(Guid ProfileId, List<WindowsFirewallLink> Links, WindowsFirewallPending? Pending = null)
+public sealed record WindowsFirewallSyncState(Guid ProfileId, List<WindowsFirewallLink> Links, WindowsFirewallPending? Pending = null, bool Automatic = false)
 {
     public void Validate(PolicyDocument document)
     {
         if (!document.Profiles.Any(x => x.Id == ProfileId) || Links is null || Links.Count > 1000
-            || Links.Select(x => x.RuleId).Distinct().Count() != Links.Count) throw new InvalidDataException("Invalid Windows Firewall sync state.");
+            || Links.Any(x => x is null) || Links.Select(x => x.RuleId).Distinct().Count() != Links.Count) throw new InvalidDataException("Invalid Windows Firewall sync state.");
         ValidateLinks(Links);
         if (Pending is { } pending)
         {
@@ -50,13 +50,13 @@ public sealed record WindowsFirewallSyncState(Guid ProfileId, List<WindowsFirewa
     }
     private static void ValidateLinks(List<WindowsFirewallLink> links)
     {
-        if (links.Count > 1000 || links.Select(x => x.RuleId).Distinct().Count() != links.Count) throw new InvalidDataException("Duplicate sync links.");
+        if (links.Count > 1000 || links.Any(x => x is null) || links.Select(x => x.RuleId).Distinct().Count() != links.Count) throw new InvalidDataException("Duplicate sync links.");
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var link in links)
         {
             if (link.Local is null || link.RuleId != link.Local.Id || link.Windows is null || link.Windows.Count is < 1 or > 2) throw new InvalidDataException("Invalid sync link.");
             link.Local.Validate();
-            foreach (var entry in link.Windows) { entry.ValidateWritable(); if (!names.Add(entry.Name)) throw new InvalidDataException("Duplicate Windows rule link."); }
+            foreach (var entry in link.Windows) { if (entry is null) throw new InvalidDataException("Empty Windows rule link."); entry.ValidateWritable(); if (!names.Add(entry.Name)) throw new InvalidDataException("Duplicate Windows rule link."); }
         }
     }
 }
@@ -68,15 +68,38 @@ public sealed record WindowsFirewallPlan(List<FirewallRule> Rules, List<WindowsF
     public bool Ready => Problems.Count == 0;
 }
 
+// Preserve all matches: an index must not hide duplicate names or identity markers.
+public sealed class WindowsFirewallIndex
+{
+    private readonly Dictionary<string, List<WindowsFirewallEntry>> names = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, List<WindowsFirewallEntry>> markers = new(StringComparer.Ordinal);
+    public WindowsFirewallIndex(IReadOnlyList<WindowsFirewallEntry> entries)
+    {
+        foreach (var entry in entries)
+        {
+            if (!names.TryGetValue(entry.Name, out var named)) names.Add(entry.Name, named = []);
+            named.Add(entry);
+            if (!entry.Description.StartsWith(WindowsFirewallSync.Marker, StringComparison.Ordinal)) continue;
+            if (!markers.TryGetValue(entry.Description, out var marked)) markers.Add(entry.Description, marked = []);
+            marked.Add(entry);
+        }
+    }
+    public IReadOnlyList<WindowsFirewallEntry> Named(string name) => names.TryGetValue(name, out var matches) ? matches : Array.Empty<WindowsFirewallEntry>();
+    public IReadOnlyList<WindowsFirewallEntry> Find(WindowsFirewallEntry baseline) =>
+        baseline.Description.StartsWith(WindowsFirewallSync.Marker, StringComparison.Ordinal) && markers.TryGetValue(baseline.Description, out var matches)
+            ? matches : Named(baseline.Name);
+}
+
 public static class WindowsFirewallSync
 {
+    private sealed record ParsedNetwork(byte[] Address, uint Prefix);
     public const string Marker = "ZikWall sync v1:";
     public static string NormalizeNetwork(string value)
     {
         if (value is "" or "*") return "";
         var parts = value.Split('/');
         // Windows often returns an IPv4 subnet mask instead of a prefix length.
-        if (parts.Length == 2 && IPAddress.TryParse(parts[1], out var mask) && mask.GetAddressBytes().Length == 4)
+        if (parts.Length == 2 && parts[1].Contains('.') && IPAddress.TryParse(parts[1], out var mask) && mask.GetAddressBytes().Length == 4)
         {
             string bits = string.Concat(mask.GetAddressBytes().Select(x => Convert.ToString(x, 2).PadLeft(8, '0')));
             int prefix = bits.TakeWhile(x => x == '1').Count();
@@ -100,9 +123,15 @@ public static class WindowsFirewallSync
         int suffix = name.LastIndexOf(" [ZikWall ", StringComparison.Ordinal);
         return suffix < 0 ? name : name[..suffix];
     }
-    public static List<WindowsFirewallEntry> Find(WindowsFirewallEntry baseline, IReadOnlyList<WindowsFirewallEntry> current) =>
-        current.Where(x => baseline.Description.StartsWith(Marker, StringComparison.Ordinal)
-            ? x.Description == baseline.Description : string.Equals(x.Name, baseline.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+    public static List<WindowsFirewallEntry> Find(WindowsFirewallEntry baseline, IReadOnlyList<WindowsFirewallEntry> current)
+    {
+        if (baseline.Description.StartsWith(Marker, StringComparison.Ordinal))
+        {
+            var matches = current.Where(x => x.Description == baseline.Description).ToList();
+            if (matches.Count > 0) return matches;
+        }
+        return current.Where(x => string.Equals(x.Name, baseline.Name, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
 
     private static List<WindowsFirewallEntry> Export(Guid profileId, FirewallRule rule, List<WindowsFirewallEntry> existing)
     {
@@ -120,10 +149,10 @@ public static class WindowsFirewallSync
         return result;
     }
 
-    private static FirewallRule? Import(Guid id, string group, List<WindowsFirewallEntry> entries)
+    private static FirewallRule? Import(Guid id, string group, List<WindowsFirewallEntry> entries, Action<WindowsFirewallEntry> validate)
     {
         if (entries.Count == 0) return null;
-        foreach (var entry in entries) entry.ValidateWritable();
+        foreach (var entry in entries) validate(entry);
         var first = entries[0].Rule! with { Id = id, Group = group };
         if (entries.Count == 1) return first;
         if (entries.Count != 2 || entries[0].Rule!.Direction == entries[1].Rule!.Direction
@@ -137,9 +166,18 @@ public static class WindowsFirewallSync
         WindowsFirewallConflictChoice choice = WindowsFirewallConflictChoice.Review)
     {
         if (state is not null && state.ProfileId != profile.Id) throw new InvalidDataException("Sync is linked to another profile. Disconnect that profile first.");
+        if (profile.Rules.Count > 1000) return new(profile.Rules, [], [], [], ["Sync supports at most 1,000 local rules. Use a smaller profile."]);
         var rules = profile.Rules.ToList(); var links = new List<WindowsFirewallLink>();
         var changes = new List<WindowsFirewallChange>(); var summary = new List<string>(); var problems = new List<string>();
         var tracked = (state?.Links ?? []).Select(x => x.RuleId).ToHashSet();
+        var localById = profile.Rules.ToDictionary(x => x.Id);
+        var nativeIndex = new WindowsFirewallIndex(current);
+        var validated = new HashSet<WindowsFirewallEntry>(ReferenceEqualityComparer.Instance);
+        void Validate(WindowsFirewallEntry entry)
+        {
+            if (validated.Contains(entry)) return;
+            entry.ValidateWritable(); validated.Add(entry);
+        }
         void Reconcile(FirewallRule? local, List<WindowsFirewallEntry> remote, Guid id)
         {
             var desired = local is null ? [] : Export(profile.Id, local, remote);
@@ -157,26 +195,26 @@ public static class WindowsFirewallSync
         {
             try
             {
-                var local = rules.SingleOrDefault(x => x.Id == link.RuleId);
+                localById.TryGetValue(link.RuleId, out var local);
                 var remote = new List<WindowsFirewallEntry>();
                 foreach (var before in link.Windows)
                 {
-                    var matches = Find(before, current);
+                    var matches = nativeIndex.Find(before);
                     if (matches.Count > 1) throw new InvalidDataException($"{before.Name}: multiple Windows rules share its identity.");
                     remote.AddRange(matches);
                 }
                 bool localChanged = !Equivalent(local, link.Local);
                 bool remoteChanged = remote.Count != link.Windows.Count || remote.Where((x, i) => !Same(x, link.Windows[i])).Any();
                 // Advanced Windows conditions must never be removed by a conflict choice.
-                foreach (var entry in remote) entry.ValidateWritable();
+                foreach (var entry in remote) Validate(entry);
                 FirewallRule? imported = null; string? conversionProblem = null;
-                try { imported = Import(link.RuleId, local?.Group ?? link.Local.Group, remote); }
+                try { imported = Import(link.RuleId, local?.Group ?? link.Local.Group, remote, Validate); }
                 catch (InvalidDataException ex) { conversionProblem = ex.Message; }
                 bool conflict = conversionProblem is not null || (localChanged && remoteChanged && !Equivalent(local, imported));
                 if (conflict && choice == WindowsFirewallConflictChoice.Review)
                     throw new InvalidDataException(conversionProblem ?? $"{link.Local.Name}: changed in both apps (including deletion). Choose which version to keep.");
                 if (conversionProblem is not null && choice != WindowsFirewallConflictChoice.ZikWall) throw new InvalidDataException(conversionProblem);
-                if (remoteChanged && (!localChanged || Equivalent(local, imported)) && !conflict || conflict && choice == WindowsFirewallConflictChoice.Windows)
+                if ((remoteChanged && (!localChanged || Equivalent(local, imported)) && !conflict) || (conflict && choice == WindowsFirewallConflictChoice.Windows))
                 {
                     int index = rules.FindIndex(x => x.Id == link.RuleId);
                     if (index >= 0) { if (imported is null) rules.RemoveAt(index); else rules[index] = imported; }
@@ -200,10 +238,10 @@ public static class WindowsFirewallSync
             try
             {
                 if (linkedNames.Contains(entry.Name)) continue;
-                if (current.Count(x => string.Equals(x.Name, entry.Name, StringComparison.OrdinalIgnoreCase)) != 1) throw new InvalidDataException($"{entry.Name}: duplicate Windows rule names cannot be synced.");
+                if (nativeIndex.Named(entry.Name).Count != 1) throw new InvalidDataException($"{entry.Name}: duplicate Windows rule names cannot be synced.");
                 if (entry.Description.StartsWith(Marker, StringComparison.Ordinal)) throw new InvalidDataException($"{entry.Name}: already owned by a ZikWall sync profile.");
                 var id = new Guid(SHA256.HashData(Encoding.UTF8.GetBytes(profile.Id + "|" + entry.Name))[..16]);
-                var imported = Import(id, "Custom rules", [entry])!;
+                var imported = Import(id, "Custom rules", [entry], Validate)!;
                 if (rules.Any(x => x.Id == id)) throw new InvalidDataException("Imported rule identity collision.");
                 rules.Add(imported); links.Add(new(id, imported, [entry])); summary.Add($"ZikWall: import {entry.Name}");
             }
@@ -211,24 +249,32 @@ public static class WindowsFirewallSync
         }
         // Block precedence differs from ZikWall ordering. Conservatively reject any
         // intersecting allow/block pair rather than silently changing its meaning.
-        for (int i = 0; i < rules.Count; i++)
-            for (int j = i + 1; j < rules.Count; j++)
-                if (rules[i].Enabled && rules[j].Enabled && rules[i].Block != rules[j].Block && Overlaps(rules[i], rules[j]))
+        var networks = new Dictionary<string, ParsedNetwork>(StringComparer.Ordinal);
+        for (int i = 0; i < rules.Count && problems.Count < 100; i++)
+            for (int j = i + 1; j < rules.Count && problems.Count < 100; j++)
+                if (rules[i].Enabled && rules[j].Enabled && rules[i].Block != rules[j].Block && Overlaps(rules[i], rules[j], networks))
                 { problems.Add($"{rules[i].Name} / {rules[j].Name}: overlapping allow/block rules have different precedence in Windows Firewall."); if (problems.Count >= 100) break; }
         if (links.Count > 1000 || changes.Count > 1000) problems.Add("Sync supports at most 1,000 linked rules and 1,000 Windows changes per operation.");
         foreach (var change in changes.Where(x => x.After is not null))
-            if (current.Any(x => string.Equals(x.Name, change.After!.Name, StringComparison.OrdinalIgnoreCase) && !Same(x, change.Before)))
+            if (nativeIndex.Named(change.After!.Name).Any(x => !Same(x, change.Before)))
                 problems.Add($"{change.After!.Name}: another Windows rule already uses this name.");
         return new(rules, links, changes, summary, problems.Distinct().ToList());
     }
-    private static bool Overlaps(FirewallRule a, FirewallRule b)
+    private static bool Overlaps(FirewallRule a, FirewallRule b, Dictionary<string, ParsedNetwork> networks)
     {
         if ((a.Direction & b.Direction) == 0 || a.Protocol != 0 && b.Protocol != 0 && a.Protocol != b.Protocol
             || a.RemotePort != 0 && b.RemotePort != 0 && a.RemotePort != b.RemotePort
             || a.Application.Length > 0 && b.Application.Length > 0 && !string.Equals(a.Application, b.Application, StringComparison.OrdinalIgnoreCase)) return false;
         if (a.RemoteNetwork.Length == 0 || b.RemoteNetwork.Length == 0) return true;
-        var x = FirewallRule.ParseNetwork(a.RemoteNetwork); var y = FirewallRule.ParseNetwork(b.RemoteNetwork);
-        var xb = IPAddress.Parse(x.Address).GetAddressBytes(); var yb = IPAddress.Parse(y.Address).GetAddressBytes();
+        ParsedNetwork Parse(string value)
+        {
+            if (networks.TryGetValue(value, out var found)) return found;
+            var parsed = FirewallRule.ParseNetwork(value);
+            found = new(IPAddress.Parse(parsed.Address).GetAddressBytes(), parsed.Prefix);
+            networks.Add(value, found); return found;
+        }
+        var x = Parse(a.RemoteNetwork); var y = Parse(b.RemoteNetwork);
+        var xb = x.Address; var yb = y.Address;
         if (xb.Length != yb.Length) return false;
         int bits = (int)Math.Min(x.Prefix, y.Prefix);
         for (int i = 0; i < xb.Length; i++) { int mask = 0xff << (8 - Math.Clamp(bits - i * 8, 0, 8)); if ((xb[i] & mask) != (yb[i] & mask)) return false; }

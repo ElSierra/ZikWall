@@ -2,6 +2,24 @@ using System.Text;
 using System.Xml;
 using ZikWall.WinUI.Models;
 
+if (args.Contains("--country-data-only")) { CountryDataTests.Run(); return; }
+
+if (args.Contains("--saved-logs-only")) { SavedLogTests.Run(); return; }
+if (args.Length == 2 && args[0] == "--saved-logs-inspect") { SavedLogTests.Inspect(args[1]); return; }
+
+if (args.Contains("--broker-lifetime-only")) { BrokerLifetimeTests.Run(); return; }
+
+if (args.Contains("--windows-sync-only")) { WindowsFirewallSyncTests.Run(); return; }
+if (args.Contains("--windows-sync-perf-regression")) { if (!WindowsSyncPerfTests.Run()) Environment.ExitCode = 1; return; }
+if (args.Contains("--windows-sync-read")) { WindowsFirewallSyncTests.ReadNative(); return; }
+if (args.Contains("--windows-sync-native"))
+{
+    string report = Path.Combine(AppContext.BaseDirectory, "windows-sync-native.txt");
+    try { WindowsFirewallSyncTests.NativeRoundTrip(); File.WriteAllText(report, "PASS: disabled native Windows Firewall sync round trip and cleanup.\n"); }
+    catch (Exception ex) { File.WriteAllText(report, ex.ToString()); Console.Error.WriteLine(ex); Environment.ExitCode = 1; }
+    return;
+}
+
 if (args.Contains("--activity-overview-only")) { ActivityOverviewTests.Run(); return; }
 if (args.Contains("--notifications-only")) { NotificationTests.Run(); return; }
 if (args.Contains("--passive-dns-only")) { await PassiveDnsTests.RunAsync(); return; }
@@ -63,6 +81,7 @@ if (args.Length > 0)
 }
 Console.WriteLine($"PASS: {checks} model and profile-reader checks.");
 MonitorTests.Run();
+CountryDataTests.Run();
 MonitorEnrichmentTests.Run();
 NotificationTests.Run();
 SystemAppTests.Run();
@@ -71,7 +90,10 @@ await CachedDomainTests.RunAsync(args.Contains("--dns-cache"));
 await HostNameTests.RunAsync();
 await PassiveDnsTests.RunAsync();
 await ServiceProtocolTests.RunAsync();
+BrokerLifetimeTests.Run();
 PolicyTests.Run();
+WindowsFirewallSyncTests.Run();
+if (!WindowsSyncPerfTests.Run()) throw new InvalidOperationException("Windows sync allocation regression.");
 PolicyAnalysisTests.Run();
 PrivacyTests.RunAsync().GetAwaiter().GetResult();
 await SubscriptionTests.RunAsync(args.Contains("--subscriptions"));
@@ -80,3 +102,4 @@ ActivityUsageTests.Run();
 ActivityOverviewTests.Run();
 MonitorActionTests.Run();
 LogAnalysisTests.Run();
+SavedLogTests.Run();

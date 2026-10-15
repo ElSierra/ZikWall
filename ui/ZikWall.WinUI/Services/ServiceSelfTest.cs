@@ -26,6 +26,10 @@ internal static class ServiceSelfTest
                     await domains.StartAsync(domainsOnly: true);
                     await usage.StartAsync();
                     if (!domains.UsesService || !usage.UsesService) throw new InvalidOperationException("A session used UAC fallback.");
+                    var empty = await usage.SendAsync(new("apply", []));
+                    if (!empty.Success || empty.ActiveRules != 0)
+                        throw new InvalidOperationException("Enabling an empty filtering profile failed: " + empty.Message);
+                    checks.Add($"Launch {launch + 1}: empty filtering profile enabled through the service.");
                     if (!(await domains.SendAsync(new("status"))).Success || !(await usage.SendAsync(new("usage-start"))).Success)
                         throw new InvalidOperationException("A service session failed.");
                     if ((await domains.SendAsync(new("apply", []))).Success)

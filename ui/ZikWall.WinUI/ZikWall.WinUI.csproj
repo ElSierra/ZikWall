@@ -28,11 +28,16 @@
     <Content Include="Assets\ZikWall-tray.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\ZikWall.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\World.svg" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Assets\Countries\**\*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Assets\Networks\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\EarthRelief.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Countries\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="Assets\Networks\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Assets\Flags\**\*" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4654" />
   </ItemGroup>
   <ItemGroup><PackageReference Include="System.Management" Version="8.0.0" /></ItemGroup>
+  <Target Name="ValidateOfflineLocationPayload" AfterTargets="Build">
+    <Error Condition="!Exists('$(OutDir)Assets\Countries\ipv4.zwc') Or !Exists('$(OutDir)Assets\Countries\ipv6.zwc')" Text="Offline country lookup tables are missing from the application output." />
+    <Error Condition="!Exists('$(OutDir)Assets\Networks\ipv4.zwn') Or !Exists('$(OutDir)Assets\Networks\ipv6.zwn') Or !Exists('$(OutDir)Assets\Networks\names.zwn')" Text="Offline network owner tables are missing from the application output." />
+  </Target>
 </Project>

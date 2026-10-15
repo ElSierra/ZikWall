@@ -37,6 +37,7 @@ public sealed record FirewallRule(Guid Id, string Name, string Application, stri
 public sealed record NetworkProfile(Guid Id, string Name, List<FirewallRule> Rules, string NetworkId = "");
 public sealed record PolicyDocument(int Version, Guid SelectedProfile, bool AutoSwitch, List<NetworkProfile> Profiles)
 {
+    public WindowsFirewallSyncState? WindowsSync { get; init; }
     public static PolicyDocument Empty() { var id = Guid.NewGuid(); return new(1, id, false, [new(id, "Default", [])]); }
     public void Validate()
     {
@@ -49,8 +50,9 @@ public sealed record PolicyDocument(int Version, Guid SelectedProfile, bool Auto
             if (profile.Rules.Count > 10000 || profile.Rules.Any(x => x is null) || profile.Rules.Select(x => x.Id).Distinct().Count() != profile.Rules.Count) throw new InvalidDataException("Too many rules, empty rules or duplicate rule IDs.");
             foreach (var rule in profile.Rules) { if (rule is null) throw new InvalidDataException("Empty rule."); rule.Validate(); }
         }
+        WindowsSync?.Validate(this);
     }
 }
 
-public sealed record BrokerRequest(string Command, List<FirewallRule>? Rules = null, List<string>? RemoteAddresses = null);
+public sealed record BrokerRequest(string Command, List<FirewallRule>? Rules = null, List<string>? RemoteAddresses = null, WindowsFirewallBatch? WindowsBatch = null);
 public sealed record BrokerResponse(bool Success, string Message, int ActiveRules = 0, UsageSnapshot? Usage = null, List<CachedDomainAnswer>? Domains = null);
